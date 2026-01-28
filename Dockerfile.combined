@@ -14,10 +14,9 @@ RUN npm run build && npm prune --production
 # Stage 2: Final combined image
 FROM python:3.11-slim
 
-# Install Node.js and supervisord
+# Install Node.js
 RUN apt-get update && apt-get install -y \
     curl \
-    supervisor \
     wget \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
@@ -39,12 +38,12 @@ COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/node_modules ./node_modules
 COPY --from=backend-builder /app/backend/package.json ./
 
-# Create supervisord config
-RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copy start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Set ownership
-RUN chown -R appuser:appuser /app /var/log/supervisor
+RUN chown -R appuser:appuser /app
 
 WORKDIR /app
 
@@ -55,5 +54,5 @@ EXPOSE 3000 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Run supervisord to manage both processes
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Run both services via start script (inherits all env vars)
+CMD ["/bin/bash", "/app/start.sh"]
