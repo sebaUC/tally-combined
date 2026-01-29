@@ -214,7 +214,21 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
             cid=cid,
         )
 
+        # Log raw LLM response for debugging
+        log.state("LLM raw response", {"data": data}, cid)
+
         response_type = data.get("response_type", "clarification")
+
+        # Validate response_type before constructing Pydantic model
+        valid_types = ("tool_call", "clarification", "direct_reply")
+        if response_type not in valid_types:
+            log.err(
+                "Invalid response_type from LLM",
+                {"received": response_type, "valid": valid_types, "full_response": data},
+                cid,
+            )
+            # Fallback to clarification with the LLM's text if available
+            response_type = "clarification"
 
         # Build response based on response_type
         tool_call = None
