@@ -13,6 +13,7 @@ import { CooldownService } from './services/cooldown.service';
 import { StyleDetectorService } from './services/style-detector.service';
 import { OrchestratorClient } from './services/orchestrator.client';
 import { GuardrailsService } from './services/guardrails.service';
+import { MessageLogService } from './services/message-log.service';
 import { ToolRegistry } from './tools/tool-registry';
 
 @Module({
@@ -30,6 +31,7 @@ import { ToolRegistry } from './tools/tool-registry';
     StyleDetectorService,
     OrchestratorClient,
     GuardrailsService,
+    MessageLogService,
     ToolRegistry,
   ],
   exports: [
@@ -40,6 +42,7 @@ import { ToolRegistry } from './tools/tool-registry';
     CooldownService,
     OrchestratorClient,
     GuardrailsService,
+    MessageLogService,
     ToolRegistry,
   ],
 })

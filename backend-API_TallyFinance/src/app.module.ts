@@ -8,6 +8,7 @@ import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './user/user.module';
 import { BotModule } from './bot/bot.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BotModule } from './bot/bot.module';
     AuthModule,
     UsersModule,
     BotModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

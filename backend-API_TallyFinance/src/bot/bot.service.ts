@@ -8,6 +8,7 @@ import { MetricsService } from './services/metrics.service';
 import { CooldownService } from './services/cooldown.service';
 import { StyleDetectorService } from './services/style-detector.service';
 import { OrchestratorClient } from './services/orchestrator.client';
+import { MessageLogService } from './services/message-log.service';
 import {
   OrchestratorError,
   PhaseAResponse,
@@ -47,6 +48,7 @@ export class BotService {
     private readonly guardrails: GuardrailsService,
     private readonly toolRegistry: ToolRegistry,
     private readonly redis: RedisService,
+    private readonly messageLog: MessageLogService,
   ) {}
 
   async handle(m: DomainMessage): Promise<string> {
@@ -200,12 +202,14 @@ export class BotService {
       if (phaseA.response_type === 'direct_reply') {
         metrics.totalMs = Date.now() - startTotal;
         this.log.ok('Direct reply', { ms: metrics.totalMs }, cid);
+        this.logMessageAsync(userId, m.channel, m.text, phaseA.direct_reply!, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: phaseA.direct_reply!, metrics };
       }
 
       if (phaseA.response_type === 'clarification') {
         metrics.totalMs = Date.now() - startTotal;
         this.log.slot('Clarification needed', { text: phaseA.clarification?.substring(0, 50) }, cid);
+        this.logMessageAsync(userId, m.channel, m.text, phaseA.clarification!, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: phaseA.clarification!, metrics };
       }
 
@@ -219,11 +223,9 @@ export class BotService {
       if (!validation.valid) {
         this.log.warn('Guardrails rejected', { error: validation.error }, cid);
         metrics.totalMs = Date.now() - startTotal;
-        return {
-          reply:
-            'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?',
-          metrics,
-        };
+        const guardrailReply = 'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?';
+        this.logMessageAsync(userId, m.channel, m.text, guardrailReply, phaseA as unknown as Record<string, unknown>, null, `Guardrails: ${validation.error}`);
+        return { reply: guardrailReply, metrics };
       }
 
       // 8. Execute tool handler
@@ -260,6 +262,7 @@ export class BotService {
 
         metrics.totalMs = Date.now() - startTotal;
         this.log.slot('Slot-fill prompt', { response: result.userMessage.substring(0, 50) }, cid);
+        this.logMessageAsync(userId, m.channel, m.text, result.userMessage, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: result.userMessage, metrics };
       }
 
@@ -304,10 +307,9 @@ export class BotService {
         this.log.err('Phase B failed after tool success', { error: String(phaseBError) }, cid);
         metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
         metrics.totalMs = Date.now() - startTotal;
-        return {
-          reply: 'Listo. (No pude generar un mensaje personalizado)',
-          metrics,
-        };
+        const phaseBFailReply = 'Listo. (No pude generar un mensaje personalizado)';
+        this.logMessageAsync(userId, m.channel, m.text, phaseBFailReply, phaseA as unknown as Record<string, unknown>, null, `Phase B failed: ${String(phaseBError)}`);
+        return { reply: phaseBFailReply, metrics };
       }
       metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
       phaseBTimer();
@@ -341,6 +343,17 @@ export class BotService {
         total: `${metrics.totalMs}ms`,
       }, cid);
 
+      // Log for admin backoffice
+      this.logMessageAsync(
+        userId,
+        m.channel,
+        m.text,
+        phaseB.final_message,
+        phaseA as unknown as Record<string, unknown>,
+        phaseB as unknown as Record<string, unknown>,
+        null,
+      );
+
       return { reply: phaseB.final_message, metrics };
     } catch (err) {
       metrics.totalMs = Date.now() - startTotal;
@@ -351,10 +364,9 @@ export class BotService {
         // Handle cold start specially - friendly sleeping message
         if (err.code === 'COLD_START') {
           this.log.warn('😴 AI Service cold start detected', undefined, cid);
-          return {
-            reply: '😴💤 Estoy despertando, dame un momento... Envía tu mensaje de nuevo en unos segundos.',
-            metrics,
-          };
+          const coldStartReply = '😴💤 Estoy despertando, dame un momento... Envía tu mensaje de nuevo en unos segundos.';
+          this.logMessageAsync(userId, m.channel, m.text, coldStartReply, null, null, `COLD_START: ${err.message}`);
+          return { reply: coldStartReply, metrics };
         }
 
         const errorMessages: Record<string, string> = {
@@ -366,20 +378,42 @@ export class BotService {
             '😴 Tuve un problema respondiendo. Intenta de nuevo en unos momentos.',
         };
 
-        return {
-          reply:
-            errorMessages[err.code] ??
-            'Hubo un problema procesando tu solicitud.',
-          metrics,
-        };
+        const errorReply = errorMessages[err.code] ?? 'Hubo un problema procesando tu solicitud.';
+        this.logMessageAsync(userId, m.channel, m.text, errorReply, null, null, `${err.code}: ${err.message}`);
+        return { reply: errorReply, metrics };
       }
 
       this.log.err('Unexpected error', { error: String(err) }, cid);
-      return { reply: 'Hubo un error procesando tu solicitud.', metrics };
+      const unexpectedReply = 'Hubo un error procesando tu solicitud.';
+      this.logMessageAsync(userId, m.channel, m.text, unexpectedReply, null, null, String(err));
+      return { reply: unexpectedReply, metrics };
     }
   }
 
   private generateCorrelationId(): string {
     return randomUUID().substring(0, 8);
+  }
+
+  private logMessageAsync(
+    userId: string | null,
+    channel: string,
+    userMessage: string,
+    botResponse: string | null,
+    phaseADebug: Record<string, unknown> | null,
+    phaseBDebug: Record<string, unknown> | null,
+    error: string | null,
+  ): void {
+    // Fire and forget - don't await, don't block the response
+    this.messageLog.log({
+      userId,
+      channel,
+      userMessage,
+      botResponse,
+      phaseADebug,
+      phaseBDebug,
+      error,
+    }).catch((err) => {
+      console.error('[BotService] Failed to log message:', err);
+    });
   }
 }
