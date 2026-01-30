@@ -15,8 +15,7 @@ import type { Request } from 'express';
  * To add a new admin: add their UUID here AND set app_metadata.role = 'admin' in Supabase.
  */
 const ADMIN_WHITELIST: string[] = [
-  // Add admin UUIDs here after assigning via SQL
-  // Example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  '9d1454f5-4317-4baf-aec8-78bd8a06edb0',
 ];
 
 @Injectable()
