@@ -16,6 +16,7 @@ import type { Request } from 'express';
  */
 const ADMIN_WHITELIST: string[] = [
   '9d1454f5-4317-4baf-aec8-78bd8a06edb0',
+  '4c023f2d-a5c6-44c7-b44d-b3cb3913e5bb',
 ];
 
 @Injectable()

@@ -20,6 +20,15 @@ export class AdminController {
   ) {}
 
   /**
+   * GET /admin/check
+   * Lightweight endpoint to check if user is admin (for showing admin button)
+   */
+  @Get('check')
+  async checkAdmin() {
+    return { isAdmin: true };
+  }
+
+  /**
    * GET /admin/dashboard
    * Returns overview metrics for the admin dashboard
    */
