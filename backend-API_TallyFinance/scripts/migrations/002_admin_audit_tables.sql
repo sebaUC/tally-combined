@@ -18,6 +18,9 @@ CREATE TABLE IF NOT EXISTS public.bot_message_log (
   user_message TEXT NOT NULL,
   bot_response TEXT,
 
+  -- Handler used
+  tool_name VARCHAR(50), -- register_transaction, ask_balance, greeting, etc.
+
   -- AI Debug (full JSON for detailed inspection)
   phase_a_debug JSONB, -- Full Phase A: response_type, tool_call, clarification, etc.
   phase_b_debug JSONB, -- Full Phase B: final_message, new_summary, did_nudge, etc.
@@ -32,6 +35,7 @@ CREATE TABLE IF NOT EXISTS public.bot_message_log (
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_bot_message_log_user_id ON public.bot_message_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_bot_message_log_created_at ON public.bot_message_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bot_message_log_tool_name ON public.bot_message_log(tool_name);
 CREATE INDEX IF NOT EXISTS idx_bot_message_log_has_error ON public.bot_message_log(created_at DESC) WHERE error IS NOT NULL;
 
 COMMENT ON TABLE public.bot_message_log IS

@@ -202,14 +202,14 @@ export class BotService {
       if (phaseA.response_type === 'direct_reply') {
         metrics.totalMs = Date.now() - startTotal;
         this.log.ok('Direct reply', { ms: metrics.totalMs }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, phaseA.direct_reply!, phaseA as unknown as Record<string, unknown>, null, null);
+        this.logMessageAsync(userId, m.channel, m.text, phaseA.direct_reply!, null, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: phaseA.direct_reply!, metrics };
       }
 
       if (phaseA.response_type === 'clarification') {
         metrics.totalMs = Date.now() - startTotal;
         this.log.slot('Clarification needed', { text: phaseA.clarification?.substring(0, 50) }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, phaseA.clarification!, phaseA as unknown as Record<string, unknown>, null, null);
+        this.logMessageAsync(userId, m.channel, m.text, phaseA.clarification!, null, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: phaseA.clarification!, metrics };
       }
 
@@ -224,7 +224,7 @@ export class BotService {
         this.log.warn('Guardrails rejected', { error: validation.error }, cid);
         metrics.totalMs = Date.now() - startTotal;
         const guardrailReply = 'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?';
-        this.logMessageAsync(userId, m.channel, m.text, guardrailReply, phaseA as unknown as Record<string, unknown>, null, `Guardrails: ${validation.error}`);
+        this.logMessageAsync(userId, m.channel, m.text, guardrailReply, toolCall.name, phaseA as unknown as Record<string, unknown>, null, `Guardrails: ${validation.error}`);
         return { reply: guardrailReply, metrics };
       }
 
@@ -262,7 +262,7 @@ export class BotService {
 
         metrics.totalMs = Date.now() - startTotal;
         this.log.slot('Slot-fill prompt', { response: result.userMessage.substring(0, 50) }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, result.userMessage, phaseA as unknown as Record<string, unknown>, null, null);
+        this.logMessageAsync(userId, m.channel, m.text, result.userMessage, toolCall.name, phaseA as unknown as Record<string, unknown>, null, null);
         return { reply: result.userMessage, metrics };
       }
 
@@ -308,7 +308,7 @@ export class BotService {
         metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
         metrics.totalMs = Date.now() - startTotal;
         const phaseBFailReply = 'Listo. (No pude generar un mensaje personalizado)';
-        this.logMessageAsync(userId, m.channel, m.text, phaseBFailReply, phaseA as unknown as Record<string, unknown>, null, `Phase B failed: ${String(phaseBError)}`);
+        this.logMessageAsync(userId, m.channel, m.text, phaseBFailReply, toolCall.name, phaseA as unknown as Record<string, unknown>, null, `Phase B failed: ${String(phaseBError)}`);
         return { reply: phaseBFailReply, metrics };
       }
       metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
@@ -349,6 +349,7 @@ export class BotService {
         m.channel,
         m.text,
         phaseB.final_message,
+        toolCall.name,
         phaseA as unknown as Record<string, unknown>,
         phaseB as unknown as Record<string, unknown>,
         null,
@@ -365,7 +366,7 @@ export class BotService {
         if (err.code === 'COLD_START') {
           this.log.warn('😴 AI Service cold start detected', undefined, cid);
           const coldStartReply = '😴💤 Estoy despertando, dame un momento... Envía tu mensaje de nuevo en unos segundos.';
-          this.logMessageAsync(userId, m.channel, m.text, coldStartReply, null, null, `COLD_START: ${err.message}`);
+          this.logMessageAsync(userId, m.channel, m.text, coldStartReply, metrics.toolName ?? null, null, null, `COLD_START: ${err.message}`);
           return { reply: coldStartReply, metrics };
         }
 
@@ -379,13 +380,13 @@ export class BotService {
         };
 
         const errorReply = errorMessages[err.code] ?? 'Hubo un problema procesando tu solicitud.';
-        this.logMessageAsync(userId, m.channel, m.text, errorReply, null, null, `${err.code}: ${err.message}`);
+        this.logMessageAsync(userId, m.channel, m.text, errorReply, metrics.toolName ?? null, null, null, `${err.code}: ${err.message}`);
         return { reply: errorReply, metrics };
       }
 
       this.log.err('Unexpected error', { error: String(err) }, cid);
       const unexpectedReply = 'Hubo un error procesando tu solicitud.';
-      this.logMessageAsync(userId, m.channel, m.text, unexpectedReply, null, null, String(err));
+      this.logMessageAsync(userId, m.channel, m.text, unexpectedReply, metrics.toolName ?? null, null, null, String(err));
       return { reply: unexpectedReply, metrics };
     }
   }
@@ -399,6 +400,7 @@ export class BotService {
     channel: string,
     userMessage: string,
     botResponse: string | null,
+    toolName: string | null,
     phaseADebug: Record<string, unknown> | null,
     phaseBDebug: Record<string, unknown> | null,
     error: string | null,
@@ -409,6 +411,7 @@ export class BotService {
       channel,
       userMessage,
       botResponse,
+      toolName,
       phaseADebug,
       phaseBDebug,
       error,

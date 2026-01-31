@@ -182,3 +182,130 @@ See `docs/SYSTEM_ARCHITECTURE.md` for complete architecture reference including 
 Service-specific guidance:
 - `backend-API_TallyFinance/CLAUDE.md`
 - `ai-service_TallyFinane/CLAUDE.md`
+
+---
+
+## Frontend Design System (SIEMPRE SEGUIR)
+
+### Archivos de Referencia
+Antes de modificar frontend, revisar:
+- `src/pages/dashboard/components/DashboardLayout.jsx` - Layout principal
+- `src/pages/dashboard/components/AppNavbar.jsx` - Navegación
+- `src/components/Button.jsx` - Botones
+- `tailwind.config.js` - Colores y configuración
+
+### Colores de Marca
+```
+brand-primary: #0364c6    (azul principal - CTAs)
+brand-primaryDark: #023a7e (texto principal)
+brand-accent: #3B82F6     (hover states)
+brand-border: #BFDBFE     (bordes)
+brand-tint: #DBEAFE       (backgrounds sutiles)
+```
+
+### Tipografía
+- **Font:** Goldplay (weights 200-900)
+- **Títulos:** `text-2xl font-bold text-slate-900` o `font-black text-brand-primaryDark`
+- **Subtítulos:** `text-lg font-semibold text-slate-900`
+- **Body:** `text-sm text-slate-600` o `text-base font-medium`
+- **Labels:** `text-xs font-medium text-slate-500`
+- **Links:** `text-sm font-medium text-blue-600 hover:text-blue-800`
+
+### Componentes
+
+**Botones:**
+```jsx
+// Primario
+className="rounded-full bg-brand-primary px-6 py-3 text-base font-black text-white shadow-cta hover:bg-brand-accent"
+
+// Secundario
+className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+
+// Ghost
+className="text-sm font-medium text-blue-600 hover:text-blue-800"
+```
+
+**Cards:**
+```jsx
+className="rounded-2xl border border-brand-border/40 bg-white/90 p-6 shadow-lg shadow-brand-border/20 backdrop-blur md:rounded-3xl md:p-8"
+```
+
+**Inputs:**
+```jsx
+className="w-full rounded-xl border border-brand-tint/60 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:border-brand-highlight focus:ring-2 focus:ring-brand-border md:rounded-2xl md:px-5 md:py-4 md:text-lg"
+```
+
+**Tables:**
+```jsx
+// Container
+className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+
+// Header
+className="bg-slate-50"
+<th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
+
+// Rows
+className="hover:bg-slate-50"
+<td className="px-4 py-3 text-sm text-slate-900">
+```
+
+### Backgrounds
+```jsx
+// Página principal
+className="bg-gradient-to-b from-white via-[#f5f8ff] to-[#e0eaff]"
+
+// Mobile
+className="bg-white"
+
+// Cards transparentes
+className="bg-white/90 backdrop-blur"
+```
+
+### Border Radius
+- **Botones:** `rounded-full` (pill) o `rounded-lg`
+- **Cards:** `rounded-2xl` → `md:rounded-3xl`
+- **Inputs:** `rounded-xl` → `md:rounded-2xl`
+- **Chips:** `rounded-xl`
+
+### Shadows
+```
+shadow-sm shadow-brand-border/20   (sutil)
+shadow-lg shadow-brand-border/30   (cards)
+shadow-xl shadow-brand-border/20   (modals)
+shadow-cta                          (botones primarios)
+```
+
+### Responsive (3 vistas)
+```
+Mobile (base):     px-4, py-2.5, text-sm, rounded-xl
+Tablet (md:):      px-5, py-4, text-lg, rounded-2xl
+Desktop (lg:):     px-6, py-5, más espaciado
+```
+
+### Layout para Páginas Autenticadas
+```jsx
+import DashboardLayout from '../dashboard/components/DashboardLayout'
+import { useAdminGuard } from '../../hooks/useAdminGuard'
+
+const MiPagina = () => {
+  const { user, logout } = useAuthSession()
+
+  return (
+    <DashboardLayout
+      displayName={user?.fullName}
+      subtitle={user?.email}
+      onLogout={logout}
+      isAdmin={isAdmin}
+    >
+      {/* Contenido */}
+    </DashboardLayout>
+  )
+}
+```
+
+### NUNCA hacer
+- Usar colores hex directos (usar clases de Tailwind/brand)
+- Crear estilos inline
+- Ignorar responsive (`md:` y `lg:`)
+- Usar border-radius inconsistentes
+- Olvidar hover/focus states

@@ -117,4 +117,17 @@ export class AdminController {
       },
     };
   }
+
+  /**
+   * GET /admin/users
+   * Returns list of users with message counts for admin chat view tabs
+   */
+  @Get('users')
+  async getActiveUsers() {
+    const users = await this.messagesService.getActiveUsers();
+    return {
+      ok: true,
+      data: users,
+    };
+  }
 }

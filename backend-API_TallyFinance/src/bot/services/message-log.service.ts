@@ -6,6 +6,7 @@ export interface MessageLogData {
   channel: string;
   userMessage: string;
   botResponse: string | null;
+  toolName: string | null;
   phaseADebug: Record<string, unknown> | null;
   phaseBDebug: Record<string, unknown> | null;
   error: string | null;
@@ -22,6 +23,7 @@ export class MessageLogService {
         channel: data.channel,
         user_message: data.userMessage,
         bot_response: data.botResponse,
+        tool_name: data.toolName,
         phase_a_debug: data.phaseADebug,
         phase_b_debug: data.phaseBDebug,
         error: data.error,

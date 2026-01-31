@@ -126,4 +126,82 @@ export class AdminMessagesService {
       total: count || 0,
     };
   }
+
+  async getActiveUsers(): Promise<Array<{
+    user_id: string;
+    email: string | null;
+    message_count: number;
+    last_message_at: string;
+    has_errors: boolean;
+  }>> {
+    // Get all unique users with their message counts
+    const { data: messages, error } = await this.supabase
+      .from('bot_message_log')
+      .select('user_id, created_at, error')
+      .not('user_id', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[AdminMessagesService] Error fetching active users:', error);
+      throw new Error('Failed to fetch active users');
+    }
+
+    // Aggregate by user
+    const userMap = new Map<string, {
+      message_count: number;
+      last_message_at: string;
+      has_errors: boolean;
+    }>();
+
+    for (const msg of messages || []) {
+      if (!msg.user_id) continue;
+
+      const existing = userMap.get(msg.user_id);
+      if (existing) {
+        existing.message_count++;
+        if (msg.error) existing.has_errors = true;
+      } else {
+        userMap.set(msg.user_id, {
+          message_count: 1,
+          last_message_at: msg.created_at,
+          has_errors: Boolean(msg.error),
+        });
+      }
+    }
+
+    // Get user emails
+    const userIds = Array.from(userMap.keys());
+    const usersWithEmails: Array<{
+      user_id: string;
+      email: string | null;
+      message_count: number;
+      last_message_at: string;
+      has_errors: boolean;
+    }> = [];
+
+    for (const userId of userIds) {
+      const stats = userMap.get(userId)!;
+      let email: string | null = null;
+
+      try {
+        const { data: userData } = await this.supabase.auth.admin.getUserById(userId);
+        email = userData?.user?.email || null;
+      } catch {
+        // Ignore errors getting email
+      }
+
+      usersWithEmails.push({
+        user_id: userId,
+        email,
+        ...stats,
+      });
+    }
+
+    // Sort by last message (most recent first)
+    usersWithEmails.sort((a, b) =>
+      new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+    );
+
+    return usersWithEmails;
+  }
 }
