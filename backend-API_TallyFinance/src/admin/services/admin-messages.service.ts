@@ -127,6 +127,54 @@ export class AdminMessagesService {
     };
   }
 
+  async getUserProfile(userId: string): Promise<{
+    email: string | null;
+    full_name: string | null;
+    personality: { tone: string; intensity: number } | null;
+    spending_expectations: Array<{ period: string; active: boolean; amount: number }>;
+    goals: Array<{ name: string; target_amount: number; target_date: string | null; status: string }>;
+  }> {
+    // Get user email and name
+    let email: string | null = null;
+    let fullName: string | null = null;
+    try {
+      const { data: userData } = await this.supabase.auth.admin.getUserById(userId);
+      email = userData?.user?.email || null;
+      fullName = userData?.user?.user_metadata?.full_name || null;
+    } catch {
+      // Ignore errors
+    }
+
+    // Get personality
+    const { data: personality } = await this.supabase
+      .from('personality_snapshot')
+      .select('tone, intensity')
+      .eq('user_id', userId)
+      .single();
+
+    // Get spending expectations
+    const { data: spending } = await this.supabase
+      .from('spending_expectations')
+      .select('period, active, amount')
+      .eq('user_id', userId)
+      .eq('active', true);
+
+    // Get goals
+    const { data: goals } = await this.supabase
+      .from('goals')
+      .select('name, target_amount, target_date, status')
+      .eq('user_id', userId)
+      .eq('status', 'in_progress');
+
+    return {
+      email,
+      full_name: fullName,
+      personality: personality ? { tone: personality.tone, intensity: personality.intensity } : null,
+      spending_expectations: spending || [],
+      goals: goals || [],
+    };
+  }
+
   async getActiveUsers(): Promise<Array<{
     user_id: string;
     email: string | null;

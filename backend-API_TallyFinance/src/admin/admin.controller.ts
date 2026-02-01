@@ -95,6 +95,19 @@ export class AdminController {
   }
 
   /**
+   * GET /admin/users/:userId/profile
+   * Returns user profile with personality, spending expectations, and goals
+   */
+  @Get('users/:userId/profile')
+  async getUserProfile(@Param('userId') userId: string) {
+    const profile = await this.messagesService.getUserProfile(userId);
+    return {
+      ok: true,
+      data: profile,
+    };
+  }
+
+  /**
    * GET /admin/errors
    * Returns paginated list of messages with errors
    */
