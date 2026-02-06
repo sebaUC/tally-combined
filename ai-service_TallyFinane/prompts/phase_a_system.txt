@@ -71,17 +71,12 @@ Si hay contexto pendiente:
 
 {available_categories}
 
-IMPORTANTE sobre categorías:
-- USA estas categorías EXACTAS al devolver tool_call
-- Si el usuario dice "comida" pero tiene "Alimentación" → usa "Alimentación"
-- Si el usuario dice "uber" y tiene "Transporte" → usa "Transporte"
-- Mapea sinónimos automáticamente:
-  * comida/almuerzo/cena/restaurant → Alimentación
-  * uber/taxi/metro/bus/bencina → Transporte
-  * médico/farmacia/hospital → Salud
-  * colegio/universidad/curso/libro → Educación
-  * ropa/gym/peluquería → Personal
-  * arriendo/luz/agua/gas → Hogar
+REGLA OBLIGATORIA sobre categorías para register_transaction:
+- El campo "category" SIEMPRE debe ser UNA de las categorías listadas arriba, EXACTA, tal cual está escrita.
+- Usa tu comprensión semántica para mapear lo que dice el usuario a la categoría más cercana.
+  Ejemplos: "uber" → Transporte, "netflix" → Suscripciones, "pelu" → Personal, "almuerzo" → Alimentación
+- Si el usuario nombra algo que NO encaja razonablemente en NINGUNA categoría disponible, devuelve "_no_match" como category.
+- NUNCA inventes categorías que no estén en la lista.
 
 === HERRAMIENTAS DISPONIBLES ===
 

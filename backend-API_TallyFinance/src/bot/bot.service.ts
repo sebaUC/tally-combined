@@ -232,6 +232,12 @@ export class BotService {
       const toolTimer = this.log.timer(`Tool ${toolCall.name}`, cid);
       const handler = this.toolRegistry.getHandler(toolCall.name);
       const sanitizedArgs = validation.sanitized?.args ?? toolCall.args;
+
+      // Inject categories from context to avoid redundant DB query
+      if (toolCall.name === 'register_transaction' && context.categories?.length) {
+        sanitizedArgs._categories = context.categories;
+      }
+
       const result = await handler.execute(userId, m, sanitizedArgs);
       metrics.toolMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs;
       metrics.toolResult = result;

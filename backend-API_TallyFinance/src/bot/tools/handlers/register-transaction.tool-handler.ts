@@ -55,13 +55,14 @@ export class RegisterTransactionToolHandler implements ToolHandler {
     _msg: DomainMessage,
     args: Record<string, unknown>,
   ): Promise<ActionResult> {
-    const { amount, category, date, posted_at, description, payment_method_id } = args as {
+    const { amount, category, date, posted_at, description, payment_method_id, _categories } = args as {
       amount?: number;
       category?: string;
       date?: string;
       posted_at?: string;
       description?: string;
       payment_method_id?: string;
+      _categories?: Array<{ id: string; name: string }>;
     };
 
     // 1. Validate required args (slot-filling with pending state)
@@ -101,24 +102,29 @@ export class RegisterTransactionToolHandler implements ToolHandler {
     // 2. Normalize date to ISO format for posted_at
     const postedAt = posted_at ?? date ?? new Date().toISOString();
 
-    // 3. Find category_id from DB
-    const { data: categories, error: catError } = await this.supabase
-      .from('categories')
-      .select('id, name')
-      .eq('user_id', userId);
+    // 3. Get categories: prefer injected from context, fallback to DB query
+    let categories = _categories ?? null;
+    if (!categories) {
+      const { data: dbCategories, error: catError } = await this.supabase
+        .from('categories')
+        .select('id, name')
+        .eq('user_id', userId);
 
-    if (catError) {
-      console.error(
-        '[RegisterTransactionToolHandler] Category query error:',
-        catError,
-      );
-      return {
-        ok: false,
-        action: 'register_transaction',
-        errorCode: 'DB_QUERY_FAILED',
-        userMessage:
-          'Hubo un problema consultando tus categorías. Intenta de nuevo.',
-      };
+      if (catError) {
+        console.error(
+          '[RegisterTransactionToolHandler] Category query error:',
+          catError,
+        );
+        return {
+          ok: false,
+          action: 'register_transaction',
+          errorCode: 'DB_QUERY_FAILED',
+          userMessage:
+            'Hubo un problema consultando tus categorías. Intenta de nuevo.',
+        };
+      }
+
+      categories = dbCategories as Array<{ id: string; name: string }>;
     }
 
     if (!categories?.length) {
@@ -130,16 +136,16 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       };
     }
 
-    // Use intelligent category matching with synonyms
+    // 4. Match category: trust LLM output first, lightweight fallback
     const matched = this.findBestCategoryMatch(
       String(category),
-      categories as Array<{ id: string; name: string }>,
+      categories,
     );
 
     if (!matched) {
-      // No semantic match found - ask user
+      // No match found - show user their category list
       const suggestions = categories
-        .map((c: { name: string }) => `• ${c.name}`)
+        .map((c) => `• ${c.name}`)
         .join('\n');
 
       return {
@@ -234,11 +240,9 @@ export class RegisterTransactionToolHandler implements ToolHandler {
   }
 
   /**
-   * Finds the best matching category using:
-   * 1. Exact match (case-insensitive)
-   * 2. Synonym matching (comida → Alimentación)
-   * 3. Partial/substring match
-   * 4. Typo tolerance
+   * Finds the best matching category using lightweight fallback.
+   * The LLM is the primary category resolver (via Phase A prompt).
+   * This method handles: exact match, _no_match sentinel, partial/substring, and typo tolerance.
    */
   private findBestCategoryMatch(
     input: string,
@@ -248,100 +252,23 @@ export class RegisterTransactionToolHandler implements ToolHandler {
 
     const inputLower = input.toLowerCase().trim();
 
-    // 1. EXACT MATCH (case-insensitive)
+    // LLM returned _no_match → no category fits
+    if (inputLower === '_no_match') return null;
+
+    // 1. EXACT MATCH (case-insensitive) — handles LLM returning correct category name
     const exactMatch = categories.find(
       (c) => c.name?.toLowerCase() === inputLower,
     );
     if (exactMatch) return exactMatch;
 
-    // 2. SYNONYM MATCHING - Maps common words to standard category names
-    const SYNONYMS: Record<string, string[]> = {
-      // Food/Eating
-      alimentación: [
-        'comida', 'comidas', 'alimento', 'alimentos', 'comer', 'almuerzo',
-        'cena', 'desayuno', 'restaurante', 'restaurant', 'café', 'cafe',
-        'food', 'eating', 'almorzar', 'cenar', 'filete', 'pizza', 'sushi',
-        'hamburguesa', 'empanada', 'once', 'merienda', 'snack',
-      ],
-      comida: [
-        'alimentación', 'alimentacion', 'alimento', 'almuerzo', 'cena',
-        'desayuno', 'restaurante', 'restaurant',
-      ],
-
-      // Transport
-      transporte: [
-        'uber', 'taxi', 'metro', 'bus', 'micro', 'colectivo', 'bencina',
-        'gasolina', 'estacionamiento', 'peaje', 'pasaje', 'viaje',
-        'transport', 'movilización', 'movilizacion', 'cabify', 'didi',
-        'beat', 'indriver', 'auto', 'carro', 'bici', 'scooter',
-      ],
-      movilización: ['transporte', 'uber', 'taxi', 'metro', 'bus'],
-
-      // Home
-      hogar: [
-        'casa', 'arriendo', 'alquiler', 'rent', 'luz', 'agua', 'gas',
-        'electricidad', 'internet', 'servicios', 'home', 'household',
-        'departamento', 'depto', 'dividendo', 'hipoteca', 'condominio',
-      ],
-      casa: ['hogar', 'arriendo', 'servicios'],
-
-      // Health
-      salud: [
-        'médico', 'medico', 'doctor', 'farmacia', 'remedios', 'medicina',
-        'hospital', 'clínica', 'clinica', 'dentista', 'health', 'healthcare',
-        'isapre', 'fonasa', 'consulta', 'examen', 'exámenes', 'receta',
-      ],
-      médico: ['salud', 'doctor', 'hospital'],
-
-      // Education
-      educación: [
-        'educacion', 'colegio', 'universidad', 'curso', 'cursos', 'libro',
-        'libros', 'estudio', 'estudios', 'education', 'school', 'u',
-        'matrícula', 'matricula', 'arancel', 'mensualidad', 'diplomado',
-      ],
-      educacion: ['educación', 'colegio', 'universidad', 'curso'],
-
-      // Personal
-      personal: [
-        'ropa', 'vestuario', 'belleza', 'peluquería', 'peluqueria', 'gym',
-        'gimnasio', 'deporte', 'entretenimiento', 'ocio', 'hobby', 'hobbies',
-        'pelu', 'corte', 'manicure', 'spa', 'masaje', 'regalos', 'regalo',
-      ],
-
-      // Entertainment
-      entretenimiento: [
-        'cine', 'película', 'pelicula', 'netflix', 'spotify', 'juegos',
-        'games', 'ocio', 'diversión', 'diversion', 'entertainment',
-        'concierto', 'teatro', 'show', 'fiesta', 'bar', 'discoteque',
-      ],
-      ocio: ['entretenimiento', 'diversión', 'hobby'],
-    };
-
-    // Find synonym match
-    for (const cat of categories) {
-      const catLower = cat.name?.toLowerCase() ?? '';
-
-      // Check if input is a synonym of this category
-      const synonymList = SYNONYMS[catLower];
-      if (synonymList?.includes(inputLower)) {
-        return cat;
-      }
-
-      // Check reverse - if input has synonyms that match this category
-      const inputSynonyms = SYNONYMS[inputLower];
-      if (inputSynonyms?.some((syn) => syn === catLower)) {
-        return cat;
-      }
-    }
-
-    // 3. PARTIAL/SUBSTRING MATCH (as fallback)
+    // 2. PARTIAL/SUBSTRING MATCH — lightweight fallback if LLM was close
     const partialMatch = categories.find((cat) => {
       const catLower = cat.name?.toLowerCase() ?? '';
       return catLower.includes(inputLower) || inputLower.includes(catLower);
     });
     if (partialMatch) return partialMatch;
 
-    // 4. TYPO TOLERANCE - Check for very similar strings
+    // 3. TYPO TOLERANCE — catch minor spelling differences
     const typoMatch = categories.find((cat) =>
       this.isSimilarString(inputLower, cat.name?.toLowerCase() ?? '', 2),
     );
