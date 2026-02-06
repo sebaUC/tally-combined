@@ -35,6 +35,31 @@ export class UsersService {
     return data;
   }
 
+  async getTransactions(userId: string, limit = 50) {
+    // Fetch transactions with joined category and payment method names
+    const { data, error } = await this.supabase
+      .from('transactions')
+      .select(`
+        id,
+        amount,
+        category_id,
+        posted_at,
+        description,
+        payment_method_id,
+        source,
+        status,
+        created_at,
+        categories:category_id ( id, name ),
+        payment_method:payment_method_id ( id, name, institution, payment_type )
+      `)
+      .eq('user_id', userId)
+      .order('posted_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
   async getContext(userId: string) {
     const [
       { data: profile, error: profileError },

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
@@ -42,10 +42,15 @@ export class AdminUsageService {
 
   constructor(private readonly config: ConfigService) {
     const adminKey = this.config.get<string>('OPENAI_ADMIN_KEY');
+    if (!adminKey) {
+      this.logger.warn(
+        'OPENAI_ADMIN_KEY is not set — /admin/usage endpoint will return an error',
+      );
+    }
     this.client = axios.create({
       baseURL: 'https://api.openai.com/v1/organization',
       headers: {
-        Authorization: `Bearer ${adminKey}`,
+        Authorization: `Bearer ${adminKey ?? ''}`,
         'Content-Type': 'application/json',
       },
       timeout: 30_000,
@@ -53,6 +58,13 @@ export class AdminUsageService {
   }
 
   async getUsage(days: number): Promise<UsageResult> {
+    if (!this.config.get<string>('OPENAI_ADMIN_KEY')) {
+      throw new HttpException(
+        'OPENAI_ADMIN_KEY is not configured',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
     const now = new Date();
     const start = new Date(now);
     start.setUTCDate(start.getUTCDate() - days);
@@ -111,10 +123,16 @@ export class AdminUsageService {
         pageAfter = data.next_page;
         if (!pageAfter) break;
       } catch (err) {
+        const status = err.response?.status;
+        const apiMsg =
+          err.response?.data?.error?.message || err.message || 'Unknown error';
         this.logger.error(
-          `OpenAI usage API error on ${endpoint}: ${err.message}`,
+          `OpenAI usage API error on ${endpoint} (${status}): ${apiMsg}`,
         );
-        throw err;
+        throw new HttpException(
+          `OpenAI API error: ${apiMsg}`,
+          status || HttpStatus.BAD_GATEWAY,
+        );
       }
     }
 
