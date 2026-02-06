@@ -9,7 +9,9 @@ import {
 import { AdminGuard } from './guards/admin.guard';
 import { AdminMessagesService } from './services/admin-messages.service';
 import { AdminDashboardService } from './services/admin-dashboard.service';
+import { AdminUsageService } from './services/admin-usage.service';
 import { MessagesQueryDto, DashboardQueryDto } from './dto/query.dto';
+import { UsageQueryDto } from './dto/usage-query.dto';
 
 @Controller('admin')
 @UseGuards(AdminGuard)
@@ -17,6 +19,7 @@ export class AdminController {
   constructor(
     private readonly messagesService: AdminMessagesService,
     private readonly dashboardService: AdminDashboardService,
+    private readonly usageService: AdminUsageService,
   ) {}
 
   /**
@@ -141,6 +144,19 @@ export class AdminController {
     return {
       ok: true,
       data: users,
+    };
+  }
+
+  /**
+   * GET /admin/usage
+   * Returns OpenAI API usage metrics for the given period
+   */
+  @Get('usage')
+  async getUsage(@Query() query: UsageQueryDto) {
+    const data = await this.usageService.getUsage(query.days ?? 7);
+    return {
+      ok: true,
+      data,
     };
   }
 }
