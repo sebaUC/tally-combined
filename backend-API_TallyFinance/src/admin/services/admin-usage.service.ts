@@ -73,18 +73,27 @@ export class AdminUsageService {
     const startTs = Math.floor(start.getTime() / 1000);
     const endTs = Math.floor(now.getTime() / 1000);
 
+    // Filter by specific API key IDs if configured (to isolate TallyFinance usage)
+    const trackedKeys = this.config.get<string>('OPENAI_TRACKED_KEY_IDS');
+    const keyFilter: Record<string, unknown> = {};
+    if (trackedKeys) {
+      keyFilter.api_key_ids = trackedKeys.split(',').map((k) => k.trim());
+    }
+
     const [completionsData, costsData] = await Promise.all([
       this.fetchAllPages('/usage/completions', {
         start_time: startTs,
         end_time: endTs,
         bucket_width: '1d',
         group_by: ['model'],
+        ...keyFilter,
       }),
       this.fetchAllPages('/costs', {
         start_time: startTs,
         end_time: endTs,
         bucket_width: '1d',
         group_by: ['line_item'],
+        ...keyFilter,
       }),
     ]);
 
