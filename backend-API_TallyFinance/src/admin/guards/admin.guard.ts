@@ -42,20 +42,13 @@ export class AdminGuard implements CanActivate {
     const userId = user.id;
     const email = user.email || 'unknown';
 
-    // SECURITY LAYER 1: Check hardcoded whitelist
+    // Check hardcoded whitelist
     if (!ADMIN_WHITELIST.includes(userId)) {
       console.warn(`[AdminGuard] BLOCKED: User ${email} (${userId}) not in whitelist`);
       throw new ForbiddenException('Access denied');
     }
 
-    // SECURITY LAYER 2: Check app_metadata.role === 'admin'
-    const appMetadata = user.app_metadata || {};
-    if (appMetadata.role !== 'admin') {
-      console.warn(`[AdminGuard] BLOCKED: User ${email} (${userId}) missing admin role in app_metadata`);
-      throw new ForbiddenException('Access denied');
-    }
-
-    // Both checks passed - grant access
+    // Whitelist passed - grant access
     console.log(`[AdminGuard] ACCESS GRANTED: ${email} (${userId})`);
 
     // Attach user to request for use in controllers
