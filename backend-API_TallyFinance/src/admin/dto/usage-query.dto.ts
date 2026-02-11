@@ -1,10 +1,11 @@
-import { IsOptional, IsInt, IsIn } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class UsageQueryDto {
+  /** Calendar month in YYYY-MM format. Defaults to current month. */
   @IsOptional()
-  @IsInt()
-  @IsIn([7, 14, 30])
-  @Transform(({ value }) => parseInt(value, 10))
-  days?: number = 7;
+  @IsString()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])$/, {
+    message: 'month must be in YYYY-MM format',
+  })
+  month?: string;
 }

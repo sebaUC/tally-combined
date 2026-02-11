@@ -153,7 +153,7 @@ export class AdminController {
    */
   @Get('usage')
   async getUsage(@Query() query: UsageQueryDto) {
-    const data = await this.usageService.getUsage(query.days ?? 7);
+    const data = await this.usageService.getUsage(query.month);
     return {
       ok: true,
       data,

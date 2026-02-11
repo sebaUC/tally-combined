@@ -30,7 +30,7 @@ export interface UsageResult {
     costByLineItem: Record<string, number>;
     dailyCostTrend: DailyCost[];
   };
-  periodDays: number;
+  month: string;
   periodStart: string;
   periodEnd: string;
 }
@@ -57,7 +57,7 @@ export class AdminUsageService {
     });
   }
 
-  async getUsage(days: number): Promise<UsageResult> {
+  async getUsage(month?: string): Promise<UsageResult> {
     if (!this.config.get<string>('OPENAI_ADMIN_KEY')) {
       throw new HttpException(
         'OPENAI_ADMIN_KEY is not configured',
@@ -65,13 +65,25 @@ export class AdminUsageService {
       );
     }
 
+    // Parse month or default to current month
     const now = new Date();
-    const start = new Date(now);
-    start.setUTCDate(start.getUTCDate() - days);
-    start.setUTCHours(0, 0, 0, 0);
+    let year: number, mon: number;
+    if (month) {
+      const [y, m] = month.split('-').map(Number);
+      year = y;
+      mon = m;
+    } else {
+      year = now.getUTCFullYear();
+      mon = now.getUTCMonth() + 1;
+    }
+
+    const start = new Date(Date.UTC(year, mon - 1, 1));
+    const end = new Date(Date.UTC(year, mon, 1)); // first day of next month
+    // Cap end to now if querying current month
+    const effectiveEnd = end > now ? now : end;
 
     const startTs = Math.floor(start.getTime() / 1000);
-    const endTs = Math.floor(now.getTime() / 1000);
+    const endTs = Math.floor(effectiveEnd.getTime() / 1000);
 
     // Filter by specific API key IDs if configured (to isolate TallyFinance usage)
     const trackedKeys = this.config.get<string>('OPENAI_TRACKED_KEY_IDS');
@@ -100,12 +112,14 @@ export class AdminUsageService {
     const completions = this.aggregateCompletions(completionsData);
     const costs = this.aggregateCosts(costsData);
 
+    const monthStr = `${year}-${String(mon).padStart(2, '0')}`;
+
     return {
       completions,
       costs,
-      periodDays: days,
+      month: monthStr,
       periodStart: start.toISOString(),
-      periodEnd: now.toISOString(),
+      periodEnd: effectiveEnd.toISOString(),
     };
   }
 
