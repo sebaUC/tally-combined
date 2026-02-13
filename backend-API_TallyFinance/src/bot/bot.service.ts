@@ -4,6 +4,7 @@ import { DomainMessage } from './contracts';
 import { BotChannelService } from './delegates/bot-channel.service';
 import { UserContextService } from './services/user-context.service';
 import { ConversationService } from './services/conversation.service';
+import { ConversationHistoryService } from './services/conversation-history.service';
 import { MetricsService } from './services/metrics.service';
 import { CooldownService } from './services/cooldown.service';
 import { StyleDetectorService } from './services/style-detector.service';
@@ -41,6 +42,7 @@ export class BotService {
     private readonly channels: BotChannelService,
     private readonly userContext: UserContextService,
     private readonly conversation: ConversationService,
+    private readonly historyService: ConversationHistoryService,
     private readonly metricsService: MetricsService,
     private readonly cooldowns: CooldownService,
     private readonly styleDetector: StyleDetectorService,
@@ -55,7 +57,11 @@ export class BotService {
     const cid = this.generateCorrelationId();
 
     this.log.separator(cid);
-    this.log.recv(`${m.channel} message`, { text: m.text.substring(0, 50), from: m.externalId }, cid);
+    this.log.recv(
+      `${m.channel} message`,
+      { text: m.text.substring(0, 50), from: m.externalId },
+      cid,
+    );
 
     // 1. Handle /start commands (Telegram deep links) - no dedup needed
     const startReply = await this.channels.handleStartCommand(m);
@@ -72,12 +78,17 @@ export class BotService {
     }
 
     // 3. TWO-PHASE DEDUP: Prevents duplicate processing and allows retry on crash
-    const messageId = m.platformMessageId || `${m.channel}-${m.externalId}-${Date.now()}`;
+    const messageId =
+      m.platformMessageId || `${m.channel}-${m.externalId}-${Date.now()}`;
     const dedupKey = RedisKeys.msgDedup(messageId);
     const dedupState = await this.redis.get(dedupKey);
 
     if (dedupState === 'done') {
-      this.log.state('Duplicate ignored (already done)', { msgId: messageId }, cid);
+      this.log.state(
+        'Duplicate ignored (already done)',
+        { msgId: messageId },
+        cid,
+      );
       return '[duplicate ignored]';
     }
 
@@ -91,7 +102,10 @@ export class BotService {
 
     // 4. CONCURRENCY LOCK: Only one message per user at a time
     const lockKey = RedisKeys.lock(userId);
-    const lockAcquired = await this.redis.acquireLock(lockKey, RedisTTL.LOCK * 1000);
+    const lockAcquired = await this.redis.acquireLock(
+      lockKey,
+      RedisTTL.LOCK * 1000,
+    );
 
     if (!lockAcquired) {
       this.log.warn('Lock not acquired, user busy', { userId }, cid);
@@ -105,7 +119,11 @@ export class BotService {
       // SUCCESS: Mark dedup as "done" with 24h TTL
       await this.redis.set(dedupKey, 'done', RedisTTL.MSG_DEDUP_DONE);
 
-      this.log.send('Response ready', { length: reply.length, totalMs: metrics.totalMs }, cid);
+      this.log.send(
+        'Response ready',
+        { length: reply.length, totalMs: metrics.totalMs },
+        cid,
+      );
       return reply;
     } catch (err) {
       this.log.err('Processing failed', { error: String(err) }, cid);
@@ -122,7 +140,11 @@ export class BotService {
   ): Promise<{ reply: string; metrics: ProcessingMetrics }> {
     const cid = this.generateCorrelationId();
     this.log.separator(cid);
-    this.log.recv('Test message', { userId, text: m.text.substring(0, 50) }, cid);
+    this.log.recv(
+      'Test message',
+      { userId, text: m.text.substring(0, 50) },
+      cid,
+    );
     return this.processMessage(cid, userId, m);
   }
 
@@ -150,24 +172,29 @@ export class BotService {
     try {
       // 1. LOAD ALL STATE BEFORE PROCESSING (transaction-like behavior)
       const contextTimer = this.log.timer('Context loaded', cid);
-      const [context, summary, pending, userMetrics, cooldownFlags] =
+      const [context, summary, pending, userMetrics, cooldownFlags, history] =
         await Promise.all([
           this.userContext.getContext(userId),
           this.conversation.getSummary(userId),
           this.conversation.getPending(userId),
           this.metricsService.getMetrics(userId),
           this.cooldowns.getCooldownFlags(userId),
+          this.historyService.getHistory(userId),
         ]);
       metrics.contextMs = Date.now() - startTotal;
       contextTimer();
 
       // Log pending state if exists
       if (pending) {
-        this.log.pending('Pending slot-fill found', {
-          tool: pending.tool,
-          collected: Object.keys(pending.collectedArgs).join(','),
-          missing: pending.missingArgs.join(','),
-        }, cid);
+        this.log.pending(
+          'Pending slot-fill found',
+          {
+            tool: pending.tool,
+            collected: Object.keys(pending.collectedArgs).join(','),
+            missing: pending.missingArgs.join(','),
+          },
+          cid,
+        );
       }
 
       // 2. Detect user style from message
@@ -191,6 +218,7 @@ export class BotService {
         tools,
         pendingContext,
         availableCategories,
+        history,
       );
       metrics.phaseAMs = Date.now() - startTotal - metrics.contextMs;
       phaseATimer();
@@ -202,14 +230,38 @@ export class BotService {
       if (phaseA.response_type === 'direct_reply') {
         metrics.totalMs = Date.now() - startTotal;
         this.log.ok('Direct reply', { ms: metrics.totalMs }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, phaseA.direct_reply!, null, phaseA as unknown as Record<string, unknown>, null, null);
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          phaseA.direct_reply!,
+          null,
+          phaseA as unknown as Record<string, unknown>,
+          null,
+          null,
+        );
+        this.saveHistoryAsync(userId, m.text, phaseA.direct_reply!);
         return { reply: phaseA.direct_reply!, metrics };
       }
 
       if (phaseA.response_type === 'clarification') {
         metrics.totalMs = Date.now() - startTotal;
-        this.log.slot('Clarification needed', { text: phaseA.clarification?.substring(0, 50) }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, phaseA.clarification!, null, phaseA as unknown as Record<string, unknown>, null, null);
+        this.log.slot(
+          'Clarification needed',
+          { text: phaseA.clarification?.substring(0, 50) },
+          cid,
+        );
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          phaseA.clarification!,
+          null,
+          phaseA as unknown as Record<string, unknown>,
+          null,
+          null,
+        );
+        this.saveHistoryAsync(userId, m.text, phaseA.clarification!);
         return { reply: phaseA.clarification!, metrics };
       }
 
@@ -223,8 +275,18 @@ export class BotService {
       if (!validation.valid) {
         this.log.warn('Guardrails rejected', { error: validation.error }, cid);
         metrics.totalMs = Date.now() - startTotal;
-        const guardrailReply = 'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?';
-        this.logMessageAsync(userId, m.channel, m.text, guardrailReply, toolCall.name, phaseA as unknown as Record<string, unknown>, null, `Guardrails: ${validation.error}`);
+        const guardrailReply =
+          'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?';
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          guardrailReply,
+          toolCall.name,
+          phaseA as unknown as Record<string, unknown>,
+          null,
+          `Guardrails: ${validation.error}`,
+        );
         return { reply: guardrailReply, metrics };
       }
 
@@ -234,16 +296,24 @@ export class BotService {
       const sanitizedArgs = validation.sanitized?.args ?? toolCall.args;
 
       // Inject categories from context to avoid redundant DB query
-      if (toolCall.name === 'register_transaction' && context.categories?.length) {
+      if (
+        toolCall.name === 'register_transaction' &&
+        context.categories?.length
+      ) {
         sanitizedArgs._categories = context.categories;
       }
 
       const result = await handler.execute(userId, m, sanitizedArgs);
-      metrics.toolMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs;
+      metrics.toolMs =
+        Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs;
       metrics.toolResult = result;
       toolTimer();
 
-      this.log.tool(`Result: ${result.ok ? 'success' : 'failed'}`, { action: result.action }, cid);
+      this.log.tool(
+        `Result: ${result.ok ? 'success' : 'failed'}`,
+        { action: result.action },
+        cid,
+      );
 
       // 9. WRITE ORDER: Metrics AFTER tool success only
       if (toolCall.name === 'register_transaction' && result.ok) {
@@ -260,15 +330,33 @@ export class BotService {
             missingArgs: result.pending.missingArgs,
             askedAt: new Date().toISOString(),
           });
-          this.log.pending('Saved pending state', {
-            collected: Object.keys(result.pending.collectedArgs).join(','),
-            missing: result.pending.missingArgs.join(','),
-          }, cid);
+          this.log.pending(
+            'Saved pending state',
+            {
+              collected: Object.keys(result.pending.collectedArgs).join(','),
+              missing: result.pending.missingArgs.join(','),
+            },
+            cid,
+          );
         }
 
         metrics.totalMs = Date.now() - startTotal;
-        this.log.slot('Slot-fill prompt', { response: result.userMessage.substring(0, 50) }, cid);
-        this.logMessageAsync(userId, m.channel, m.text, result.userMessage, toolCall.name, phaseA as unknown as Record<string, unknown>, null, null);
+        this.log.slot(
+          'Slot-fill prompt',
+          { response: result.userMessage.substring(0, 50) },
+          cid,
+        );
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          result.userMessage,
+          toolCall.name,
+          phaseA as unknown as Record<string, unknown>,
+          null,
+          null,
+        );
+        this.saveHistoryAsync(userId, m.text, result.userMessage);
         return { reply: result.userMessage, metrics };
       }
 
@@ -278,7 +366,10 @@ export class BotService {
           ? context.activeBudget.spent / context.activeBudget.amount
           : null;
 
-      const moodHint = this.metricsService.calculateMoodHint(context, userMetrics);
+      const moodHint = this.metricsService.calculateMoodHint(
+        context,
+        userMetrics,
+      );
 
       const runtimeContext: RuntimeContext = {
         summary: summary ?? undefined,
@@ -308,19 +399,49 @@ export class BotService {
           result,
           context,
           runtimeContext,
+          m.text,
+          history,
         );
       } catch (phaseBError) {
-        this.log.err('Phase B failed after tool success', { error: String(phaseBError) }, cid);
-        metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
+        this.log.err(
+          'Phase B failed after tool success',
+          { error: String(phaseBError) },
+          cid,
+        );
+        metrics.phaseBMs =
+          Date.now() -
+          startTotal -
+          metrics.contextMs -
+          metrics.phaseAMs -
+          metrics.toolMs;
         metrics.totalMs = Date.now() - startTotal;
-        const phaseBFailReply = 'Listo. (No pude generar un mensaje personalizado)';
-        this.logMessageAsync(userId, m.channel, m.text, phaseBFailReply, toolCall.name, phaseA as unknown as Record<string, unknown>, null, `Phase B failed: ${String(phaseBError)}`);
+        const phaseBFailReply =
+          'Listo. (No pude generar un mensaje personalizado)';
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          phaseBFailReply,
+          toolCall.name,
+          phaseA as unknown as Record<string, unknown>,
+          null,
+          `Phase B failed: ${String(phaseBError)}`,
+        );
         return { reply: phaseBFailReply, metrics };
       }
-      metrics.phaseBMs = Date.now() - startTotal - metrics.contextMs - metrics.phaseAMs - metrics.toolMs;
+      metrics.phaseBMs =
+        Date.now() -
+        startTotal -
+        metrics.contextMs -
+        metrics.phaseAMs -
+        metrics.toolMs;
       phaseBTimer();
 
-      this.log.phaseB('Response generated', { length: phaseB.final_message.length }, cid);
+      this.log.phaseB(
+        'Response generated',
+        { length: phaseB.final_message.length },
+        cid,
+      );
 
       // 13. WRITE ORDER: Summary AFTER Phase B success only
       if (phaseB.new_summary) {
@@ -341,13 +462,17 @@ export class BotService {
       }
 
       metrics.totalMs = Date.now() - startTotal;
-      this.log.ok('Flow complete', {
-        context: `${metrics.contextMs}ms`,
-        phaseA: `${metrics.phaseAMs}ms`,
-        tool: `${metrics.toolMs}ms`,
-        phaseB: `${metrics.phaseBMs}ms`,
-        total: `${metrics.totalMs}ms`,
-      }, cid);
+      this.log.ok(
+        'Flow complete',
+        {
+          context: `${metrics.contextMs}ms`,
+          phaseA: `${metrics.phaseAMs}ms`,
+          tool: `${metrics.toolMs}ms`,
+          phaseB: `${metrics.phaseBMs}ms`,
+          total: `${metrics.totalMs}ms`,
+        },
+        cid,
+      );
 
       // Log for admin backoffice
       this.logMessageAsync(
@@ -361,18 +486,35 @@ export class BotService {
         null,
       );
 
+      // Save to Tier 1 conversation history
+      this.saveHistoryAsync(userId, m.text, phaseB.final_message);
+
       return { reply: phaseB.final_message, metrics };
     } catch (err) {
       metrics.totalMs = Date.now() - startTotal;
 
       if (err instanceof OrchestratorError) {
-        this.log.err(`Orchestrator: ${err.code}`, { message: err.message }, cid);
+        this.log.err(
+          `Orchestrator: ${err.code}`,
+          { message: err.message },
+          cid,
+        );
 
         // Handle cold start specially - friendly sleeping message
         if (err.code === 'COLD_START') {
           this.log.warn('😴 AI Service cold start detected', undefined, cid);
-          const coldStartReply = '😴💤 Estoy despertando, dame un momento... Envía tu mensaje de nuevo en unos segundos.';
-          this.logMessageAsync(userId, m.channel, m.text, coldStartReply, metrics.toolName ?? null, null, null, `COLD_START: ${err.message}`);
+          const coldStartReply =
+            '😴💤 Estoy despertando, dame un momento... Envía tu mensaje de nuevo en unos segundos.';
+          this.logMessageAsync(
+            userId,
+            m.channel,
+            m.text,
+            coldStartReply,
+            metrics.toolName ?? null,
+            null,
+            null,
+            `COLD_START: ${err.message}`,
+          );
           return { reply: coldStartReply, metrics };
         }
 
@@ -385,20 +527,53 @@ export class BotService {
             '😴 Tuve un problema respondiendo. Intenta de nuevo en unos momentos.',
         };
 
-        const errorReply = errorMessages[err.code] ?? 'Hubo un problema procesando tu solicitud.';
-        this.logMessageAsync(userId, m.channel, m.text, errorReply, metrics.toolName ?? null, null, null, `${err.code}: ${err.message}`);
+        const errorReply =
+          errorMessages[err.code] ??
+          'Hubo un problema procesando tu solicitud.';
+        this.logMessageAsync(
+          userId,
+          m.channel,
+          m.text,
+          errorReply,
+          metrics.toolName ?? null,
+          null,
+          null,
+          `${err.code}: ${err.message}`,
+        );
         return { reply: errorReply, metrics };
       }
 
       this.log.err('Unexpected error', { error: String(err) }, cid);
       const unexpectedReply = 'Hubo un error procesando tu solicitud.';
-      this.logMessageAsync(userId, m.channel, m.text, unexpectedReply, metrics.toolName ?? null, null, null, String(err));
+      this.logMessageAsync(
+        userId,
+        m.channel,
+        m.text,
+        unexpectedReply,
+        metrics.toolName ?? null,
+        null,
+        null,
+        String(err),
+      );
       return { reply: unexpectedReply, metrics };
     }
   }
 
   private generateCorrelationId(): string {
     return randomUUID().substring(0, 8);
+  }
+
+  private saveHistoryAsync(
+    userId: string,
+    userMessage: string,
+    assistantMessage: string,
+  ): void {
+    // Fire and forget - don't await, don't block the response
+    this.historyService
+      .appendToHistory(userId, userMessage, assistantMessage)
+      .catch((err) => {
+        console.error('[BotService] Failed to save history:', err);
+      });
   }
 
   private logMessageAsync(
@@ -412,17 +587,19 @@ export class BotService {
     error: string | null,
   ): void {
     // Fire and forget - don't await, don't block the response
-    this.messageLog.log({
-      userId,
-      channel,
-      userMessage,
-      botResponse,
-      toolName,
-      phaseADebug,
-      phaseBDebug,
-      error,
-    }).catch((err) => {
-      console.error('[BotService] Failed to log message:', err);
-    });
+    this.messageLog
+      .log({
+        userId,
+        channel,
+        userMessage,
+        botResponse,
+        toolName,
+        phaseADebug,
+        phaseBDebug,
+        error,
+      })
+      .catch((err) => {
+        console.error('[BotService] Failed to log message:', err);
+      });
   }
 }

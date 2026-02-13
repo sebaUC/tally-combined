@@ -84,7 +84,11 @@ export class TelegramAdapter {
         }
 
         // Network timeout - retry with backoff
-        if (!err.response || err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET') {
+        if (
+          !err.response ||
+          err.code === 'ETIMEDOUT' ||
+          err.code === 'ECONNRESET'
+        ) {
           await new Promise((r) => setTimeout(r, 500 * attempt));
           continue;
         }

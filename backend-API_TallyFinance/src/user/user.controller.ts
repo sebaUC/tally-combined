@@ -22,7 +22,10 @@ export class UsersController {
   @UseGuards(JwtGuard)
   @Get('transactions')
   async transactions(@User() user: any, @Query('limit') limit?: string) {
-    const parsedLimit = Math.min(Math.max(parseInt(limit || '50', 10) || 50, 1), 200);
+    const parsedLimit = Math.min(
+      Math.max(parseInt(limit || '50', 10) || 50, 1),
+      200,
+    );
     return this.users.getTransactions(user.id, parsedLimit);
   }
 }

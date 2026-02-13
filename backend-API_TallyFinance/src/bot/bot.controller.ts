@@ -13,7 +13,10 @@ import { WhatsappAdapter } from './adapters/whatsapp.adapter';
 import { TelegramAdapter } from './adapters/telegram.adapter';
 import { UserContextService } from './services/user-context.service';
 import { DomainMessage } from './contracts';
-import { AsyncRateLimiter, createAsyncRateLimiter } from '../common/utils/resilience';
+import {
+  AsyncRateLimiter,
+  createAsyncRateLimiter,
+} from '../common/utils/resilience';
 import { RedisService } from '../redis';
 
 interface TestRequest {

@@ -22,7 +22,9 @@ export interface MessageLogDetail extends MessageLogEntry {
 export class AdminMessagesService {
   constructor(@Inject('SUPABASE') private supabase: SupabaseClient) {}
 
-  async getMessages(query: MessagesQueryDto): Promise<{ data: MessageLogEntry[]; total: number }> {
+  async getMessages(
+    query: MessagesQueryDto,
+  ): Promise<{ data: MessageLogEntry[]; total: number }> {
     let baseQuery = this.supabase
       .from('bot_message_log')
       .select('*', { count: 'exact' });
@@ -82,7 +84,9 @@ export class AdminMessagesService {
     // Try to get user email if user_id exists
     let userEmail: string | undefined;
     if (message.user_id) {
-      const { data: userData } = await this.supabase.auth.admin.getUserById(message.user_id);
+      const { data: userData } = await this.supabase.auth.admin.getUserById(
+        message.user_id,
+      );
       userEmail = userData?.user?.email;
     }
 
@@ -108,7 +112,10 @@ export class AdminMessagesService {
     return data || [];
   }
 
-  async getErrors(limit = 50, offset = 0): Promise<{ data: MessageLogEntry[]; total: number }> {
+  async getErrors(
+    limit = 50,
+    offset = 0,
+  ): Promise<{ data: MessageLogEntry[]; total: number }> {
     const { data, error, count } = await this.supabase
       .from('bot_message_log')
       .select('*', { count: 'exact' })
@@ -131,14 +138,24 @@ export class AdminMessagesService {
     email: string | null;
     full_name: string | null;
     personality: { tone: string; intensity: number } | null;
-    spending_expectations: Array<{ period: string; active: boolean; amount: number }>;
-    goals: Array<{ name: string; target_amount: number; target_date: string | null; status: string }>;
+    spending_expectations: Array<{
+      period: string;
+      active: boolean;
+      amount: number;
+    }>;
+    goals: Array<{
+      name: string;
+      target_amount: number;
+      target_date: string | null;
+      status: string;
+    }>;
   }> {
     // Get user email and name
     let email: string | null = null;
     let fullName: string | null = null;
     try {
-      const { data: userData } = await this.supabase.auth.admin.getUserById(userId);
+      const { data: userData } =
+        await this.supabase.auth.admin.getUserById(userId);
       email = userData?.user?.email || null;
       fullName = userData?.user?.user_metadata?.full_name || null;
     } catch {
@@ -169,19 +186,23 @@ export class AdminMessagesService {
     return {
       email,
       full_name: fullName,
-      personality: personality ? { tone: personality.tone, intensity: personality.intensity } : null,
+      personality: personality
+        ? { tone: personality.tone, intensity: personality.intensity }
+        : null,
       spending_expectations: spending || [],
       goals: goals || [],
     };
   }
 
-  async getActiveUsers(): Promise<Array<{
-    user_id: string;
-    email: string | null;
-    message_count: number;
-    last_message_at: string;
-    has_errors: boolean;
-  }>> {
+  async getActiveUsers(): Promise<
+    Array<{
+      user_id: string;
+      email: string | null;
+      message_count: number;
+      last_message_at: string;
+      has_errors: boolean;
+    }>
+  > {
     // Get all unique users with their message counts
     const { data: messages, error } = await this.supabase
       .from('bot_message_log')
@@ -190,16 +211,22 @@ export class AdminMessagesService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[AdminMessagesService] Error fetching active users:', error);
+      console.error(
+        '[AdminMessagesService] Error fetching active users:',
+        error,
+      );
       throw new Error('Failed to fetch active users');
     }
 
     // Aggregate by user
-    const userMap = new Map<string, {
-      message_count: number;
-      last_message_at: string;
-      has_errors: boolean;
-    }>();
+    const userMap = new Map<
+      string,
+      {
+        message_count: number;
+        last_message_at: string;
+        has_errors: boolean;
+      }
+    >();
 
     for (const msg of messages || []) {
       if (!msg.user_id) continue;
@@ -232,7 +259,8 @@ export class AdminMessagesService {
       let email: string | null = null;
 
       try {
-        const { data: userData } = await this.supabase.auth.admin.getUserById(userId);
+        const { data: userData } =
+          await this.supabase.auth.admin.getUserById(userId);
         email = userData?.user?.email || null;
       } catch {
         // Ignore errors getting email
@@ -246,8 +274,10 @@ export class AdminMessagesService {
     }
 
     // Sort by last message (most recent first)
-    usersWithEmails.sort((a, b) =>
-      new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+    usersWithEmails.sort(
+      (a, b) =>
+        new Date(b.last_message_at).getTime() -
+        new Date(a.last_message_at).getTime(),
     );
 
     return usersWithEmails;

@@ -18,7 +18,8 @@ export class AiWarmupService {
   private readonly warmThresholdMs = 14 * 60 * 1000; // 14 minutes (before Render sleeps)
 
   constructor(private readonly config: ConfigService) {
-    this.aiServiceUrl = this.config.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
+    this.aiServiceUrl =
+      this.config.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
   }
 
   /**

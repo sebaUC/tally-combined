@@ -8,6 +8,7 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { BotChannelService } from './delegates/bot-channel.service';
 import { UserContextService } from './services/user-context.service';
 import { ConversationService } from './services/conversation.service';
+import { ConversationHistoryService } from './services/conversation-history.service';
 import { MetricsService } from './services/metrics.service';
 import { CooldownService } from './services/cooldown.service';
 import { StyleDetectorService } from './services/style-detector.service';
@@ -26,6 +27,7 @@ import { ToolRegistry } from './tools/tool-registry';
     TelegramAdapter,
     UserContextService,
     ConversationService,
+    ConversationHistoryService,
     MetricsService,
     CooldownService,
     StyleDetectorService,
@@ -38,6 +40,7 @@ import { ToolRegistry } from './tools/tool-registry';
     BotService,
     UserContextService,
     ConversationService,
+    ConversationHistoryService,
     MetricsService,
     CooldownService,
     OrchestratorClient,

@@ -11,7 +11,10 @@ import { randomUUID } from 'crypto';
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client: Redis | null = null;
-  private readonly fallbackCache = new Map<string, { value: string; expiresAt: number }>();
+  private readonly fallbackCache = new Map<
+    string,
+    { value: string; expiresAt: number }
+  >();
   private readonly fallbackLocks = new Map<string, number>();
   private readonly multiInstance: boolean;
   private connected = false;
@@ -148,7 +151,13 @@ export class RedisService implements OnModuleDestroy {
     const ttlSeconds = Math.ceil(ttlMs / 1000);
 
     if (this.checkAvailability()) {
-      const result = await this.client!.set(key, lockValue, 'EX', ttlSeconds, 'NX');
+      const result = await this.client!.set(
+        key,
+        lockValue,
+        'EX',
+        ttlSeconds,
+        'NX',
+      );
       return result === 'OK';
     }
 

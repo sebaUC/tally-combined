@@ -65,7 +65,8 @@ export class BotChannelService {
             `[handleStartCommand] Conflict: channel ${m.channel}/${m.externalId} linked to ${existingUserId}, but code is for ${targetUserId}`,
           );
           // Mark the code as conflicted so frontend can detect it
-          const conflictReason = 'Este canal ya está vinculado a otra cuenta de Tally. Para cambiarlo, desvincúlalo primero desde la web de esa cuenta.';
+          const conflictReason =
+            'Este canal ya está vinculado a otra cuenta de Tally. Para cambiarlo, desvincúlalo primero desde la web de esa cuenta.';
           this.linkCodes.markConflict(code, conflictReason);
           return '⚠️ Este canal ya está vinculado a otra cuenta de Tally.\n\nPara vincularlo a esta cuenta, primero debes desvincularlo desde la web de la otra cuenta (Ajustes > Canal vinculado).';
         }

@@ -35,7 +35,9 @@ export class AdminDashboardService {
       .gte('created_at', since)
       .not('user_id', 'is', null);
 
-    const uniqueUserIds = new Set((uniqueUsersData || []).map(r => r.user_id));
+    const uniqueUserIds = new Set(
+      (uniqueUsersData || []).map((r) => r.user_id),
+    );
     const uniqueUsers = uniqueUserIds.size;
 
     // Get error count

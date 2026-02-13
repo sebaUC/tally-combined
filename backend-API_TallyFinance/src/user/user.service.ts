@@ -39,7 +39,8 @@ export class UsersService {
     // Fetch transactions with joined category and payment method names
     const { data, error } = await this.supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         id,
         amount,
         category_id,
@@ -51,7 +52,8 @@ export class UsersService {
         created_at,
         categories:category_id ( id, name ),
         payment_method:payment_method_id ( id, name, institution, payment_type )
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .order('posted_at', { ascending: false })
       .limit(limit);

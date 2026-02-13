@@ -260,7 +260,13 @@ export interface AsyncRateLimiter {
  * Falls back to in-memory if Redis check fails.
  */
 export function createAsyncRateLimiter(
-  redisService: { rateLimitCheck: (key: string, max: number, windowMs: number) => Promise<boolean> },
+  redisService: {
+    rateLimitCheck: (
+      key: string,
+      max: number,
+      windowMs: number,
+    ) => Promise<boolean>;
+  },
   maxRequests: number,
   windowMs: number,
 ): AsyncRateLimiter {

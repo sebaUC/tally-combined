@@ -24,7 +24,9 @@ export class AdminGuard implements CanActivate {
   constructor(@Inject('SUPABASE') private supabase: SupabaseClient) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const req = ctx.switchToHttp().getRequest<Request & { user?: any; authToken?: string }>();
+    const req = ctx
+      .switchToHttp()
+      .getRequest<Request & { user?: any; authToken?: string }>();
 
     // Extract token from Bearer header or cookie
     const token = this.extractToken(req);
@@ -44,7 +46,9 @@ export class AdminGuard implements CanActivate {
 
     // Check hardcoded whitelist
     if (!ADMIN_WHITELIST.includes(userId)) {
-      console.warn(`[AdminGuard] BLOCKED: User ${email} (${userId}) not in whitelist`);
+      console.warn(
+        `[AdminGuard] BLOCKED: User ${email} (${userId}) not in whitelist`,
+      );
       throw new ForbiddenException('Access denied');
     }
 

@@ -71,7 +71,9 @@ export class MetricsService {
       // Calculate new streak
       let newStreak = 1;
       if (current.lastTxIso) {
-        const lastTxDate = new Date(current.lastTxIso).toISOString().split('T')[0];
+        const lastTxDate = new Date(current.lastTxIso)
+          .toISOString()
+          .split('T')[0];
 
         if (lastTxDate === todayStr) {
           // Same day, keep current streak
@@ -93,7 +95,8 @@ export class MetricsService {
       let newWeekCount = 1;
       if (current.lastTxIso) {
         const daysSinceLast = Math.floor(
-          (now.getTime() - new Date(current.lastTxIso).getTime()) / (24 * 60 * 60 * 1000),
+          (now.getTime() - new Date(current.lastTxIso).getTime()) /
+            (24 * 60 * 60 * 1000),
         );
         if (daysSinceLast <= 7) {
           newWeekCount = current.weekTxCount + 1;
@@ -119,7 +122,10 @@ export class MetricsService {
    * Calculates mood hint based on user context and metrics.
    * Returns -1, 0, or +1 for AI-Service to compute final mood.
    */
-  calculateMoodHint(context: MinimalUserContext, metrics: UserMetrics): MoodHint {
+  calculateMoodHint(
+    context: MinimalUserContext,
+    metrics: UserMetrics,
+  ): MoodHint {
     // Calculate budget percentage if available
     const budgetPercent =
       context.activeBudget?.amount && context.activeBudget.spent != null

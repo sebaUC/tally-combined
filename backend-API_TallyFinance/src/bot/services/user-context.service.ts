@@ -64,12 +64,18 @@ export class UserContextService {
       this.log.warn(`[getContext] Redis cache error, falling back to DB`, err);
     }
 
-    this.log.debug(`[getContext] Cache miss for user ${userId}, fetching from DB...`);
+    this.log.debug(
+      `[getContext] Cache miss for user ${userId}, fetching from DB...`,
+    );
     const context = await this.fetchContext(userId);
 
     // Store in Redis cache
     try {
-      await this.redis.set(cacheKey, JSON.stringify(context), RedisTTL.USER_CONTEXT);
+      await this.redis.set(
+        cacheKey,
+        JSON.stringify(context),
+        RedisTTL.USER_CONTEXT,
+      );
     } catch (err) {
       this.log.warn(`[getContext] Failed to cache in Redis`, err);
     }
@@ -124,10 +130,7 @@ export class UserContextService {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId),
       // Fetch user's categories for transaction matching
-      this.supabase
-        .from('categories')
-        .select('id, name')
-        .eq('user_id', userId),
+      this.supabase.from('categories').select('id, name').eq('user_id', userId),
     ]);
 
     if (profileError) {
@@ -150,7 +153,9 @@ export class UserContextService {
       this.log.warn(`[fetchContext] Goals error: ${goalsError.message}`);
     }
     if (categoriesError) {
-      this.log.warn(`[fetchContext] Categories error: ${categoriesError.message}`);
+      this.log.warn(
+        `[fetchContext] Categories error: ${categoriesError.message}`,
+      );
     }
 
     // Use nickname if available, otherwise fall back to full_name
@@ -190,10 +195,11 @@ export class UserContextService {
         : null,
       goalsCount: goals?.length ?? 0,
       goalsSummary: [],
-      categories: categories?.map((c: { id: string; name: string }) => ({
-        id: c.id,
-        name: c.name,
-      })) ?? [],
+      categories:
+        categories?.map((c: { id: string; name: string }) => ({
+          id: c.id,
+          name: c.name,
+        })) ?? [],
     };
   }
 }

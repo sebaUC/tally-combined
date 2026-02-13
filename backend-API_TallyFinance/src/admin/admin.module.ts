@@ -7,7 +7,12 @@ import { AdminUsageService } from './services/admin-usage.service';
 
 @Module({
   controllers: [AdminController],
-  providers: [AdminGuard, AdminMessagesService, AdminDashboardService, AdminUsageService],
+  providers: [
+    AdminGuard,
+    AdminMessagesService,
+    AdminDashboardService,
+    AdminUsageService,
+  ],
   exports: [AdminMessagesService],
 })
 export class AdminModule {}

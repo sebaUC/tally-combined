@@ -5,6 +5,7 @@ import { MinimalUserContext } from './user-context.service';
 import { ToolSchema } from '../tools/tool-schemas';
 import { ActionResult } from '../actions/action-result';
 import {
+  ConversationMessage,
   PhaseARequest,
   PhaseAResponse,
   PhaseBRequest,
@@ -61,7 +62,9 @@ export class OrchestratorClient {
         return true;
       }
     } catch (err) {
-      this.log.warn(`😴 Wake-up failed: ${err instanceof Error ? err.message : String(err)}`);
+      this.log.warn(
+        `😴 Wake-up failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
 
     return false;
@@ -87,6 +90,7 @@ export class OrchestratorClient {
     tools: ToolSchema[],
     pending?: PendingSlotContext | null,
     availableCategories?: string[],
+    conversationHistory?: ConversationMessage[],
   ): Promise<PhaseAResponse> {
     const baseUrl = this.cfg.get<string>('AI_SERVICE_URL');
 
@@ -103,6 +107,7 @@ export class OrchestratorClient {
       tools,
       pending: pending ?? null,
       available_categories: availableCategories ?? [],
+      conversation_history: conversationHistory ?? [],
     };
 
     // Determine timeout based on cold start likelihood
@@ -157,7 +162,9 @@ export class OrchestratorClient {
 
         // Handle 502 - Render returns this when service is sleeping
         if (err.response?.status === 502) {
-          this.log.warn('[phaseA] 😴 Got 502 - AI service is sleeping, waking up...');
+          this.log.warn(
+            '[phaseA] 😴 Got 502 - AI service is sleeping, waking up...',
+          );
 
           // Try to wake up the service
           const wokeUp = await this.wakeUpService();
@@ -178,7 +185,9 @@ export class OrchestratorClient {
               this.warmup.finishWarming();
 
               if (this.isValidPhaseAResponse(retryData)) {
-                this.log.debug(`[phaseA] Retry successful: ${retryData.response_type}`);
+                this.log.debug(
+                  `[phaseA] Retry successful: ${retryData.response_type}`,
+                );
                 return retryData;
               }
             } catch (retryErr) {
@@ -187,15 +196,23 @@ export class OrchestratorClient {
           }
 
           // Wake-up or retry failed
-          throw new OrchestratorError('COLD_START', this.warmup.getWakeUpMessage());
+          throw new OrchestratorError(
+            'COLD_START',
+            this.warmup.getWakeUpMessage(),
+          );
         }
 
         // Handle timeout - this is likely a cold start
         if (err.code === 'ECONNABORTED' || err.code === 'ECONNREFUSED') {
-          this.log.warn(`[phaseA] 😴 AI service timeout/refused - likely cold start`);
+          this.log.warn(
+            `[phaseA] 😴 AI service timeout/refused - likely cold start`,
+          );
           // Mark that we're trying to wake it up
           this.warmup.startWarming();
-          throw new OrchestratorError('COLD_START', this.warmup.getWakeUpMessage());
+          throw new OrchestratorError(
+            'COLD_START',
+            this.warmup.getWakeUpMessage(),
+          );
         }
       }
 
@@ -212,6 +229,8 @@ export class OrchestratorClient {
     actionResult: ActionResult,
     context: MinimalUserContext,
     runtimeContext?: RuntimeContext,
+    userText?: string,
+    conversationHistory?: ConversationMessage[],
   ): Promise<PhaseBResponse> {
     const baseUrl = this.cfg.get<string>('AI_SERVICE_URL');
 
@@ -226,13 +245,17 @@ export class OrchestratorClient {
       action_result: actionResult,
       user_context: this.buildAiUserContext(context),
       runtime_context: runtimeContext ?? null,
+      user_text: userText,
+      conversation_history: conversationHistory ?? [],
     };
 
     // Determine timeout based on cold start likelihood
     const isLikelyCold = this.warmup.isLikelyCold();
     const timeout = isLikelyCold ? this.longTimeout : this.shortTimeout;
 
-    this.log.debug(`[phaseB] Calling AI service (cold=${isLikelyCold}, timeout=${timeout}ms) for tool: ${toolName}`);
+    this.log.debug(
+      `[phaseB] Calling AI service (cold=${isLikelyCold}, timeout=${timeout}ms) for tool: ${toolName}`,
+    );
 
     try {
       // Use circuit breaker to protect against cascading failures
@@ -280,7 +303,9 @@ export class OrchestratorClient {
 
         // Handle 502 - Render returns this when service is sleeping
         if (err.response?.status === 502) {
-          this.log.warn('[phaseB] 😴 Got 502 - AI service is sleeping, waking up...');
+          this.log.warn(
+            '[phaseB] 😴 Got 502 - AI service is sleeping, waking up...',
+          );
 
           // Try to wake up the service
           const wokeUp = await this.wakeUpService();
@@ -310,14 +335,22 @@ export class OrchestratorClient {
           }
 
           // Wake-up or retry failed
-          throw new OrchestratorError('COLD_START', this.warmup.getWakeUpMessage());
+          throw new OrchestratorError(
+            'COLD_START',
+            this.warmup.getWakeUpMessage(),
+          );
         }
 
         // Handle timeout - this is likely a cold start
         if (err.code === 'ECONNABORTED' || err.code === 'ECONNREFUSED') {
-          this.log.warn(`[phaseB] 😴 AI service timeout/refused - likely cold start`);
+          this.log.warn(
+            `[phaseB] 😴 AI service timeout/refused - likely cold start`,
+          );
           this.warmup.startWarming();
-          throw new OrchestratorError('COLD_START', this.warmup.getWakeUpMessage());
+          throw new OrchestratorError(
+            'COLD_START',
+            this.warmup.getWakeUpMessage(),
+          );
         }
       }
 
@@ -927,30 +960,133 @@ export class OrchestratorClient {
     // 2. SYNONYM MATCHING - Maps common words to standard category names
     const SYNONYMS: Record<string, string[]> = {
       // Food/Eating
-      alimentación: ['comida', 'comidas', 'alimento', 'alimentos', 'comer', 'almuerzo', 'cena', 'desayuno', 'restaurante', 'restaurant', 'café', 'cafe', 'food', 'eating'],
-      comida: ['alimentación', 'alimentacion', 'alimento', 'almuerzo', 'cena', 'desayuno', 'restaurante', 'restaurant'],
+      alimentación: [
+        'comida',
+        'comidas',
+        'alimento',
+        'alimentos',
+        'comer',
+        'almuerzo',
+        'cena',
+        'desayuno',
+        'restaurante',
+        'restaurant',
+        'café',
+        'cafe',
+        'food',
+        'eating',
+      ],
+      comida: [
+        'alimentación',
+        'alimentacion',
+        'alimento',
+        'almuerzo',
+        'cena',
+        'desayuno',
+        'restaurante',
+        'restaurant',
+      ],
 
       // Transport
-      transporte: ['uber', 'taxi', 'metro', 'bus', 'micro', 'colectivo', 'bencina', 'gasolina', 'estacionamiento', 'peaje', 'pasaje', 'viaje', 'transport', 'movilización', 'movilizacion'],
+      transporte: [
+        'uber',
+        'taxi',
+        'metro',
+        'bus',
+        'micro',
+        'colectivo',
+        'bencina',
+        'gasolina',
+        'estacionamiento',
+        'peaje',
+        'pasaje',
+        'viaje',
+        'transport',
+        'movilización',
+        'movilizacion',
+      ],
       movilización: ['transporte', 'uber', 'taxi', 'metro', 'bus'],
 
       // Home
-      hogar: ['casa', 'arriendo', 'alquiler', 'rent', 'luz', 'agua', 'gas', 'electricidad', 'internet', 'servicios', 'home', 'household'],
+      hogar: [
+        'casa',
+        'arriendo',
+        'alquiler',
+        'rent',
+        'luz',
+        'agua',
+        'gas',
+        'electricidad',
+        'internet',
+        'servicios',
+        'home',
+        'household',
+      ],
       casa: ['hogar', 'arriendo', 'servicios'],
 
       // Health
-      salud: ['médico', 'medico', 'doctor', 'farmacia', 'remedios', 'medicina', 'hospital', 'clínica', 'clinica', 'dentista', 'health', 'healthcare'],
+      salud: [
+        'médico',
+        'medico',
+        'doctor',
+        'farmacia',
+        'remedios',
+        'medicina',
+        'hospital',
+        'clínica',
+        'clinica',
+        'dentista',
+        'health',
+        'healthcare',
+      ],
       médico: ['salud', 'doctor', 'hospital'],
 
       // Education
-      educación: ['educacion', 'colegio', 'universidad', 'curso', 'cursos', 'libro', 'libros', 'estudio', 'estudios', 'education', 'school'],
+      educación: [
+        'educacion',
+        'colegio',
+        'universidad',
+        'curso',
+        'cursos',
+        'libro',
+        'libros',
+        'estudio',
+        'estudios',
+        'education',
+        'school',
+      ],
       educacion: ['educación', 'colegio', 'universidad', 'curso'],
 
       // Personal
-      personal: ['ropa', 'vestuario', 'belleza', 'peluquería', 'peluqueria', 'gym', 'gimnasio', 'deporte', 'entretenimiento', 'ocio', 'hobby', 'hobbies'],
+      personal: [
+        'ropa',
+        'vestuario',
+        'belleza',
+        'peluquería',
+        'peluqueria',
+        'gym',
+        'gimnasio',
+        'deporte',
+        'entretenimiento',
+        'ocio',
+        'hobby',
+        'hobbies',
+      ],
 
       // Entertainment
-      entretenimiento: ['cine', 'película', 'pelicula', 'netflix', 'spotify', 'juegos', 'games', 'ocio', 'diversión', 'diversion', 'entertainment'],
+      entretenimiento: [
+        'cine',
+        'película',
+        'pelicula',
+        'netflix',
+        'spotify',
+        'juegos',
+        'games',
+        'ocio',
+        'diversión',
+        'diversion',
+        'entertainment',
+      ],
       ocio: ['entretenimiento', 'diversión', 'hobby'],
     };
 

@@ -10,6 +10,7 @@ from openai import OpenAI
 from config import Settings
 from schemas import (
     ActionResult,
+    ConversationMessage,
     MinimalUserContext,
     OrchestrateResponsePhaseA,
     OrchestrateResponsePhaseB,
@@ -151,6 +152,7 @@ class Orchestrator:
         tools: List[ToolSchema],
         pending: PendingSlotContext | None = None,
         available_categories: List[str] | None = None,
+        conversation_history: List[ConversationMessage] | None = None,
         cid: str | None = None,
     ) -> OrchestrateResponsePhaseA:
         """
@@ -203,10 +205,16 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
             available_categories=categories_text,
         )
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_text},
-        ]
+        # Build message array: system + conversation history + current user message
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Inject Tier 1 conversation history (if available)
+        if conversation_history:
+            for msg in conversation_history:
+                messages.append({"role": msg.role, "content": msg.content})
+            log.state("History injected (Phase A)", {"count": len(conversation_history)}, cid)
+
+        messages.append({"role": "user", "content": user_text})
 
         data = self._call_openai_json(
             messages=messages,
@@ -263,6 +271,8 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         action_result: ActionResult,
         user_context: MinimalUserContext,
         runtime_context: RuntimeContext | None = None,
+        user_text: str | None = None,
+        conversation_history: List[ConversationMessage] | None = None,
         cid: str | None = None,
     ) -> OrchestrateResponsePhaseB:
         """
@@ -345,6 +355,9 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         # Conversation summary context
         conv_summary = runtime.summary or ""
 
+        # Count actions in summary for session depth awareness
+        session_action_count = len([s for s in conv_summary.split('.') if s.strip()]) if conv_summary else 0
+
         system_prompt = f"""{gus_identity}
 
 {system_prompt_template.format(
@@ -362,8 +375,9 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
     goals_summary=goals_summary,
 )}
 
-CONTEXTO DE CONVERSACION:
-{conv_summary if conv_summary else "Sin contexto previo"}
+CONTEXTO DE LA SESION:
+{conv_summary if conv_summary else "Primera interaccion de esta sesion."}
+Acciones en esta sesion: {session_action_count}
 
 {user_style_info}
 
@@ -374,10 +388,18 @@ NUDGES PERMITIDOS:
 - Puede advertir presupuesto >90%: {"Sí" if can_budget_warning else "No (en cooldown)"}
 """
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": "Genera el mensaje de respuesta."},
-        ]
+        # Build message array: system + conversation history + user message
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Inject Tier 1 conversation history (if available)
+        if conversation_history:
+            for msg in conversation_history:
+                messages.append({"role": msg.role, "content": msg.content})
+            log.state("History injected (Phase B)", {"count": len(conversation_history)}, cid)
+
+        # Use real user text for natural continuation, fallback to fixed prompt
+        final_user_content = user_text if user_text else "Genera el mensaje de respuesta."
+        messages.append({"role": "user", "content": final_user_content})
 
         final_message = self._call_openai_text(
             messages=messages,
@@ -402,14 +424,16 @@ NUDGES PERMITIDOS:
                     did_nudge = True
                     nudge_type = "streak"
 
-        # Generate updated summary (simple: append tool action)
+        # Generate updated summary (with Tier 2 pattern compression)
         new_summary = None
         if action_result.ok and tool_name != "greeting":
             action_desc = self._summarize_action(tool_name, action_result)
             if conv_summary:
-                new_summary = f"{conv_summary} {action_desc}"
+                raw_summary = f"{conv_summary} {action_desc}"
             else:
-                new_summary = action_desc
+                raw_summary = action_desc
+            # Tier 2: compress repeated transaction patterns
+            new_summary = self._compress_summary(raw_summary)
 
         log.phase_b("Done", {
             "mood": final_mood,
@@ -453,14 +477,100 @@ NUDGES PERMITIDOS:
         if tool_name == "register_transaction":
             amount = data.get("amount", "?")
             category = data.get("category", "gasto")
-            return f"Registró ${amount:,} en {category}." if isinstance(amount, (int, float)) else f"Registró gasto en {category}."
+            desc = data.get("description", "")
+            if isinstance(amount, (int, float)):
+                base = f"Registró ${amount:,} en {category}"
+                if desc:
+                    base += f" ({desc})"
+                return base + "."
+            return f"Registró gasto en {category}."
         elif tool_name == "ask_balance":
+            total = data.get("totalSpent")
+            if total and isinstance(total, (int, float)):
+                return f"Consultó su balance (${total:,.0f} gastado este mes)."
             return "Consultó su balance."
         elif tool_name == "ask_budget_status":
+            budget_data = data.get("budget") or data
+            remaining = budget_data.get("remaining") if isinstance(budget_data, dict) else None
+            if remaining and isinstance(remaining, (int, float)):
+                return f"Revisó presupuesto (le quedan ${remaining:,.0f})."
             return "Revisó estado de presupuesto."
         elif tool_name == "ask_goal_status":
             return "Consultó progreso de metas."
         elif tool_name == "ask_app_info":
+            question = data.get("userQuestion", "")
+            if question:
+                return f"Preguntó: {question[:40]}."
             return "Preguntó sobre la app."
         else:
             return f"Usó {tool_name}."
+
+    def _compress_summary(self, summary: str) -> str:
+        """
+        Tier 2: Compress repeated transaction patterns in summary.
+        "Registró $15,000 en Comida. Registró $8,000 en Comida." →
+        "Registró 2 gastos en Comida ($23,000 total)."
+        """
+        import re
+
+        # Find all individual transaction entries by category
+        individual_pattern = r"Registró \$([0-9,.]+) en ([^.]+)\."
+        matches = list(re.finditer(individual_pattern, summary))
+
+        if len(matches) < 2:
+            return summary
+
+        # Group by category (case-insensitive)
+        from collections import defaultdict
+        category_groups: dict[str, list[tuple[re.Match, float]]] = defaultdict(list)
+        for m in matches:
+            amount_str = m.group(1).replace(".", "").replace(",", "")
+            amount = float(amount_str) if amount_str else 0
+            category = m.group(2).strip()
+            category_groups[category.lower()].append((m, amount))
+
+        # Only compress categories with 2+ entries
+        has_compression = False
+        for cat_key, entries in category_groups.items():
+            if len(entries) >= 2:
+                has_compression = True
+                break
+
+        if not has_compression:
+            return summary
+
+        # Rebuild summary: replace repeated entries with compressed ones
+        result_parts = []
+        compressed_categories = set()
+        non_tx_parts = []
+
+        # Extract non-transaction parts
+        last_end = 0
+        for m, _ in sorted(
+            [(m, a) for entries in category_groups.values() for m, a in entries],
+            key=lambda x: x[0].start(),
+        ):
+            before = summary[last_end:m.start()].strip()
+            if before:
+                non_tx_parts.append(before)
+            last_end = m.end()
+        trailing = summary[last_end:].strip()
+        if trailing:
+            non_tx_parts.append(trailing)
+
+        # Build compressed entries
+        for cat_key, entries in category_groups.items():
+            # Use the original category casing from the first entry
+            category_name = entries[0][0].group(2).strip()
+            if len(entries) >= 2:
+                total = sum(amount for _, amount in entries)
+                count = len(entries)
+                result_parts.append(f"Registró {count} gastos en {category_name} (${total:,.0f} total).")
+                compressed_categories.add(cat_key)
+            else:
+                # Keep single entries as-is
+                result_parts.append(entries[0][0].group(0))
+
+        # Combine: non-transaction parts + compressed transactions
+        all_parts = non_tx_parts + result_parts
+        return " ".join(p for p in all_parts if p)

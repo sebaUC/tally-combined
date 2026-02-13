@@ -55,7 +55,15 @@ export class RegisterTransactionToolHandler implements ToolHandler {
     _msg: DomainMessage,
     args: Record<string, unknown>,
   ): Promise<ActionResult> {
-    const { amount, category, date, posted_at, description, payment_method_id, _categories } = args as {
+    const {
+      amount,
+      category,
+      date,
+      posted_at,
+      description,
+      payment_method_id,
+      _categories,
+    } = args as {
       amount?: number;
       category?: string;
       date?: string;
@@ -137,16 +145,11 @@ export class RegisterTransactionToolHandler implements ToolHandler {
     }
 
     // 4. Match category: trust LLM output first, lightweight fallback
-    const matched = this.findBestCategoryMatch(
-      String(category),
-      categories,
-    );
+    const matched = this.findBestCategoryMatch(String(category), categories);
 
     if (!matched) {
       // No match found - show user their category list
-      const suggestions = categories
-        .map((c) => `• ${c.name}`)
-        .join('\n');
+      const suggestions = categories.map((c) => `• ${c.name}`).join('\n');
 
       return {
         ok: true,

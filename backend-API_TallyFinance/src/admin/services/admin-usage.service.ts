@@ -206,8 +206,7 @@ export class AdminUsageService {
         : 0;
     const cacheHitRate =
       totalInputTokens > 0
-        ? Math.round((totalCachedInputTokens / totalInputTokens) * 10000) /
-          100
+        ? Math.round((totalCachedInputTokens / totalInputTokens) * 10000) / 100
         : 0;
 
     const dailyBreakdown = Array.from(dailyMap.values()).sort((a, b) =>

@@ -252,7 +252,9 @@ export class ChannelLinkCodeService {
       reason,
       conflictedAt: Date.now(),
     });
-    this.log.debug(`[markConflict] Code ${code} marked as conflicted: ${reason}`);
+    this.log.debug(
+      `[markConflict] Code ${code} marked as conflicted: ${reason}`,
+    );
   }
 
   /**

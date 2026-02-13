@@ -12,7 +12,9 @@ import { createClient } from '@supabase/supabase-js';
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!url || !serviceKey) {
-          throw new Error('SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no configurados');
+          throw new Error(
+            'SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no configurados',
+          );
         }
 
         return createClient(url, serviceKey, {

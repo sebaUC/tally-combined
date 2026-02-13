@@ -224,10 +224,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('create-link-token')
-  async createLinkToken(
-    @Body('channel') channel: string,
-    @User() user: any,
-  ) {
+  async createLinkToken(@Body('channel') channel: string, @User() user: any) {
     if (!user?.id) {
       throw new BadRequestException('Usuario no encontrado en la sesión.');
     }

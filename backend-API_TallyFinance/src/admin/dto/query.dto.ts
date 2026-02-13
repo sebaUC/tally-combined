@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsInt, Min, Max, IsUUID, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  Max,
+  IsUUID,
+  IsDateString,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class MessagesQueryDto {

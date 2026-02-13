@@ -132,6 +132,12 @@ class PendingSlotContext(BaseModel):
     asked_at: Optional[str] = None  # ISO timestamp when we asked
 
 
+class ConversationMessage(BaseModel):
+    """A single message in conversation history (Tier 1 working memory)."""
+    role: Literal["user", "assistant"]
+    content: str
+
+
 class OrchestrateRequestPhaseA(BaseModel):
     """
     Phase A request: Analyze user text and determine action.
@@ -144,6 +150,8 @@ class OrchestrateRequestPhaseA(BaseModel):
     pending: Optional[PendingSlotContext] = None
     # NEW: User's actual category names for matching
     available_categories: List[str] = Field(default_factory=list)
+    # Tier 1: Conversation history (last N exchanges)
+    conversation_history: List[ConversationMessage] = Field(default_factory=list)
 
 
 class OrchestrateResponsePhaseA(BaseModel):
@@ -211,6 +219,10 @@ class OrchestrateRequestPhaseB(BaseModel):
     action_result: ActionResult
     user_context: MinimalUserContext
     runtime_context: Optional[RuntimeContext] = None  # NEW: Extended context
+    # Tier 1: User's original text for natural continuation
+    user_text: Optional[str] = None
+    # Tier 1: Conversation history (last N exchanges)
+    conversation_history: List[ConversationMessage] = Field(default_factory=list)
 
 
 class OrchestrateResponsePhaseB(BaseModel):

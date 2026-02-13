@@ -69,7 +69,8 @@ export class CooldownService {
    */
   private canBudgetWarning(cooldowns: Cooldowns): boolean {
     if (!cooldowns.lastBudgetWarning) return true;
-    const elapsed = Date.now() - new Date(cooldowns.lastBudgetWarning).getTime();
+    const elapsed =
+      Date.now() - new Date(cooldowns.lastBudgetWarning).getTime();
     return elapsed > BUDGET_WARNING_COOLDOWN_MS;
   }
 
@@ -111,7 +112,10 @@ export class CooldownService {
   /**
    * Saves cooldown state to Redis.
    */
-  private async saveCooldowns(userId: string, cooldowns: Cooldowns): Promise<void> {
+  private async saveCooldowns(
+    userId: string,
+    cooldowns: Cooldowns,
+  ): Promise<void> {
     const key = RedisKeys.convCooldowns(userId);
     await this.redis.set(key, JSON.stringify(cooldowns), RedisTTL.COOLDOWNS);
   }

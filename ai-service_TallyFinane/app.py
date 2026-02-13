@@ -79,6 +79,7 @@ def orchestrate(
                 tools=req.tools,
                 pending=req.pending,
                 available_categories=req.available_categories,
+                conversation_history=req.conversation_history or [],
                 cid=cid,
             )
 
@@ -103,6 +104,8 @@ def orchestrate(
                 action_result=req.action_result,
                 user_context=req.user_context,
                 runtime_context=req.runtime_context,
+                user_text=req.user_text,
+                conversation_history=req.conversation_history or [],
                 cid=cid,
             )
 

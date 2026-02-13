@@ -9,6 +9,7 @@ export const RedisKeys = {
   // Conversation state (SEPARATE keys)
   convSummary: (userId: string) => `conv:${userId}:summary`,
   convPending: (userId: string) => `conv:${userId}:pending`,
+  convHistory: (userId: string) => `conv:${userId}:history`,
 
   // Cooldowns
   convCooldowns: (userId: string) => `conv:${userId}:cooldowns`,
@@ -32,6 +33,7 @@ export const RedisTTL = {
   CONV_SUMMARY_DEFAULT: 2 * 3600, // 2 hours
   CONV_SUMMARY_MAX: 24 * 3600, // 24 hours
   CONV_PENDING: 600, // 10 minutes
+  CONV_HISTORY: 600, // 10 minutes (working memory window)
   COOLDOWNS: 30 * 24 * 3600, // 30 days
   METRICS: 30 * 24 * 3600, // 30 days
   RATE_LIMIT: 60, // 60 seconds

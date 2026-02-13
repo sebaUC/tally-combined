@@ -30,7 +30,10 @@ export class MessageLogService {
       });
 
       if (error) {
-        console.error('[MessageLogService] Failed to log message:', error.message);
+        console.error(
+          '[MessageLogService] Failed to log message:',
+          error.message,
+        );
       }
     } catch (err) {
       // Don't throw - logging failures should not break the bot

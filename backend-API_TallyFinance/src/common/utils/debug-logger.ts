@@ -208,8 +208,16 @@ class DebugLogger {
   /** Performance timing */
   perf(message: string, ms: number, cid?: string) {
     const formatted = formatMs(ms);
-    const color = ms < 100 ? colors.green : ms < 500 ? colors.yellow : colors.red;
-    this.log('info', '⚡', 'PERF', message, { time: `${color}${formatted}${colors.reset}` }, cid);
+    const color =
+      ms < 100 ? colors.green : ms < 500 ? colors.yellow : colors.red;
+    this.log(
+      'info',
+      '⚡',
+      'PERF',
+      message,
+      { time: `${color}${formatted}${colors.reset}` },
+      cid,
+    );
   }
 
   /** Success */

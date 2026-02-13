@@ -29,6 +29,13 @@ export interface PendingSlotContext {
   asked_at: string; // ISO timestamp
 }
 
+// ============ Conversation History ============
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 // ============ Phase A ============
 
 export interface PhaseARequest {
@@ -41,6 +48,8 @@ export interface PhaseARequest {
   pending?: PendingSlotContext | null;
   // NEW: Available categories for matching
   available_categories?: string[];
+  // Tier 1: Conversation history (last N exchanges)
+  conversation_history?: ConversationMessage[];
 }
 
 export type PhaseAResponseType = 'tool_call' | 'clarification' | 'direct_reply';
@@ -100,6 +109,10 @@ export interface PhaseBRequest {
   action_result: ActionResult;
   user_context: AiUserContextPayload;
   runtime_context?: RuntimeContext | null; // NEW: Extended context
+  // Tier 1: User's original text for natural continuation
+  user_text?: string;
+  // Tier 1: Conversation history (last N exchanges)
+  conversation_history?: ConversationMessage[];
 }
 
 export type NudgeType = 'budget' | 'goal' | 'streak';
@@ -118,12 +131,14 @@ export interface PhaseBResponse {
 /**
  * Convert internal PendingSlot to AI-friendly PendingSlotContext.
  */
-export function toPendingSlotContext(pending: {
-  tool: string;
-  collectedArgs: Record<string, unknown>;
-  missingArgs: string[];
-  askedAt: string;
-} | null): PendingSlotContext | null {
+export function toPendingSlotContext(
+  pending: {
+    tool: string;
+    collectedArgs: Record<string, unknown>;
+    missingArgs: string[];
+    askedAt: string;
+  } | null,
+): PendingSlotContext | null {
   if (!pending) return null;
   return {
     tool: pending.tool,

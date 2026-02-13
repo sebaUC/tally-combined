@@ -35,7 +35,9 @@ export class StyleDetectorService {
   }
 
   private detectChilenismos(text: string): boolean {
-    return /cachai|wena|po\b|bacán|fome|pega|polola?|al tiro|altiro/i.test(text);
+    return /cachai|wena|po\b|bacán|fome|pega|polola?|al tiro|altiro/i.test(
+      text,
+    );
   }
 
   private detectEmojiLevel(text: string): 'none' | 'light' | 'moderate' {
@@ -51,7 +53,8 @@ export class StyleDetectorService {
 
   private countEmojis(text: string): number {
     // Match common emoji ranges
-    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu;
+    const emojiRegex =
+      /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]/gu;
     const matches = text.match(emojiRegex);
     return matches ? matches.length : 0;
   }
