@@ -497,6 +497,23 @@ NUDGES PERMITIDOS:
             return "Revisó estado de presupuesto."
         elif tool_name == "ask_goal_status":
             return "Consultó progreso de metas."
+        elif tool_name == "manage_transactions":
+            op = data.get("operation", "?")
+            if op == "list":
+                count = data.get("count", 0)
+                return f"Listó sus últimas {count} transacciones."
+            elif op == "edit":
+                prev = data.get("previous", {})
+                changes = data.get("changes", [])
+                amt = prev.get("amount", "?")
+                amt_str = f"${amt:,}" if isinstance(amt, (int, float)) else str(amt)
+                return f"Editó transacción de {amt_str} ({', '.join(changes)})."
+            elif op == "delete":
+                deleted = data.get("deleted", {})
+                amt = deleted.get("amount", "?")
+                amt_str = f"${amt:,}" if isinstance(amt, (int, float)) else str(amt)
+                return f"Eliminó transacción de {amt_str} en {deleted.get('category', '?')}."
+            return f"Gestionó transacciones ({op})."
         elif tool_name == "ask_app_info":
             question = data.get("userQuestion", "")
             if question:

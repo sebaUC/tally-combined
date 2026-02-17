@@ -142,6 +142,24 @@ export class OrchestratorClient {
         );
       }
 
+      // Post-process: intercept amount=0 hallucination from AI
+      if (
+        data.response_type === 'tool_call' &&
+        data.tool_call?.name === 'register_transaction' &&
+        (data.tool_call.args?.amount === 0 ||
+          data.tool_call.args?.amount === null ||
+          data.tool_call.args?.amount === undefined)
+      ) {
+        this.log.warn(
+          `[phaseA] Intercepted amount=${data.tool_call.args?.amount} hallucination, converting to clarification`,
+        );
+        return {
+          phase: 'A',
+          response_type: 'clarification',
+          clarification: '¿Cuánto fue el gasto exactamente?',
+        } as PhaseAResponse;
+      }
+
       return data;
     } catch (err) {
       if (err instanceof OrchestratorError) throw err;
@@ -420,6 +438,21 @@ export class OrchestratorClient {
     // =================================================================
     // PRIORITY 1: If there's pending slot-fill state, try to complete it
     // =================================================================
+    // ── manage_transactions pending (disambiguation) ──
+    if (pending && pending.tool === 'manage_transactions') {
+      const collectedArgs = { ...pending.collected_args };
+      const numMatch = text.match(/^(\d+)$/);
+      if (numMatch) {
+        collectedArgs['choice'] = parseInt(numMatch[1], 10);
+        return {
+          phase: 'A',
+          response_type: 'tool_call',
+          tool_call: { name: 'manage_transactions', args: collectedArgs },
+        };
+      }
+    }
+
+    // ── register_transaction pending ──
     if (pending && pending.tool === 'register_transaction') {
       const collectedArgs = { ...pending.collected_args };
       const missingArgs = [...pending.missing_args];
@@ -576,6 +609,72 @@ export class OrchestratorClient {
         phase: 'A',
         response_type: 'tool_call',
         tool_call: { name: 'ask_goal_status', args: {} },
+      };
+    }
+
+    // ── manage_transactions patterns ──
+    if (
+      /mis\s*(últimos?\s+)?gastos|ver\s*(mis\s+)?transacciones|historial|qué he gastado|últimas transacciones|mostrar\s*gastos/.test(
+        text,
+      )
+    ) {
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_transactions',
+          args: { operation: 'list' },
+        },
+      };
+    }
+
+    if (/borr|elimin|quita.*gasto|bórralo|elimínalo/.test(text)) {
+      const amountMatch = text.match(
+        /(\d+(?:[.,]\d+)?)\s*(?:lucas?|pesos?|clp)?/i,
+      );
+      let hint_amount: number | undefined;
+      if (amountMatch) {
+        const numStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
+        hint_amount =
+          parseFloat(numStr) * (text.includes('luca') ? 1000 : 1);
+      }
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_transactions',
+          args: {
+            operation: 'delete',
+            ...(hint_amount ? { hint_amount } : {}),
+          },
+        },
+      };
+    }
+
+    if (
+      /cambi|modific|correg|edit|actualiz.*(?:gasto|transacci)|no\s+eran|en\s+realidad\s+eran/.test(
+        text,
+      )
+    ) {
+      const amountMatch = text.match(
+        /(\d+(?:[.,]\d+)?)\s*(?:lucas?|pesos?|clp)?/i,
+      );
+      let new_amount: number | undefined;
+      if (amountMatch) {
+        const numStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
+        new_amount =
+          parseFloat(numStr) * (text.includes('luca') ? 1000 : 1);
+      }
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_transactions',
+          args: {
+            operation: 'edit',
+            ...(new_amount ? { new_amount } : {}),
+          },
+        },
       };
     }
 
@@ -752,6 +851,76 @@ export class OrchestratorClient {
           phase: 'B',
           final_message: '¡Hola! ¿En qué te puedo ayudar hoy?',
         };
+
+      case 'manage_transactions': {
+        const data = result.data as {
+          operation: string;
+          transactions?: any[];
+          count?: number;
+          deleted?: any;
+          previous?: any;
+          updated?: any;
+          changes?: string[];
+        };
+
+        if (!data) {
+          return {
+            phase: 'B',
+            final_message: 'Procesado correctamente.',
+          };
+        }
+
+        const formatCLP = (n: number) => `$${n.toLocaleString('es-CL')}`;
+
+        if (data.operation === 'list') {
+          if (!data.transactions?.length) {
+            return {
+              phase: 'B',
+              final_message: 'No tienes gastos registrados.',
+            };
+          }
+          const lines = data.transactions.map(
+            (tx: any, i: number) => {
+              const desc = tx.description ? ` — ${tx.description}` : '';
+              const date = tx.posted_at?.substring(0, 10) ?? '';
+              return `${i + 1}. ${formatCLP(tx.amount)} en ${tx.category || '?'} (${date})${desc}`;
+            },
+          );
+          return {
+            phase: 'B',
+            final_message: `Tus últimos ${data.count} gastos:\n${lines.join('\n')}`,
+          };
+        }
+
+        if (data.operation === 'delete' && data.deleted) {
+          return {
+            phase: 'B',
+            final_message: `Eliminado: ${formatCLP(data.deleted.amount)} en ${data.deleted.category || '?'}.`,
+          };
+        }
+
+        if (data.operation === 'edit' && data.previous && data.updated) {
+          const changeDetails = (data.changes || [])
+            .map((c: string) => {
+              if (c === 'monto')
+                return `monto de ${formatCLP(data.previous.amount)} a ${formatCLP(data.updated.amount)}`;
+              if (c === 'categoría')
+                return `categoría de ${data.previous.category} a ${data.updated.category}`;
+              if (c === 'descripción')
+                return `descripción`;
+              if (c === 'fecha')
+                return `fecha`;
+              return c;
+            })
+            .join(', ');
+          return {
+            phase: 'B',
+            final_message: `Listo, cambié ${changeDetails}.`,
+          };
+        }
+
+        return { phase: 'B', final_message: 'Procesado correctamente.' };
+      }
 
       case 'ask_app_info': {
         // In stub mode, generate a helpful response based on the question

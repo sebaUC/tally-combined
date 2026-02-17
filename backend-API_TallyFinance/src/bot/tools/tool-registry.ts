@@ -5,6 +5,7 @@ import { ToolSchema } from './tool-schemas';
 
 // Import all handlers
 import { RegisterTransactionToolHandler } from './handlers/register-transaction.tool-handler';
+import { ManageTransactionsToolHandler } from './handlers/manage-transactions.tool-handler';
 import { AskBalanceToolHandler } from './handlers/ask-balance.tool-handler';
 import { AskBudgetStatusToolHandler } from './handlers/ask-budget-status.tool-handler';
 import { AskGoalStatusToolHandler } from './handlers/ask-goal-status.tool-handler';
@@ -38,6 +39,7 @@ export class ToolRegistry {
     // Register all built-in handlers
     this.registerAll([
       new RegisterTransactionToolHandler(supabase),
+      new ManageTransactionsToolHandler(supabase),
       new AskBalanceToolHandler(supabase),
       new AskBudgetStatusToolHandler(supabase),
       new AskGoalStatusToolHandler(supabase),

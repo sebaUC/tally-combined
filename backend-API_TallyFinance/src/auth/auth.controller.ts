@@ -181,9 +181,14 @@ export class AuthController {
   @Post('refresh')
   async refresh(
     @Req() req: RequestWithCookies,
+    @Body() body: { refreshToken?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Accept refresh token from: (1) request body, (2) cookies, (3) raw cookie header.
+    // Body-based token is needed for cross-origin deployments (Vercel → Render)
+    // where sameSite=lax cookies are NOT sent on fetch requests.
     const refreshToken =
+      body?.refreshToken ??
       req.cookies?.[REFRESH_COOKIE] ??
       this.parseCookieHeader(req.headers.cookie)[REFRESH_COOKIE];
 

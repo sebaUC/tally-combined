@@ -2,6 +2,7 @@ export * from './tool-handler.interface';
 export * from './tool-schemas';
 export * from './tool-registry';
 export * from './handlers/register-transaction.tool-handler';
+export * from './handlers/manage-transactions.tool-handler';
 export * from './handlers/ask-balance.tool-handler';
 export * from './handlers/ask-budget-status.tool-handler';
 export * from './handlers/ask-goal-status.tool-handler';

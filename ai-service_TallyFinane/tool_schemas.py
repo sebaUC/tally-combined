@@ -53,7 +53,7 @@ TOOL_SCHEMAS: List[ToolSchema] = [
             properties={
                 "amount": ToolSchemaParameter(
                     type="number",
-                    description="Monto de la transaccion en CLP (pesos chilenos). Siempre positivo.",
+                    description="Monto de la transaccion en CLP (pesos chilenos). Siempre positivo y mayor a 0. NUNCA enviar 0.",
                 ),
                 "category": ToolSchemaParameter(
                     type="string",
@@ -73,6 +73,63 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
             },
             required=["amount", "category"],
+        ),
+    ),
+    ToolSchema(
+        name="manage_transactions",
+        description=(
+            "Gestiona transacciones existentes del usuario: listar las ultimas, "
+            "editar campos (monto, categoria, descripcion, fecha), o eliminar una transaccion. "
+            "Usa hints para identificar la transaccion objetivo si no tienes el ID."
+        ),
+        parameters=ToolSchemaParameters(
+            properties={
+                "operation": ToolSchemaParameter(
+                    type="string",
+                    description='Operacion a realizar: "list", "edit", o "delete"',
+                ),
+                "transaction_id": ToolSchemaParameter(
+                    type="string",
+                    description="UUID de la transaccion (si se conoce del historial de conversacion)",
+                ),
+                "hint_amount": ToolSchemaParameter(
+                    type="number",
+                    description="Monto aproximado para identificar la transaccion",
+                ),
+                "hint_category": ToolSchemaParameter(
+                    type="string",
+                    description="Categoria para identificar la transaccion",
+                ),
+                "hint_description": ToolSchemaParameter(
+                    type="string",
+                    description="Descripcion parcial para identificar la transaccion",
+                ),
+                "limit": ToolSchemaParameter(
+                    type="number",
+                    description="Cantidad de transacciones a listar (default 5, max 20)",
+                ),
+                "new_amount": ToolSchemaParameter(
+                    type="number",
+                    description="Nuevo monto para editar",
+                ),
+                "new_category": ToolSchemaParameter(
+                    type="string",
+                    description="Nueva categoria para editar",
+                ),
+                "new_description": ToolSchemaParameter(
+                    type="string",
+                    description="Nueva descripcion para editar",
+                ),
+                "new_posted_at": ToolSchemaParameter(
+                    type="string",
+                    description="Nueva fecha para editar (ISO-8601)",
+                ),
+                "choice": ToolSchemaParameter(
+                    type="number",
+                    description="Numero 1-based para elegir entre transacciones ambiguas",
+                ),
+            },
+            required=["operation"],
         ),
     ),
     ToolSchema(

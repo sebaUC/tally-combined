@@ -275,8 +275,17 @@ export class BotService {
       if (!validation.valid) {
         this.log.warn('Guardrails rejected', { error: validation.error }, cid);
         metrics.totalMs = Date.now() - startTotal;
-        const guardrailReply =
+
+        // Smart guardrail recovery: convert amount failures into clarification
+        let guardrailReply =
           'No pude procesar tu solicitud. ¿Podrías intentar de nuevo con más detalle?';
+        if (
+          toolCall.name === 'register_transaction' &&
+          validation.error?.includes('amount')
+        ) {
+          guardrailReply = '¿Cuánto fue el gasto exactamente?';
+        }
+
         this.logMessageAsync(
           userId,
           m.channel,
@@ -297,7 +306,8 @@ export class BotService {
 
       // Inject categories from context to avoid redundant DB query
       if (
-        toolCall.name === 'register_transaction' &&
+        (toolCall.name === 'register_transaction' ||
+          toolCall.name === 'manage_transactions') &&
         context.categories?.length
       ) {
         sanitizedArgs._categories = context.categories;
@@ -455,8 +465,8 @@ export class BotService {
         this.log.state('Nudge recorded', { type: phaseB.nudge_type }, cid);
       }
 
-      // 15. Clear pending if slot-fill was in progress and tool completed
-      if (pending && result.ok) {
+      // 15. Clear pending if slot-fill was in progress and the SAME tool completed
+      if (pending && result.ok && toolCall.name === pending.tool) {
         await this.conversation.clearPending(userId);
         this.log.state('Pending cleared', undefined, cid);
       }

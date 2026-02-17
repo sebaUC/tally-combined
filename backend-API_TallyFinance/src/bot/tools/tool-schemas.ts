@@ -38,6 +38,65 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
     },
   },
   {
+    name: 'manage_transactions',
+    description:
+      'Gestiona transacciones existentes del usuario: listar las últimas, editar campos (monto, categoría, descripción, fecha), o eliminar una transacción. Usa hints para identificar la transacción objetivo si no tienes el ID.',
+    parameters: {
+      type: 'object',
+      properties: {
+        operation: {
+          type: 'string',
+          description: 'Operación a realizar: "list", "edit", o "delete"',
+        },
+        transaction_id: {
+          type: 'string',
+          description:
+            'UUID de la transacción (si se conoce del historial de conversación)',
+        },
+        hint_amount: {
+          type: 'number',
+          description: 'Monto aproximado para identificar la transacción',
+        },
+        hint_category: {
+          type: 'string',
+          description: 'Categoría para identificar la transacción',
+        },
+        hint_description: {
+          type: 'string',
+          description:
+            'Descripción parcial para identificar la transacción',
+        },
+        limit: {
+          type: 'number',
+          description:
+            'Cantidad de transacciones a listar (default 5, max 20)',
+        },
+        new_amount: {
+          type: 'number',
+          description: 'Nuevo monto para editar',
+        },
+        new_category: {
+          type: 'string',
+          description: 'Nueva categoría para editar',
+        },
+        new_description: {
+          type: 'string',
+          description: 'Nueva descripción para editar',
+        },
+        new_posted_at: {
+          type: 'string',
+          description: 'Nueva fecha para editar (ISO-8601)',
+        },
+        choice: {
+          type: 'number',
+          description:
+            'Número 1-based para elegir entre transacciones ambiguas',
+        },
+      },
+      required: ['operation'],
+    },
+  },
+  {
     name: 'ask_balance',
     description: 'Consulta el saldo actual de las cuentas del usuario',
     parameters: {
