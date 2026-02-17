@@ -1,0 +1,58 @@
+# ============================================
+# TallyFinance Combined Dockerfile
+# Runs Backend (NestJS) + AI Service (FastAPI) in one container
+# ============================================
+
+# Stage 1: Build NestJS Backend
+FROM node:20-alpine AS backend-builder
+WORKDIR /app/backend
+COPY backend-API_TallyFinance/package*.json ./
+RUN npm ci
+COPY backend-API_TallyFinance/ .
+RUN npm run build && npm prune --production
+
+# Stage 2: Final combined image
+FROM python:3.11-slim
+
+# Install Node.js
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN useradd -m -u 1001 appuser
+
+# Setup AI Service (Python)
+WORKDIR /app/ai-service
+COPY ai-service_TallyFinane/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY ai-service_TallyFinane/ .
+
+# Setup Backend (Node.js) - copy built files from builder
+WORKDIR /app/backend
+COPY --from=backend-builder /app/backend/dist ./dist
+COPY --from=backend-builder /app/backend/node_modules ./node_modules
+COPY --from=backend-builder /app/backend/package.json ./
+
+# Copy start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Set ownership
+RUN chown -R appuser:appuser /app
+
+WORKDIR /app
+
+# Expose both ports (Render will use 3000 as primary)
+EXPOSE 3000 8000
+
+# Health check on backend (primary service)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Run both services via start script (inherits all env vars)
+CMD ["/bin/bash", "/app/start.sh"]

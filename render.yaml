@@ -1,0 +1,62 @@
+# Render Blueprint - Deploy both services together
+# https://render.com/docs/blueprint-spec
+
+services:
+  # ============================================
+  # AI Service (Private - not exposed to internet)
+  # ============================================
+  - type: private-service
+    name: tally-ai-service
+    runtime: docker
+    dockerfilePath: ./ai-service_TallyFinane/Dockerfile
+    dockerContext: ./ai-service_TallyFinane
+    region: oregon  # or closest to your users
+    plan: free      # or starter for better performance
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_TIMEOUT
+        value: "25.0"
+    healthCheckPath: /health
+
+  # ============================================
+  # Backend API (Public - exposed to internet)
+  # ============================================
+  - type: web
+    name: tally-backend
+    runtime: docker
+    dockerfilePath: ./backend-API_TallyFinance/Dockerfile
+    dockerContext: ./backend-API_TallyFinance
+    region: oregon
+    plan: free      # or starter for better performance
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: AI_SERVICE_URL
+        fromService:
+          type: private-service
+          name: tally-ai-service
+          property: host  # Results in http://tally-ai-service:8000
+      - key: REDIS_URL
+        sync: false  # Set Upstash URL manually
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false  # Set to your Vercel frontend URL
+      - key: APP_BASE_URL
+        sync: false  # Set to your Render backend URL
+      - key: LINK_ACCOUNT_URL
+        sync: false
+    healthCheckPath: /

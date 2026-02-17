@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "TallyFinance Auth API",
+    "description": "Colección mínima para probar endpoints de autenticación.",
+    "_postman_id": "6f6ea1c8-3b76-4a4d-9fe2-0d05d02d5f84",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sign Up",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"example@domain.com\",\n  \"password\": \"secret123\",\n  \"fullName\": \"Example User\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "signup"]
+        }
+      }
+    },
+    {
+      "name": "Sign In",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"example@domain.com\",\n  \"password\": \"secret123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/signin",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "signin"]
+        }
+      }
+    },
+    {
+      "name": "OAuth Provider URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"provider\": \"google\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/provider",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "provider"]
+        }
+      }
+    },
+    {
+      "name": "OAuth Callback",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/auth/callback?access_token={{access_token}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "callback"],
+          "query": [
+            { "key": "access_token", "value": "{{access_token}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Refresh Session",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/refresh",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "refresh"]
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/logout",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "logout"]
+        }
+      }
+    },
+    {
+      "name": "Me (protected)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "me"]
+        }
+      }
+    },
+    {
+      "name": "Sessions (protected)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/auth/sessions",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "sessions"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "access_token", "value": "" }
+  ]
+}

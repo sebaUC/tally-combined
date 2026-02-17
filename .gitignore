@@ -1,0 +1,27 @@
+# ============================================
+# TALLYFINANCE ROOT - GITIGNORE
+# ============================================
+
+# Environment files (contain secrets)
+.env
+*.env
+.env.*
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Test results (auto-generated)
+test-results/
+**/test-results/
+
+# Claude MCP config (local)
+.mcp.json

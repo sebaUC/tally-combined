@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TallyFinance — Landing Page Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#0364c6',
+              primaryDark: '#023a7e',
+              accent: '#3B82F6',
+              highlight: '#60A5FA',
+              border: '#BFDBFE',
+              tint: '#DBEAFE',
+              surface: '#F5F8FF',
+              surfaceAlt: '#E9F0FF',
+              navy: '#01306c',
+            }
+          },
+          boxShadow: {
+            cta: '0 25px 50px -12px rgba(59, 130, 246, 0.45)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Goldplay font — replace src paths with your actual font files */
+    @font-face { font-family: 'Goldplay'; src: url('../frontend_TallyFinance/public/fonts/Goldplay-Regular.otf') format('opentype'); font-weight: 400; font-display: swap; }
+    @font-face { font-family: 'Goldplay'; src: url('../frontend_TallyFinance/public/fonts/Goldplay-Medium.otf') format('opentype'); font-weight: 500; font-display: swap; }
+    @font-face { font-family: 'Goldplay'; src: url('../frontend_TallyFinance/public/fonts/Goldplay-SemiBold.otf') format('opentype'); font-weight: 600; font-display: swap; }
+    @font-face { font-family: 'Goldplay'; src: url('../frontend_TallyFinance/public/fonts/Goldplay-Bold.otf') format('opentype'); font-weight: 700; font-display: swap; }
+    @font-face { font-family: 'Goldplay'; src: url('../frontend_TallyFinance/public/fonts/Goldplay-Black.otf') format('opentype'); font-weight: 900; font-display: swap; }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Goldplay', system-ui, -apple-system, sans-serif; }
+
+    /* Placeholder styling — bright dashed borders to make fill-in areas obvious */
+    .placeholder {
+      border: 2px dashed #f59e0b;
+      background: #fffbeb;
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+    }
+    .placeholder::before {
+      content: attr(data-label);
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      background: #f59e0b;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .placeholder-sm {
+      border: 2px dashed #f59e0b;
+      background: #fffbeb;
+      border-radius: 8px;
+      padding: 8px 14px;
+    }
+
+    /* Chat bubble styles */
+    .chat-bubble-user {
+      background: #DCF8C6;
+      border-radius: 18px 18px 4px 18px;
+      padding: 10px 16px;
+      max-width: 280px;
+      margin-left: auto;
+    }
+    .chat-bubble-bot {
+      background: white;
+      border-radius: 18px 18px 18px 4px;
+      padding: 10px 16px;
+      max-width: 280px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+
+    /* FAQ accordion */
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after {
+      content: '+';
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0364c6;
+      transition: transform 0.2s;
+    }
+    details[open] summary::after {
+      content: '-';
+    }
+
+    /* Sticky mobile CTA */
+    @media (max-width: 639px) {
+      .sticky-cta {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        padding: 12px 16px;
+        background: white;
+        border-top: 1px solid #DBEAFE;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-slate-800 antialiased">
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 1 · HERO                                       ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="hero" class="relative overflow-hidden bg-gradient-to-b from-white via-brand-surface to-brand-tint/60">
+
+  <!-- Navbar -->
+  <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
+    <div class="flex items-center gap-2">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-primary">
+        <span class="text-lg font-black text-white">T</span>
+      </div>
+      <span class="text-xl font-black tracking-tight text-brand-primaryDark">TallyFinance</span>
+    </div>
+    <a href="#final-cta" class="rounded-full bg-brand-primary px-5 py-2.5 text-sm font-bold text-white shadow-cta transition hover:bg-brand-accent">
+      Empezar gratis
+    </a>
+  </nav>
+
+  <!-- Hero Content -->
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 pb-20 pt-12 md:grid-cols-2 md:items-center md:pt-20">
+
+    <!-- Left: Copy -->
+    <div class="flex flex-col gap-6">
+
+      <div class="placeholder" data-label="Headline">
+        <h1 class="text-4xl font-black leading-tight tracking-tight text-brand-primaryDark md:text-5xl lg:text-6xl">
+          Controla tu plata con un mensaje de texto
+        </h1>
+      </div>
+
+      <div class="placeholder" data-label="Subheadline">
+        <p class="text-lg font-medium leading-relaxed text-slate-600 md:text-xl">
+          Registra gastos en 5 segundos. Pregunta por tu balance cuando quieras. Todo desde WhatsApp o Telegram.
+        </p>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col gap-3 sm:flex-row sm:gap-4">
+        <div class="placeholder flex-1" data-label="CTA WhatsApp">
+          <a href="#" class="flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-base font-black text-white shadow-lg transition hover:bg-[#20bd5a]">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Empezar en WhatsApp
+          </a>
+        </div>
+        <div class="placeholder flex-1" data-label="CTA Telegram">
+          <a href="#" class="flex items-center justify-center gap-2 rounded-full bg-[#0088cc] px-6 py-3.5 text-base font-black text-white shadow-lg transition hover:bg-[#0077b5]">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Empezar en Telegram
+          </a>
+        </div>
+      </div>
+
+      <!-- Micro Social Proof -->
+      <div class="placeholder" data-label="Social Proof">
+        <p class="text-sm font-semibold text-slate-500">
+          <span class="text-brand-primary">+X</span> usuarios ya controlan sus gastos con Gus
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: Conversation Mock-up -->
+    <div class="flex justify-center md:justify-end">
+      <div class="w-full max-w-[320px]">
+        <!-- Phone Frame -->
+        <div class="rounded-[36px] border-[3px] border-slate-200 bg-slate-100 p-2 shadow-2xl">
+          <!-- Status bar -->
+          <div class="flex items-center justify-between rounded-t-[28px] bg-[#075E54] px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary">
+                <span class="text-xs font-black text-white">G</span>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-white">Gus - TallyFinance</p>
+                <p class="text-xs text-green-200">en linea</p>
+              </div>
+            </div>
+          </div>
+          <!-- Chat area -->
+          <div class="flex flex-col gap-3 bg-[#ECE5DD] p-4" style="min-height: 360px;">
+
+            <div class="placeholder-sm" data-label="">
+              <div class="chat-bubble-user">
+                <p class="text-sm text-slate-800">gasté 15 lucas en almuerzo</p>
+                <p class="mt-1 text-right text-[10px] text-slate-500">14:23</p>
+              </div>
+            </div>
+
+            <div class="placeholder-sm" data-label="">
+              <div class="chat-bubble-bot">
+                <p class="text-sm text-slate-800">Listo! Registre $15.000 en Comida</p>
+                <p class="mt-1 text-sm text-slate-800">Llevas $45.000 en comida esta semana</p>
+                <p class="mt-1 text-right text-[10px] text-slate-500">14:23</p>
+              </div>
+            </div>
+
+            <div class="placeholder-sm" data-label="">
+              <div class="chat-bubble-user">
+                <p class="text-sm text-slate-800">cuanto llevo gastado este mes?</p>
+                <p class="mt-1 text-right text-[10px] text-slate-500">14:24</p>
+              </div>
+            </div>
+
+            <div class="placeholder-sm" data-label="">
+              <div class="chat-bubble-bot">
+                <p class="text-sm text-slate-800">Este mes llevas <strong>$340.000</strong></p>
+                <p class="text-sm text-slate-800">Comida: $120k | Transporte: $85k</p>
+                <p class="mt-1 text-right text-[10px] text-slate-500">14:24</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 2 · PAIN POINTS                                ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="pain" class="bg-white py-20">
+  <div class="mx-auto max-w-4xl px-5 text-center">
+
+    <div class="placeholder mx-auto mb-12 max-w-lg" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Te suena familiar?
+      </h2>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+
+      <!-- Pain 1 -->
+      <div class="placeholder" data-label="Pain Point 1">
+        <div class="rounded-2xl border border-red-100 bg-red-50/50 p-6 text-left">
+          <span class="mb-3 inline-block text-3xl">😩</span>
+          <p class="text-base font-semibold text-slate-700">
+            Abres tu app del banco y no cachai en que se fue la plata
+          </p>
+        </div>
+      </div>
+
+      <!-- Pain 2 -->
+      <div class="placeholder" data-label="Pain Point 2">
+        <div class="rounded-2xl border border-red-100 bg-red-50/50 p-6 text-left">
+          <span class="mb-3 inline-block text-3xl">📱</span>
+          <p class="text-base font-semibold text-slate-700">
+            Descargaste una app de presupuesto, la usaste una semana y chao
+          </p>
+        </div>
+      </div>
+
+      <!-- Pain 3 -->
+      <div class="placeholder" data-label="Pain Point 3">
+        <div class="rounded-2xl border border-red-100 bg-red-50/50 p-6 text-left">
+          <span class="mb-3 inline-block text-3xl">📊</span>
+          <p class="text-base font-semibold text-slate-700">
+            La planilla de Excel dura hasta el dia 5 del mes
+          </p>
+        </div>
+      </div>
+
+      <!-- Pain 4 -->
+      <div class="placeholder" data-label="Pain Point 4">
+        <div class="rounded-2xl border border-red-100 bg-red-50/50 p-6 text-left">
+          <span class="mb-3 inline-block text-3xl">😮‍💨</span>
+          <p class="text-base font-semibold text-slate-700">
+            Sabes que deberias ordenarte pero la paja de abrir otra app te gana
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 3 · HOW IT WORKS (3 Steps)                     ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="how" class="bg-gradient-to-b from-brand-surface to-white py-20">
+  <div class="mx-auto max-w-5xl px-5">
+
+    <div class="placeholder mx-auto mb-14 max-w-md text-center" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Asi de simple funciona
+      </h2>
+    </div>
+
+    <div class="grid gap-8 md:grid-cols-3">
+
+      <!-- Step 1 -->
+      <div class="placeholder" data-label="Step 1">
+        <div class="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-lg shadow-brand-border/20">
+          <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-tint text-2xl">
+            💬
+          </div>
+          <div class="mb-1 text-xs font-bold uppercase tracking-widest text-brand-primary">Paso 1</div>
+          <h3 class="mb-2 text-xl font-black text-brand-primaryDark">Manda un mensaje</h3>
+          <p class="text-sm font-medium text-slate-500">
+            Textea tu gasto como le hablarias a un amigo: "gaste 15 lucas en comida"
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="placeholder" data-label="Step 2">
+        <div class="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-lg shadow-brand-border/20">
+          <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-tint text-2xl">
+            🧠
+          </div>
+          <div class="mb-1 text-xs font-bold uppercase tracking-widest text-brand-primary">Paso 2</div>
+          <h3 class="mb-2 text-xl font-black text-brand-primaryDark">Gus entiende al tiro</h3>
+          <p class="text-sm font-medium text-slate-500">
+            La IA categoriza tu gasto y lo registra contra tu presupuesto automaticamente
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="placeholder" data-label="Step 3">
+        <div class="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-lg shadow-brand-border/20">
+          <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-tint text-2xl">
+            📊
+          </div>
+          <div class="mb-1 text-xs font-bold uppercase tracking-widest text-brand-primary">Paso 3</div>
+          <h3 class="mb-2 text-xl font-black text-brand-primaryDark">Pregunta lo que quieras</h3>
+          <p class="text-sm font-medium text-slate-500">
+            "Cuanto llevo gastado?" — respuesta al instante con resumen completo
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 4 · BENEFITS                                   ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="benefits" class="bg-white py-20">
+  <div class="mx-auto max-w-5xl px-5">
+
+    <div class="placeholder mx-auto mb-14 max-w-md text-center" data-label="Section Title (optional)">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Por que Gus funciona (de verdad)
+      </h2>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+
+      <!-- Benefit 1 -->
+      <div class="placeholder" data-label="Benefit 1">
+        <div class="rounded-2xl border border-brand-border/40 bg-brand-surface/50 p-7">
+          <div class="mb-3 text-3xl">🎯</div>
+          <h3 class="mb-2 text-lg font-black text-brand-primaryDark">Sabe exacto en que se te va la plata</h3>
+          <p class="text-sm font-medium text-slate-500">
+            Cada gasto queda registrado y categorizado automaticamente
+          </p>
+        </div>
+      </div>
+
+      <!-- Benefit 2 -->
+      <div class="placeholder" data-label="Benefit 2">
+        <div class="rounded-2xl border border-brand-border/40 bg-brand-surface/50 p-7">
+          <div class="mb-3 text-3xl">📲</div>
+          <h3 class="mb-2 text-lg font-black text-brand-primaryDark">Sin apps nuevas que aprender</h3>
+          <p class="text-sm font-medium text-slate-500">
+            Funciona en WhatsApp y Telegram — apps que ya abres 50 veces al dia
+          </p>
+        </div>
+      </div>
+
+      <!-- Benefit 3 -->
+      <div class="placeholder" data-label="Benefit 3">
+        <div class="rounded-2xl border border-brand-border/40 bg-brand-surface/50 p-7">
+          <div class="mb-3 text-3xl">⚡</div>
+          <h3 class="mb-2 text-lg font-black text-brand-primaryDark">Respuestas al toque</h3>
+          <p class="text-sm font-medium text-slate-500">
+            Pregunta tu balance, presupuesto o patrones de gasto cuando quieras
+          </p>
+        </div>
+      </div>
+
+      <!-- Benefit 4 -->
+      <div class="placeholder" data-label="Benefit 4">
+        <div class="rounded-2xl border border-brand-border/40 bg-brand-surface/50 p-7">
+          <div class="mb-3 text-3xl">🌱</div>
+          <h3 class="mb-2 text-lg font-black text-brand-primaryDark">Mejores habitos sin esfuerzo</h3>
+          <p class="text-sm font-medium text-slate-500">
+            Insights personalizados y recordatorios segun tu forma de gastar
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 5 · SOCIAL PROOF & TRUST                       ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="proof" class="bg-gradient-to-b from-brand-tint/40 via-white to-white py-20">
+  <div class="mx-auto max-w-5xl px-5">
+
+    <div class="placeholder mx-auto mb-14 max-w-md text-center" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Personas reales, resultados reales
+      </h2>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="mb-12 grid gap-6 md:grid-cols-3">
+
+      <div class="placeholder" data-label="Testimonial 1">
+        <div class="flex flex-col rounded-2xl border border-brand-border/40 bg-white p-6 shadow-sm">
+          <p class="mb-4 flex-1 text-sm font-medium italic text-slate-600">
+            "Nunca habia logrado trackear mis gastos mas de una semana. Con Gus llevo 3 meses."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-tint text-sm font-black text-brand-primary">CR</div>
+            <div>
+              <p class="text-sm font-bold text-slate-800">Camila R.</p>
+              <p class="text-xs text-slate-500">Disenadora freelance</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="placeholder" data-label="Testimonial 2">
+        <div class="flex flex-col rounded-2xl border border-brand-border/40 bg-white p-6 shadow-sm">
+          <p class="mb-4 flex-1 text-sm font-medium italic text-slate-600">
+            "[TESTIMONIAL TEXT — Replace with real user quote]"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-tint text-sm font-black text-brand-primary">??</div>
+            <div>
+              <p class="text-sm font-bold text-slate-800">[Name]</p>
+              <p class="text-xs text-slate-500">[Context]</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="placeholder" data-label="Testimonial 3">
+        <div class="flex flex-col rounded-2xl border border-brand-border/40 bg-white p-6 shadow-sm">
+          <p class="mb-4 flex-1 text-sm font-medium italic text-slate-600">
+            "[TESTIMONIAL TEXT — Replace with real user quote]"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-tint text-sm font-black text-brand-primary">??</div>
+            <div>
+              <p class="text-sm font-bold text-slate-800">[Name]</p>
+              <p class="text-xs text-slate-500">[Context]</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="placeholder mx-auto max-w-3xl" data-label="Stats Bar">
+      <div class="grid grid-cols-3 divide-x divide-brand-border/60 rounded-2xl border border-brand-border/40 bg-white py-8">
+        <div class="px-4 text-center">
+          <p class="text-3xl font-black text-brand-primary">X+</p>
+          <p class="mt-1 text-sm font-semibold text-slate-500">gastos registrados</p>
+        </div>
+        <div class="px-4 text-center">
+          <p class="text-3xl font-black text-brand-primary">X+</p>
+          <p class="mt-1 text-sm font-semibold text-slate-500">usuarios activos</p>
+        </div>
+        <div class="px-4 text-center">
+          <p class="text-3xl font-black text-brand-primary">5 seg</p>
+          <p class="mt-1 text-sm font-semibold text-slate-500">por registro</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust Line -->
+    <div class="placeholder mx-auto mt-8 max-w-md text-center" data-label="Security Message">
+      <p class="text-sm font-semibold text-slate-500">
+        🔒 Tu informacion esta encriptada. Nunca accedemos a tu cuenta bancaria.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 6 · LIVE DEMO / CONVERSATION PREVIEW           ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="demo" class="bg-white py-20">
+  <div class="mx-auto max-w-5xl px-5">
+
+    <div class="placeholder mx-auto mb-4 max-w-md text-center" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Mira como se siente usar Gus
+      </h2>
+    </div>
+    <div class="placeholder mx-auto mb-14 max-w-lg text-center" data-label="Section Subtitle">
+      <p class="text-base font-medium text-slate-500">
+        Gus se adapta a tu personalidad. Elige como quieres que te hable.
+      </p>
+    </div>
+
+    <!-- Personality Showcase -->
+    <div class="grid gap-6 md:grid-cols-3">
+
+      <!-- Friendly -->
+      <div class="placeholder" data-label="Personality: Friendly">
+        <div class="overflow-hidden rounded-2xl border border-brand-border/40 bg-white shadow-sm">
+          <div class="bg-brand-tint/50 px-5 py-3">
+            <span class="text-lg">😊</span>
+            <span class="ml-2 text-sm font-black text-brand-primaryDark">Amigable</span>
+          </div>
+          <div class="bg-[#ECE5DD] p-4">
+            <div class="chat-bubble-user mb-3">
+              <p class="text-sm">gaste 40 lucas en delivery</p>
+            </div>
+            <div class="chat-bubble-bot">
+              <p class="text-sm">
+                Anotado! $40k en delivery. Si quieres cocinar manana, ahi ahorras altiro 😉
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motivational -->
+      <div class="placeholder" data-label="Personality: Motivational">
+        <div class="overflow-hidden rounded-2xl border border-brand-border/40 bg-white shadow-sm">
+          <div class="bg-brand-tint/50 px-5 py-3">
+            <span class="text-lg">💪</span>
+            <span class="ml-2 text-sm font-black text-brand-primaryDark">Motivacional</span>
+          </div>
+          <div class="bg-[#ECE5DD] p-4">
+            <div class="chat-bubble-user mb-3">
+              <p class="text-sm">gaste 40 lucas en delivery</p>
+            </div>
+            <div class="chat-bubble-bot">
+              <p class="text-sm">
+                Registrado. Llevas $80k en delivery este mes. Tu puedes bajar eso — vamos! 💪
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strict -->
+      <div class="placeholder" data-label="Personality: Strict">
+        <div class="overflow-hidden rounded-2xl border border-brand-border/40 bg-white shadow-sm">
+          <div class="bg-brand-tint/50 px-5 py-3">
+            <span class="text-lg">📏</span>
+            <span class="ml-2 text-sm font-black text-brand-primaryDark">Directo</span>
+          </div>
+          <div class="bg-[#ECE5DD] p-4">
+            <div class="chat-bubble-user mb-3">
+              <p class="text-sm">gaste 40 lucas en delivery</p>
+            </div>
+            <div class="chat-bubble-bot">
+              <p class="text-sm">
+                Registrado: $40.000 en delivery. Ojo: ya superaste tu presupuesto en un 20%.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 7 · FEATURES DEEP-DIVE                         ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="features" class="bg-gradient-to-b from-brand-surface/80 to-white py-20">
+  <div class="mx-auto max-w-5xl px-5">
+
+    <div class="placeholder mx-auto mb-14 max-w-md text-center" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Todo lo que puedes hacer con Gus
+      </h2>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+      <!-- Feature 1 -->
+      <div class="placeholder" data-label="Feature 1">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">💸</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Registrar gastos</h3>
+          <p class="mb-3 text-sm text-slate-500">Textea tu gasto y queda registrado al instante</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            "gaste 50 en uber" → ✅ Registrado!
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="placeholder" data-label="Feature 2">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">📈</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Consultar balance</h3>
+          <p class="mb-3 text-sm text-slate-500">Pregunta cuanto llevas gastado cuando quieras</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            "cuanto gaste?" → Resumen completo
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="placeholder" data-label="Feature 3">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">🎯</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Control de presupuesto</h3>
+          <p class="mb-3 text-sm text-slate-500">Configura limites y recibe alertas automaticas</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            "como va mi presupuesto?" → Status
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="placeholder" data-label="Feature 4">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">🏆</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Metas de ahorro</h3>
+          <p class="mb-3 text-sm text-slate-500">Trackea el progreso de tus metas en cualquier momento</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            "como va mi meta?" → Progreso 67%
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="placeholder" data-label="Feature 5">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">🗣️</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Lenguaje natural</h3>
+          <p class="mb-3 text-sm text-slate-500">Habla como hablas normalmente, sin comandos raros</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            "lucas", "luca", "me salio", "gaste"...
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="placeholder" data-label="Feature 6 (optional)">
+        <div class="rounded-2xl border border-brand-border/40 bg-white p-6 transition hover:shadow-lg">
+          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-tint text-xl">🎨</div>
+          <h3 class="mb-1 text-base font-black text-brand-primaryDark">Personalidad adaptable</h3>
+          <p class="mb-3 text-sm text-slate-500">Elige como quieres que Gus te hable: amigable, motivacional o directo</p>
+          <div class="rounded-lg bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600">
+            Tu eliges el tono y la onda
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 8 · FAQ / OBJECTION HANDLING                   ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="faq" class="bg-white py-20">
+  <div class="mx-auto max-w-3xl px-5">
+
+    <div class="placeholder mx-auto mb-14 max-w-md text-center" data-label="Section Title">
+      <h2 class="text-3xl font-black tracking-tight text-brand-primaryDark md:text-4xl">
+        Preguntas frecuentes
+      </h2>
+    </div>
+
+    <div class="flex flex-col gap-4">
+
+      <!-- FAQ 1 -->
+      <div class="placeholder" data-label="FAQ 1 — Security">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Mi informacion financiera esta segura?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — max 2-3 sentences about encryption, data handling, no bank access]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 2 -->
+      <div class="placeholder" data-label="FAQ 2 — App Fatigue">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Ya probe apps de presupuesto y siempre las dejo de usar
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — explain zero friction, just text, no new app to open]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 3 -->
+      <div class="placeholder" data-label="FAQ 3 — vs Spreadsheet">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            En que se diferencia de una planilla?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — AI understanding, instant, personalized, mobile]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 4 -->
+      <div class="placeholder" data-label="FAQ 4 — Bank/Currency">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Funciona con mi banco?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — manual tracking via chat, works with any currency/bank]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 5 -->
+      <div class="placeholder" data-label="FAQ 5 — Pricing">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Es gratis?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — pricing model, free tier, no credit card required]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 6 -->
+      <div class="placeholder" data-label="FAQ 6 — How AI Works">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Como entiende lo que le escribo?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — natural language AI, not rigid commands, learns your patterns]
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- FAQ 7 -->
+      <div class="placeholder" data-label="FAQ 7 — Forgot to Log">
+        <details class="group rounded-2xl border border-brand-border/40 bg-white">
+          <summary class="flex items-center justify-between px-6 py-5 text-base font-bold text-brand-primaryDark">
+            Que pasa si se me olvida anotar un gasto?
+          </summary>
+          <div class="px-6 pb-5">
+            <p class="text-sm font-medium text-slate-500">
+              [WRITE YOUR ANSWER HERE — easy to catch up, reminders, no rigid schedule]
+            </p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 9 · FINAL CTA                                  ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<section id="final-cta" class="bg-gradient-to-br from-brand-primary via-brand-accent to-brand-primaryDark py-24">
+  <div class="mx-auto max-w-3xl px-5 text-center">
+
+    <div class="placeholder mx-auto mb-4 max-w-lg" data-label="Closing Headline" style="border-color: #60A5FA; background: rgba(255,255,255,0.1);">
+      <h2 class="text-3xl font-black tracking-tight text-white md:text-5xl">
+        Empieza a saber en que gastas
+      </h2>
+    </div>
+
+    <div class="placeholder mx-auto mb-10 max-w-md" data-label="Closing Subtext" style="border-color: #60A5FA; background: rgba(255,255,255,0.1);">
+      <p class="text-lg font-medium text-blue-100">
+        Gratis. Sin tarjeta. Sin descargas. Solo abre WhatsApp y manda un mensaje.
+      </p>
+    </div>
+
+    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <div class="placeholder" data-label="Final CTA WhatsApp" style="border-color: #60A5FA; background: rgba(255,255,255,0.1);">
+        <a href="#" class="flex items-center gap-2 rounded-full bg-white px-8 py-4 text-base font-black text-brand-primary shadow-lg transition hover:bg-blue-50">
+          <svg class="h-5 w-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Empezar en WhatsApp
+        </a>
+      </div>
+      <div class="placeholder" data-label="Final CTA Telegram" style="border-color: #60A5FA; background: rgba(255,255,255,0.1);">
+        <a href="#" class="flex items-center gap-2 rounded-full border-2 border-white px-8 py-4 text-base font-black text-white transition hover:bg-white/10">
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          Empezar en Telegram
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║  SECTION 10 · FOOTER                                    ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<footer class="border-t border-slate-100 bg-white py-10">
+  <div class="mx-auto max-w-5xl px-5">
+    <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
+
+      <!-- Brand -->
+      <div class="flex items-center gap-2">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary">
+          <span class="text-sm font-black text-white">T</span>
+        </div>
+        <span class="text-lg font-black tracking-tight text-brand-primaryDark">TallyFinance</span>
+      </div>
+
+      <!-- Links -->
+      <div class="placeholder flex gap-6" data-label="Footer Links">
+        <a href="#" class="text-sm font-medium text-slate-500 transition hover:text-brand-primary">Privacidad</a>
+        <a href="#" class="text-sm font-medium text-slate-500 transition hover:text-brand-primary">Terminos</a>
+        <a href="#" class="text-sm font-medium text-slate-500 transition hover:text-brand-primary">Contacto</a>
+      </div>
+
+      <!-- Made with -->
+      <div class="placeholder" data-label="Location/Credit">
+        <p class="text-sm font-medium text-slate-400">
+          Hecho con ❤️ en [LOCATION]
+        </p>
+      </div>
+
+    </div>
+  </div>
+</footer>
+
+
+<!-- Sticky Mobile CTA -->
+<div class="sticky-cta hidden">
+  <a href="#" class="flex w-full items-center justify-center gap-2 rounded-full bg-brand-primary py-3.5 text-sm font-black text-white shadow-cta">
+    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Empezar gratis
+  </a>
+</div>
+
+<script>
+  // Show sticky CTA on mobile when scrolled past hero
+  if (window.innerWidth < 640) {
+    const hero = document.getElementById('hero');
+    const stickyCta = document.querySelector('.sticky-cta');
+    const observer = new IntersectionObserver(([entry]) => {
+      stickyCta.classList.toggle('hidden', entry.isIntersecting);
+    }, { threshold: 0 });
+    observer.observe(hero);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "TallyFinance Chat → Web Linking",
+    "_postman_id": "bf24f5c0-0df4-4a18-9b8a-3c49f86e9c42",
+    "description": "Colección para probar el flujo de vinculación entre chat y web.\n1. Simula la llegada de mensajes a los webhooks.\n2. Registra el código devuelto por el bot.\n3. Canjea el código vía /auth/link-channel tras el login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Telegram Webhook (mensaje desconocido)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": {\n    \"message_id\": 123,\n    \"date\": {{unixTimestamp}},\n    \"chat\": { \"id\": 987654321, \"type\": \"private\" },\n    \"from\": { \"id\": 987654321, \"first_name\": \"Test\", \"username\": \"testuser\" },\n    \"text\": \"Hola Gus\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/telegram/webhook",
+          "host": ["{{baseUrl}}"],
+          "path": ["telegram", "webhook"]
+        },
+        "description": "Simula un mensaje entrante de Telegram sin vinculación previa.\nObserva en los logs el código generado y la respuesta del bot."
+      }
+    },
+    {
+      "name": "WhatsApp Webhook (mensaje desconocido)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"entry\": [\n    {\n      \"changes\": [\n        {\n          \"value\": {\n            \"messages\": [\n              {\n                \"id\": \"wamid.HBgMNTU1MTIzNDU2Nzg=\",\n                \"from\": \"+56900000000\",\n                \"timestamp\": \"{{unixTimestamp}}\",\n                \"text\": { \"body\": \"Hola Gus\" }\n              }\n            ],\n            \"contacts\": [\n              { \"profile\": { \"name\": \"Test User\" } }\n            ]\n          }\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/whatsapp/webhook",
+          "host": ["{{baseUrl}}"],
+          "path": ["whatsapp", "webhook"]
+        },
+        "description": "Simula un mensaje entrante de WhatsApp para generar un código de vinculación."
+      }
+    },
+    {
+      "name": "Link Channel (post-login)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"linkCode\": \"{{linkCode}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/link-channel",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "link-channel"]
+        },
+        "description": "Canjea el código recibido en el chat después de completar el login en la web."
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "unixTimestamp", "value": "{{timestamp}}" },
+    { "key": "accessToken", "value": "" },
+    { "key": "linkCode", "value": "" }
+  ]
+}

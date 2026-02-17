@@ -1,0 +1,101 @@
+# ============================================
+# TallyFinance - Docker Compose (Local Dev)
+# ============================================
+# Uso: docker-compose up --build
+# Reads .env from this directory for NGROK_AUTHTOKEN
+
+services:
+  # ============================================
+  # Redis - Puerto 6379
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: tally-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - tally-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # AI Service (FastAPI) - Puerto 8000
+  # ============================================
+  ai-service:
+    build:
+      context: ./tally-combined/ai-service_TallyFinane
+      dockerfile: Dockerfile
+    container_name: tally-ai-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./tally-combined/ai-service_TallyFinane/.env
+    restart: unless-stopped
+    networks:
+      - tally-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Backend API (NestJS) - Puerto 3000
+  # ============================================
+  backend:
+    build:
+      context: ./tally-combined/backend-API_TallyFinance
+      dockerfile: Dockerfile
+    container_name: tally-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./tally-combined/backend-API_TallyFinance/.env
+    environment:
+      # Override for Docker networking
+      - AI_SERVICE_URL=http://ai-service:8000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      ai-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tally-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Ngrok (Local Tunnel for Telegram)
+  # ============================================
+  # Get your free auth token at: https://dashboard.ngrok.com/get-started/your-authtoken
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: tally-ngrok
+    command: http backend:3000 --log stdout
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"  # ngrok web interface
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - tally-network
+
+networks:
+  tally-network:
+    driver: bridge
