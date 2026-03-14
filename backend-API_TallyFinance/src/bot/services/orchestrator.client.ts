@@ -612,6 +612,145 @@ export class OrchestratorClient {
       };
     }
 
+    // ── manage_categories pending (force delete confirmation / _create_category_offer) ──
+    if (pending && pending.tool === 'manage_categories') {
+      const collectedArgs = { ...pending.collected_args };
+
+      // Force delete confirmation
+      if (collectedArgs['_has_transactions']) {
+        if (/s[ií]|dale|ok|bueno|hazlo|fuerza|forzar|elimina/i.test(text)) {
+          return {
+            phase: 'A',
+            response_type: 'tool_call',
+            tool_call: {
+              name: 'manage_categories',
+              args: {
+                operation: 'delete',
+                name: collectedArgs['name'] as string,
+                force_delete: true,
+              },
+            },
+          };
+        }
+        return {
+          phase: 'A',
+          response_type: 'direct_reply',
+          direct_reply: 'Ok, no eliminé la categoría.',
+        };
+      }
+    }
+
+    // ── _create_category_offer pending (from register_transaction) ──
+    if (
+      pending &&
+      pending.tool === 'register_transaction' &&
+      pending.collected_args?.['_create_category_offer']
+    ) {
+      const collectedArgs = { ...pending.collected_args };
+      const offerName = collectedArgs['_create_category_offer'] as string;
+
+      if (/s[ií]|dale|ok|bueno|cr[ée]ala|ya/i.test(text)) {
+        // User confirms creating the category
+        const pendingTx: Record<string, unknown> = {};
+        if (collectedArgs['amount']) pendingTx['amount'] = collectedArgs['amount'];
+        if (collectedArgs['description']) pendingTx['description'] = collectedArgs['description'];
+        if (collectedArgs['posted_at']) pendingTx['posted_at'] = collectedArgs['posted_at'];
+
+        return {
+          phase: 'A',
+          response_type: 'tool_call',
+          tool_call: {
+            name: 'manage_categories',
+            args: {
+              operation: 'create',
+              name: offerName,
+              _pending_transaction: pendingTx,
+            },
+          },
+        };
+      }
+
+      // User picks an existing category
+      const matchedCategory = this.findBestCategoryMatch(
+        text,
+        availableCategories ?? [],
+      );
+      if (matchedCategory) {
+        return {
+          phase: 'A',
+          response_type: 'tool_call',
+          tool_call: {
+            name: 'register_transaction',
+            args: {
+              amount: collectedArgs['amount'],
+              category: matchedCategory,
+              ...(collectedArgs['description'] ? { description: collectedArgs['description'] } : {}),
+              ...(collectedArgs['posted_at'] ? { posted_at: collectedArgs['posted_at'] } : {}),
+            },
+          },
+        };
+      }
+
+      // User rejects
+      if (/no|cancel|mejor no|nah/i.test(text)) {
+        return {
+          phase: 'A',
+          response_type: 'tool_call',
+          tool_call: {
+            name: 'register_transaction',
+            args: {
+              amount: collectedArgs['amount'],
+              category: '_no_match',
+              ...(collectedArgs['description'] ? { description: collectedArgs['description'] } : {}),
+              ...(collectedArgs['posted_at'] ? { posted_at: collectedArgs['posted_at'] } : {}),
+            },
+          },
+        };
+      }
+    }
+
+    // ── manage_categories patterns ──
+    if (
+      /mis\s+categor[ií]as|ver\s+categor[ií]as|qu[ée]\s+categor[ií]as|mostrar\s*categor[ií]as|listar\s*categor[ií]as/.test(
+        text,
+      )
+    ) {
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_categories',
+          args: { operation: 'list' },
+        },
+      };
+    }
+
+    if (/crea(?:r)?\s+(?:la\s+)?categor[ií]a\s+(.+)/i.test(text)) {
+      const match = text.match(/crea(?:r)?\s+(?:la\s+)?categor[ií]a\s+(.+)/i);
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_categories',
+          args: { operation: 'create', name: match![1].trim() },
+        },
+      };
+    }
+
+    if (/elimina(?:r)?\s+(?:la\s+)?categor[ií]a\s+(.+)/i.test(text)) {
+      const match = text.match(
+        /elimina(?:r)?\s+(?:la\s+)?categor[ií]a\s+(.+)/i,
+      );
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'manage_categories',
+          args: { operation: 'delete', name: match![1].trim() },
+        },
+      };
+    }
+
     // ── manage_transactions patterns ──
     if (
       /mis\s*(últimos?\s+)?gastos|ver\s*(mis\s+)?transacciones|historial|qué he gastado|últimas transacciones|mostrar\s*gastos/.test(
@@ -917,6 +1056,85 @@ export class OrchestratorClient {
             phase: 'B',
             final_message: `Listo, cambié ${changeDetails}.`,
           };
+        }
+
+        return { phase: 'B', final_message: 'Procesado correctamente.' };
+      }
+
+      case 'manage_categories': {
+        const data = result.data as {
+          operation?: string;
+          category?: { id: string; name: string };
+          categories?: any[];
+          count?: number;
+          old_name?: string;
+          name?: string;
+          transaction?: { amount: number; category: string };
+          deleted?: boolean;
+          transactionCount?: number;
+        };
+
+        if (!data) {
+          return { phase: 'B', final_message: 'Procesado correctamente.' };
+        }
+
+        const formatCLP = (n: number) => `$${n.toLocaleString('es-CL')}`;
+
+        if (data.operation === 'list') {
+          if (!data.categories?.length) {
+            return {
+              phase: 'B',
+              final_message: 'No tienes categorías configuradas.',
+            };
+          }
+          const lines = data.categories.map((cat: any) => {
+            const icon = cat.icon ? `${cat.icon} ` : '';
+            const children =
+              cat.children?.length > 0
+                ? ` (${cat.children.map((c: any) => c.name).join(', ')})`
+                : '';
+            return `• ${icon}${cat.name}${children}`;
+          });
+          return {
+            phase: 'B',
+            final_message: `Tus categorías (${data.count}):\n${lines.join('\n')}`,
+          };
+        }
+
+        if (data.operation === 'create') {
+          return {
+            phase: 'B',
+            final_message: `¡Listo! Creé la categoría "${data.category?.name}".`,
+          };
+        }
+
+        if (data.operation === 'create_and_register' && data.transaction) {
+          return {
+            phase: 'B',
+            final_message: `Creé la categoría "${data.category?.name}" y registré ${formatCLP(data.transaction.amount)} en ella.`,
+          };
+        }
+
+        if (data.operation === 'rename') {
+          return {
+            phase: 'B',
+            final_message: `Renombré "${data.old_name}" a "${data.category?.name}".`,
+          };
+        }
+
+        if (data.operation === 'delete') {
+          if (data.deleted) {
+            return {
+              phase: 'B',
+              final_message: `Eliminé la categoría "${data.name}".`,
+            };
+          }
+          if (data.transactionCount) {
+            return {
+              phase: 'B',
+              final_message: `La categoría "${data.name}" tiene ${data.transactionCount} transacciones. ¿La elimino de todas formas?`,
+            };
+          }
         }
 
         return { phase: 'B', final_message: 'Procesado correctamente.' };

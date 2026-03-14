@@ -325,10 +325,30 @@ export class BotService {
         cid,
       );
 
-      // 9. WRITE ORDER: Metrics AFTER tool success only
-      if (toolCall.name === 'register_transaction' && result.ok) {
+      // 9. WRITE ORDER: Metrics AFTER tool success only (not slot-fill returns)
+      if (toolCall.name === 'register_transaction' && result.ok && !result.userMessage) {
         await this.metricsService.recordTransaction(userId);
         this.log.state('Transaction metrics recorded', undefined, cid);
+      }
+
+      // 9b. Record metrics for create_and_register (category creation + transaction in one turn)
+      if (
+        toolCall.name === 'manage_categories' &&
+        result.ok &&
+        result.data?.operation === 'create_and_register'
+      ) {
+        await this.metricsService.recordTransaction(userId);
+        this.log.state('Transaction metrics recorded (via category creation)', undefined, cid);
+      }
+
+      // 9c. Invalidate context cache after category mutations
+      if (
+        toolCall.name === 'manage_categories' &&
+        result.ok &&
+        !result.userMessage
+      ) {
+        await this.userContext.invalidate(userId);
+        this.log.state('Context cache invalidated (category mutation)', undefined, cid);
       }
 
       // 10. If handler returns userMessage (slot-filling), save pending state and return

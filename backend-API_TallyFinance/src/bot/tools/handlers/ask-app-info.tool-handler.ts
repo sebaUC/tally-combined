@@ -152,9 +152,53 @@ NO usar para:
           'Mientras más detalles me des, mejor registro',
         ],
         limitations: [
-          'Por ahora no puedo editar gastos ya registrados (hazlo desde la web)',
           'No puedo registrar gastos recurrentes automáticos (aún)',
         ],
+      },
+      {
+        id: 'manage_transactions',
+        name: 'Gestionar transacciones',
+        description:
+          'Puedes ver, editar o eliminar tus transacciones registradas directamente desde el chat.',
+        howToUse: [
+          'Pídeme ver tus últimos gastos',
+          'Puedes corregir montos, categorías o fechas',
+          'Puedes eliminar transacciones que registraste por error',
+        ],
+        examples: [
+          'Mis últimos gastos',
+          'Borra el último gasto',
+          'No eran 15 lucas, eran 10',
+          'Cambia la categoría a transporte',
+        ],
+        tips: [
+          'Si dices "bórralo" después de registrar, borro el último',
+          'Puedes identificar gastos por monto o categoría',
+        ],
+        limitations: [],
+      },
+      {
+        id: 'manage_categories',
+        name: 'Gestionar categorías',
+        description:
+          'Puedes crear, renombrar, listar o eliminar tus categorías de gastos desde el chat o la web.',
+        howToUse: [
+          'Pídeme ver tus categorías',
+          'Puedes crear categorías nuevas al registrar gastos o directamente',
+          'Puedes renombrar o eliminar categorías existentes',
+        ],
+        examples: [
+          '¿Qué categorías tengo?',
+          'Crea la categoría Mascotas',
+          'Elimina la categoría Suscripciones',
+          'Renombra Comida a Alimentación',
+        ],
+        tips: [
+          'Si registro un gasto y no tengo la categoría, te ofrezco crearla al tiro',
+          'Puedes tener hasta 50 categorías',
+          'También puedes gestionarlas desde el dashboard web',
+        ],
+        limitations: [],
       },
       {
         id: 'budget_status',
@@ -243,8 +287,7 @@ NO usar para:
         'No tengo información de mercados financieros en tiempo real',
       ],
       currentVersion: [
-        'No puedo editar o eliminar gastos (usa la app web)',
-        'No puedo crear presupuestos o metas (usa la app web)',
+        'No puedo crear o modificar presupuestos ni metas (usa la app web)',
         'No puedo mostrar gráficos o reportes visuales',
         'No recuerdo conversaciones anteriores entre sesiones',
       ],

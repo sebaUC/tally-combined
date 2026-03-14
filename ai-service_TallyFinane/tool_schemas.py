@@ -133,6 +133,51 @@ TOOL_SCHEMAS: List[ToolSchema] = [
         ),
     ),
     ToolSchema(
+        name="manage_categories",
+        description=(
+            "Gestiona las categorias del usuario: listar todas, crear nueva, "
+            "renombrar o eliminar una categoria existente."
+        ),
+        parameters=ToolSchemaParameters(
+            properties={
+                "operation": ToolSchemaParameter(
+                    type="string",
+                    description='Operacion: "list", "create", "rename", "delete"',
+                ),
+                "name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre de la categoria (crear, renombrar fuente, eliminar)",
+                ),
+                "new_name": ToolSchemaParameter(
+                    type="string",
+                    description="Nuevo nombre (solo para rename)",
+                ),
+                "icon": ToolSchemaParameter(
+                    type="string",
+                    description="Emoji/icono para la categoria (opcional en create)",
+                ),
+                "parent_name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre de categoria padre para crear subcategoria",
+                ),
+                "force_delete": ToolSchemaParameter(
+                    type="boolean",
+                    description="Forzar eliminacion si la categoria tiene transacciones asociadas",
+                ),
+                "_pending_transaction": ToolSchemaParameter(
+                    type="object",
+                    description=(
+                        "Datos de transaccion pendiente (amount, description, posted_at) "
+                        "para registrar despues de crear la categoria. "
+                        "Solo usar cuando el usuario confirma crear una categoria "
+                        "durante un registro de transaccion pendiente."
+                    ),
+                ),
+            },
+            required=["operation"],
+        ),
+    ),
+    ToolSchema(
         name="ask_balance",
         description="Consulta el saldo actual del usuario en sus cuentas/metodos de pago",
         parameters=ToolSchemaParameters(

@@ -514,6 +514,29 @@ NUDGES PERMITIDOS:
                 amt_str = f"${amt:,}" if isinstance(amt, (int, float)) else str(amt)
                 return f"Eliminó transacción de {amt_str} en {deleted.get('category', '?')}."
             return f"Gestionó transacciones ({op})."
+        elif tool_name == "manage_categories":
+            op = data.get("operation", "?")
+            if op == "create":
+                name = data.get("category", {}).get("name", "?") if isinstance(data.get("category"), dict) else "?"
+                return f"Creó categoría \"{name}\"."
+            elif op == "create_and_register":
+                cat_name = data.get("category", {}).get("name", "?") if isinstance(data.get("category"), dict) else "?"
+                tx = data.get("transaction", {})
+                amt = tx.get("amount", "?") if isinstance(tx, dict) else "?"
+                if isinstance(amt, (int, float)):
+                    return f"Creó categoría \"{cat_name}\" y registró ${amt:,}."
+                return f"Creó categoría \"{cat_name}\" y registró gasto."
+            elif op == "rename":
+                old_name = data.get("old_name", "?")
+                new_name = data.get("category", {}).get("name", "?") if isinstance(data.get("category"), dict) else "?"
+                return f"Renombró categoría \"{old_name}\" a \"{new_name}\"."
+            elif op == "delete":
+                name = data.get("name", "?")
+                return f"Eliminó categoría \"{name}\"."
+            elif op == "list":
+                count = data.get("count", 0)
+                return f"Listó sus {count} categorías."
+            return f"Gestionó categorías ({op})."
         elif tool_name == "ask_app_info":
             question = data.get("userQuestion", "")
             if question:

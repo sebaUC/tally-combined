@@ -536,7 +536,9 @@ export class ManageTransactionsToolHandler implements ToolHandler {
       earlyReturn: {
         ok: true,
         action: 'manage_transactions',
-        userMessage: `Encontré ${candidates.length} transacciones:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`,
+        userMessage: candidates.length > capped.length
+          ? `Encontré ${candidates.length} transacciones. Te muestro las ${capped.length} más recientes:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`
+          : `Encontré ${candidates.length} transacciones:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`,
         pending: {
           collectedArgs: {
             operation,

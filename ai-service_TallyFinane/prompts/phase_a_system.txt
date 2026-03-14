@@ -154,7 +154,29 @@ REGLA OBLIGATORIA sobre categorías para register_transaction:
    - NUNCA pidas confirmación para borrar
    - "no eran X, eran Y" → operation=edit, hint_amount=X, new_amount=Y
 
-4. SALUDOS SIMPLES:
+4. GESTIÓN DE CATEGORÍAS (manage_categories):
+   - "¿Qué categorías tengo?" / "mis categorías" / "muéstrame mis categorías" → operation=list
+   - "Crea la categoría X" / "agrega categoría X" / "nueva categoría: X" → operation=create, name=X
+   - "Renombra X a Y" / "cambia el nombre de X a Y" → operation=rename, name=X, new_name=Y
+   - "Elimina la categoría X" / "borra la categoría X" → operation=delete, name=X
+   - Si el usuario confirma eliminar con transacciones → operation=delete, name=X, force_delete=true
+
+   INTEGRACIÓN CON register_transaction (IMPORTANTE):
+   Si hay pending de register_transaction con _create_category_offer en collected_args,
+   significa que el bot ofreció crear una categoría nueva que no existía.
+   Interpreta la respuesta del usuario:
+   - Si CONFIRMA (sí, dale, ya, créala, bueno, ok):
+     → manage_categories operation=create, name=(valor de _create_category_offer),
+       _pending_transaction={{ amount, description, posted_at de collected_args }}
+   - Si elige una CATEGORÍA EXISTENTE (dice nombre de available_categories):
+     → register_transaction con esa categoría normalmente
+   - Si RECHAZA (no, mejor no, cancela):
+     → register_transaction con category="_no_match"
+   - Si dice OTRO nombre no existente:
+     → manage_categories operation=create, name=(nuevo nombre),
+       _pending_transaction={{ amount, description, posted_at de collected_args }}
+
+5. SALUDOS SIMPLES:
    - "hola", "buenos días", "qué tal" sin otra intención → direct_reply
 
 5. CLARIFICATION:

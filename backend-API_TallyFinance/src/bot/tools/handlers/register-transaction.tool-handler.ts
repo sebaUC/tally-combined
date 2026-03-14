@@ -151,13 +151,28 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       // No match found - show user their category list
       const suggestions = categories.map((c) => `• ${c.name}`).join('\n');
 
+      // If AI sent a specific name (not _no_match), offer to create it
+      if (category !== '_no_match') {
+        return {
+          ok: true,
+          action: 'register_transaction',
+          userMessage: `No encontré "${category}". ¿La creo como nueva categoría?\nTambién puedes elegir una existente:\n${suggestions}`,
+          pending: {
+            collectedArgs: {
+              amount,
+              ...(description ? { description } : {}),
+              ...(posted_at ? { posted_at } : {}),
+              _create_category_offer: category,
+            },
+            missingArgs: ['category'],
+          },
+        };
+      }
+
       return {
         ok: true,
         action: 'register_transaction',
-        userMessage: category === '_no_match'
-          ? `¿En qué categoría lo registro?\n${suggestions}`
-          : `No encontré la categoría "${category}". Elige una de tus categorías:\n${suggestions}`,
-        // IMPORTANT: Save collected amount so we don't lose it on retry
+        userMessage: `¿En qué categoría lo registro?\n${suggestions}`,
         pending: {
           collectedArgs: {
             amount,

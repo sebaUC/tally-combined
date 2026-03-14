@@ -26,11 +26,15 @@ export class GuardrailsService {
           typeof v === 'string' && v.length > 0 && v.length < 100,
         description: (v) =>
           v === undefined || (typeof v === 'string' && v.length < 500),
+        posted_at: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length < 30 && !isNaN(Date.parse(v))),
       },
       sanitizers: {
         amount: (v) => Math.round(Number(v) * 100) / 100,
         category: (v) => String(v).trim().toLowerCase(),
         description: (v) => (v ? String(v).trim() : undefined),
+        posted_at: (v) => (v ? String(v).trim() : undefined),
       },
     },
     manage_transactions: {
@@ -57,6 +61,9 @@ export class GuardrailsService {
           (typeof v === 'string' && v.length > 0 && v.length < 100),
         new_description: (v) =>
           v === undefined || (typeof v === 'string' && v.length < 500),
+        new_posted_at: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length < 30 && !isNaN(Date.parse(v))),
         choice: (v) =>
           v === undefined || (typeof v === 'number' && v >= 1 && v <= 20),
       },
@@ -81,7 +88,35 @@ export class GuardrailsService {
           v !== undefined ? Math.round(Number(v) * 100) / 100 : undefined,
         new_category: (v) => (v ? String(v).trim().toLowerCase() : undefined),
         new_description: (v) => (v ? String(v).trim() : undefined),
+        new_posted_at: (v) => (v ? String(v).trim() : undefined),
         choice: (v) => (v !== undefined ? Math.round(Number(v)) : undefined),
+      },
+    },
+    manage_categories: {
+      required: [],
+      validators: {
+        operation: (v) =>
+          typeof v === 'string' &&
+          ['list', 'create', 'rename', 'delete'].includes(v),
+        name: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length > 0 && v.length < 100),
+        new_name: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length > 0 && v.length < 100),
+        icon: (v) =>
+          v === undefined || (typeof v === 'string' && v.length < 10),
+        parent_name: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length > 0 && v.length < 100),
+        force_delete: (v) => v === undefined || typeof v === 'boolean',
+      },
+      sanitizers: {
+        operation: (v) => String(v).trim().toLowerCase(),
+        name: (v) => (v ? String(v).trim() : undefined),
+        new_name: (v) => (v ? String(v).trim() : undefined),
+        icon: (v) => (v ? String(v).trim() : undefined),
+        parent_name: (v) => (v ? String(v).trim() : undefined),
       },
     },
     ask_balance: {

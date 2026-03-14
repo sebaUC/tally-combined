@@ -12,6 +12,7 @@ import { AskGoalStatusToolHandler } from './handlers/ask-goal-status.tool-handle
 import { GreetingToolHandler } from './handlers/greeting.tool-handler';
 import { UnknownToolHandler } from './handlers/unknown.tool-handler';
 import { AskAppInfoToolHandler } from './handlers/ask-app-info.tool-handler';
+import { ManageCategoriesToolHandler } from './handlers/manage-categories.tool-handler';
 
 /**
  * ToolRegistry - OCP-compliant registry for tool handlers.
@@ -43,6 +44,7 @@ export class ToolRegistry {
       new AskBalanceToolHandler(supabase),
       new AskBudgetStatusToolHandler(supabase),
       new AskGoalStatusToolHandler(supabase),
+      new ManageCategoriesToolHandler(supabase),
       new GreetingToolHandler(),
       new AskAppInfoToolHandler(),
     ]);
