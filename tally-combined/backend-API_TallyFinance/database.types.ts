@@ -488,9 +488,8 @@ export type Database = {
       bot_tone_enum:
         | "neutral"
         | "friendly"
-        | "serious"
-        | "motivational"
         | "strict"
+        | "toxic"
       channel_t: "telegram" | "whatsapp" | "web"
       emotion_t:
         | "neutral"
@@ -649,9 +648,8 @@ export const Constants = {
       bot_tone_enum: [
         "neutral",
         "friendly",
-        "serious",
-        "motivational",
         "strict",
+        "toxic",
       ],
       channel_t: ["telegram", "whatsapp", "web"],
       emotion_t: [

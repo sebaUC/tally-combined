@@ -63,13 +63,17 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                     type="string",
                     description="Fecha de la transaccion en formato ISO-8601 (YYYY-MM-DD). Si no se especifica, usar fecha de hoy.",
                 ),
-                "payment_method": ToolSchemaParameter(
-                    type="string",
-                    description="Metodo de pago usado (ej: efectivo, tarjeta, debito, credito). Si no se menciona, el backend usara el metodo por defecto del usuario.",
-                ),
                 "description": ToolSchemaParameter(
                     type="string",
                     description="Descripcion opcional del gasto (ej: almuerzo con amigos, uber al trabajo)",
+                ),
+                "type": ToolSchemaParameter(
+                    type="string",
+                    description="Tipo: 'expense' (default) o 'income' (sueldo, pago recibido, venta). Solo enviar si es ingreso.",
+                ),
+                "name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre corto deducido del contexto (2-4 palabras, ej: 'Almuerzo', 'Sueldo marzo'). SIEMPRE enviar.",
                 ),
             },
             required=["amount", "category"],
@@ -127,6 +131,51 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 "choice": ToolSchemaParameter(
                     type="number",
                     description="Numero 1-based para elegir entre transacciones ambiguas",
+                ),
+            },
+            required=["operation"],
+        ),
+    ),
+    ToolSchema(
+        name="manage_categories",
+        description=(
+            "Gestiona las categorias del usuario: listar todas, crear nueva, "
+            "renombrar o eliminar una categoria existente."
+        ),
+        parameters=ToolSchemaParameters(
+            properties={
+                "operation": ToolSchemaParameter(
+                    type="string",
+                    description='Operacion: "list", "create", "rename", "delete"',
+                ),
+                "name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre de la categoria (crear, renombrar fuente, eliminar)",
+                ),
+                "new_name": ToolSchemaParameter(
+                    type="string",
+                    description="Nuevo nombre (solo para rename)",
+                ),
+                "icon": ToolSchemaParameter(
+                    type="string",
+                    description="Emoji/icono para la categoria (opcional en create)",
+                ),
+                "parent_name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre de categoria padre para crear subcategoria",
+                ),
+                "force_delete": ToolSchemaParameter(
+                    type="boolean",
+                    description="Forzar eliminacion si la categoria tiene transacciones asociadas",
+                ),
+                "_pending_transaction": ToolSchemaParameter(
+                    type="object",
+                    description=(
+                        "Datos de transaccion pendiente (amount, description, posted_at) "
+                        "para registrar despues de crear la categoria. "
+                        "Solo usar cuando el usuario confirma crear una categoria "
+                        "durante un registro de transaccion pendiente."
+                    ),
                 ),
             },
             required=["operation"],

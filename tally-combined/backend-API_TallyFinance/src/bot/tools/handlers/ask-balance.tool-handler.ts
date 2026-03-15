@@ -4,19 +4,20 @@ import { ToolSchema } from '../tool-schemas';
 import { DomainMessage } from '../../contracts';
 import { ActionResult } from '../../actions/action-result';
 
-interface PaymentMethodWithSpending {
+interface AccountWithBalance {
   id: string;
-  name: string | null;
+  name: string;
   institution: string | null;
-  payment_type: string;
   currency: string;
-  totalSpent: number;
+  currentBalance: number;
 }
 
 interface BalanceData {
   unifiedBalance: boolean;
+  totalBalance: number;
   totalSpent: number;
-  accounts: PaymentMethodWithSpending[];
+  totalIncome: number;
+  accounts: AccountWithBalance[];
   activeBudget: {
     period: string;
     amount: number;
@@ -26,13 +27,13 @@ interface BalanceData {
 }
 
 /**
- * AskBalanceToolHandler - Queries user's spending and budget.
+ * AskBalanceToolHandler - Queries user's balance from accounts + period spending.
  *
- * Requires context: true (needs payment methods, transactions, budget)
+ * Requires context: true (needs accounts, transactions, budget)
  *
  * Features:
- * - unifiedBalance=true: Shows total spent in single account view
- * - unifiedBalance=false: Shows spending per payment method
+ * - Reads balance from accounts.current_balance (persistido)
+ * - Shows period spending (expenses) and income separately
  * - With active budget: Shows remaining budget
  */
 export class AskBalanceToolHandler implements ToolHandler {
@@ -77,16 +78,16 @@ export class AskBalanceToolHandler implements ToolHandler {
 
       const unifiedBalance = userPrefs?.unified_balance ?? true;
 
-      // 2. Get user's payment methods
-      const { data: paymentMethods, error: pmError } = await this.supabase
-        .from('payment_method')
-        .select('id, name, institution, payment_type, currency')
+      // 2. Get user's accounts with balance
+      const { data: accounts, error: accError } = await this.supabase
+        .from('accounts')
+        .select('id, name, institution, currency, current_balance')
         .eq('user_id', userId);
 
-      if (pmError) {
+      if (accError) {
         console.error(
-          '[AskBalanceToolHandler] Payment methods query error:',
-          pmError,
+          '[AskBalanceToolHandler] Accounts query error:',
+          accError,
         );
         return {
           ok: false,
@@ -96,7 +97,7 @@ export class AskBalanceToolHandler implements ToolHandler {
         };
       }
 
-      if (!paymentMethods?.length) {
+      if (!accounts?.length) {
         return {
           ok: true,
           action: 'ask_balance',
@@ -122,57 +123,51 @@ export class AskBalanceToolHandler implements ToolHandler {
         year: 'numeric',
       });
 
-      // 4. Get transactions for current period
-      const { data: transactions, error: txError } = await this.supabase
+      // 4. Get period expenses
+      const { data: periodExpenses, error: expError } = await this.supabase
         .from('transactions')
-        .select('amount, payment_method_id')
+        .select('amount, account_id')
         .eq('user_id', userId)
+        .eq('type', 'expense')
         .gte('posted_at', startOfMonth.toISOString())
         .lte('posted_at', endOfMonth.toISOString());
 
-      if (txError) {
+      if (expError) {
         console.error(
-          '[AskBalanceToolHandler] Transactions query error:',
-          txError,
+          '[AskBalanceToolHandler] Expenses query error:',
+          expError,
         );
-        return {
-          ok: false,
-          action: 'ask_balance',
-          errorCode: 'DB_QUERY_FAILED',
-          userMessage: 'Hubo un problema consultando tus transacciones.',
-        };
       }
 
-      // 5. Calculate spending per payment method
-      const spendingByMethod = new Map<string, number>();
-      let totalSpent = 0;
+      // 5. Get period income
+      const { data: periodIncome, error: incError } = await this.supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('type', 'income')
+        .gte('posted_at', startOfMonth.toISOString())
+        .lte('posted_at', endOfMonth.toISOString());
 
-      for (const tx of transactions ?? []) {
-        const amount = Number(tx.amount) || 0;
-        totalSpent += amount;
-
-        const currentSpent = spendingByMethod.get(tx.payment_method_id) || 0;
-        spendingByMethod.set(tx.payment_method_id, currentSpent + amount);
+      if (incError) {
+        console.error(
+          '[AskBalanceToolHandler] Income query error:',
+          incError,
+        );
       }
 
-      // 6. Build accounts with spending data
-      const accountsWithSpending: PaymentMethodWithSpending[] =
-        paymentMethods.map(
-          (pm: {
-            id: string;
-            name: string | null;
-            institution: string | null;
-            payment_type: string;
-            currency: string;
-          }) => ({
-            id: pm.id,
-            name: pm.name,
-            institution: pm.institution,
-            payment_type: pm.payment_type,
-            currency: pm.currency,
-            totalSpent: spendingByMethod.get(pm.id) || 0,
-          }),
-        );
+      // 6. Calculate totals
+      const totalBalance = accounts.reduce(
+        (sum: number, a: any) => sum + Number(a.current_balance),
+        0,
+      );
+      const totalSpent = (periodExpenses ?? []).reduce(
+        (sum: number, tx: any) => sum + Number(tx.amount),
+        0,
+      );
+      const totalIncome = (periodIncome ?? []).reduce(
+        (sum: number, tx: any) => sum + Number(tx.amount),
+        0,
+      );
 
       // 7. Get active budget (monthly preferred)
       const { data: budget, error: budgetError } = await this.supabase
@@ -187,7 +182,6 @@ export class AskBalanceToolHandler implements ToolHandler {
           '[AskBalanceToolHandler] Budget query error:',
           budgetError,
         );
-        // Not critical, continue without budget
       }
 
       let activeBudget: BalanceData['activeBudget'] = null;
@@ -203,8 +197,16 @@ export class AskBalanceToolHandler implements ToolHandler {
       // 8. Return data for Phase B
       const balanceData: BalanceData = {
         unifiedBalance,
+        totalBalance,
         totalSpent,
-        accounts: accountsWithSpending,
+        totalIncome,
+        accounts: accounts.map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          institution: a.institution,
+          currency: a.currency,
+          currentBalance: Number(a.current_balance),
+        })),
         activeBudget,
         periodLabel,
       };

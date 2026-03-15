@@ -130,7 +130,7 @@ export class ManageTransactionsToolHandler implements ToolHandler {
 
     const { data: transactions, error } = await this.supabase
       .from('transactions')
-      .select('id, amount, posted_at, description, categories(name), payment_method(name)')
+      .select('id, amount, posted_at, description, type, name, categories(name)')
       .eq('user_id', userId)
       .order('posted_at', { ascending: false })
       .limit(limit);
@@ -151,7 +151,8 @@ export class ManageTransactionsToolHandler implements ToolHandler {
       category: tx.categories?.name ?? null,
       description: tx.description ?? null,
       posted_at: tx.posted_at,
-      payment_method: tx.payment_method?.name ?? null,
+      type: tx.type ?? 'expense',
+      name: tx.name ?? null,
     }));
 
     return {
@@ -176,6 +177,13 @@ export class ManageTransactionsToolHandler implements ToolHandler {
 
     const tx = resolved.transaction!;
 
+    // Fetch full transaction to get account_id and type for balance revert
+    const { data: fullTx } = await this.supabase
+      .from('transactions')
+      .select('account_id, type')
+      .eq('id', tx.id)
+      .single();
+
     const { error } = await this.supabase
       .from('transactions')
       .delete()
@@ -190,6 +198,16 @@ export class ManageTransactionsToolHandler implements ToolHandler {
         errorCode: 'DB_DELETE_FAILED',
         userMessage: 'Hubo un problema eliminando la transacción.',
       };
+    }
+
+    // Revert balance: if was expense, add back; if was income, subtract
+    if (fullTx?.account_id) {
+      const txType = fullTx.type ?? 'expense';
+      const revertDelta = txType === 'income' ? -tx.amount : tx.amount;
+      await this.supabase.rpc('update_account_balance', {
+        p_account_id: fullTx.account_id,
+        p_delta: revertDelta,
+      });
     }
 
     return {
@@ -340,6 +358,26 @@ export class ManageTransactionsToolHandler implements ToolHandler {
         errorCode: 'DB_UPDATE_FAILED',
         userMessage: 'Hubo un problema actualizando la transacción.',
       };
+    }
+
+    // Adjust balance if amount changed
+    if (new_amount !== undefined && new_amount !== tx.amount) {
+      const { data: fullTx } = await this.supabase
+        .from('transactions')
+        .select('account_id, type')
+        .eq('id', tx.id)
+        .single();
+
+      if (fullTx?.account_id) {
+        const txType = fullTx.type ?? 'expense';
+        const oldDelta = txType === 'income' ? tx.amount : -tx.amount;
+        const newDelta = txType === 'income' ? new_amount : -new_amount;
+        const balanceAdjust = newDelta - oldDelta;
+        await this.supabase.rpc('update_account_balance', {
+          p_account_id: fullTx.account_id,
+          p_delta: balanceAdjust,
+        });
+      }
     }
 
     // Re-fetch updated transaction
@@ -536,7 +574,9 @@ export class ManageTransactionsToolHandler implements ToolHandler {
       earlyReturn: {
         ok: true,
         action: 'manage_transactions',
-        userMessage: `Encontré ${candidates.length} transacciones:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`,
+        userMessage: candidates.length > capped.length
+          ? `Encontré ${candidates.length} transacciones. Te muestro las ${capped.length} más recientes:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`
+          : `Encontré ${candidates.length} transacciones:\n${lines.join('\n')}\n\n¿Cuál? (responde con el número)`,
         pending: {
           collectedArgs: {
             operation,

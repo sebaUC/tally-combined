@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Body, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { JwtGuard } from '../auth/middleware/jwt.guard';
 import { User } from '../auth/decorators/user.decorator';
@@ -27,5 +27,50 @@ export class UsersController {
       200,
     );
     return this.users.getTransactions(user.id, parsedLimit);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch('settings')
+  async updateSettings(
+    @User() user: any,
+    @Body()
+    body: {
+      tone?: string;
+      intensity?: number;
+      notification_level?: string;
+      full_name?: string;
+      nickname?: string;
+      age?: number;
+    },
+  ) {
+    const results: Record<string, any> = {};
+
+    // Update users table if profile fields provided
+    const profilePatch: Record<string, any> = {};
+    if (body.full_name !== undefined) profilePatch.full_name = body.full_name;
+    if (body.nickname !== undefined) profilePatch.nickname = body.nickname;
+    if (body.age !== undefined) profilePatch.age = body.age;
+
+    if (Object.keys(profilePatch).length > 0) {
+      results.profile = await this.users.updateProfile(user.id, profilePatch);
+    }
+
+    // Update personality_snapshot if tone or intensity provided
+    const personaPatch: Record<string, any> = {};
+    if (body.tone) personaPatch.tone = body.tone;
+    if (body.intensity !== undefined) personaPatch.intensity = body.intensity;
+
+    if (Object.keys(personaPatch).length > 0) {
+      results.personality = await this.users.updatePersona(user.id, personaPatch);
+    }
+
+    // Update user_prefs if notification_level provided
+    if (body.notification_level) {
+      results.prefs = await this.users.updatePrefs(user.id, {
+        notification_level: body.notification_level,
+      });
+    }
+
+    return results;
   }
 }

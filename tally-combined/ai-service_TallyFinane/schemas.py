@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 # =============================================================================
 
 # From bot_tone_enum
-ToneType = Literal["neutral", "friendly", "serious", "motivational", "strict"]
+ToneType = Literal["neutral", "friendly", "strict", "toxic"]
 
 # From bot_mood_enum
 MoodType = Literal["normal", "happy", "disappointed", "tired", "hopeful", "frustrated", "proud"]

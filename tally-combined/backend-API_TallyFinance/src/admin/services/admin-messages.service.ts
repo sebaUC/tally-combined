@@ -198,24 +198,42 @@ export class AdminMessagesService {
     Array<{
       user_id: string;
       email: string | null;
+      full_name: string | null;
       message_count: number;
       last_message_at: string;
       has_errors: boolean;
     }>
   > {
-    // Get all unique users with their message counts
-    const { data: messages, error } = await this.supabase
-      .from('bot_message_log')
-      .select('user_id, created_at, error')
-      .not('user_id', 'is', null)
-      .order('created_at', { ascending: false });
+    // Fetch ALL messages — Supabase defaults to 1000 rows, so we paginate
+    // to avoid silently losing users whose messages fall beyond the limit.
+    const PAGE_SIZE = 1000;
+    let allMessages: Array<{
+      user_id: string;
+      created_at: string;
+      error: string | null;
+    }> = [];
+    let offset = 0;
+    let hasMore = true;
 
-    if (error) {
-      console.error(
-        '[AdminMessagesService] Error fetching active users:',
-        error,
-      );
-      throw new Error('Failed to fetch active users');
+    while (hasMore) {
+      const { data: page, error } = await this.supabase
+        .from('bot_message_log')
+        .select('user_id, created_at, error')
+        .not('user_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) {
+        console.error(
+          '[AdminMessagesService] Error fetching active users:',
+          error,
+        );
+        throw new Error('Failed to fetch active users');
+      }
+
+      allMessages = allMessages.concat(page || []);
+      hasMore = (page?.length ?? 0) === PAGE_SIZE;
+      offset += PAGE_SIZE;
     }
 
     // Aggregate by user
@@ -228,7 +246,7 @@ export class AdminMessagesService {
       }
     >();
 
-    for (const msg of messages || []) {
+    for (const msg of allMessages) {
       if (!msg.user_id) continue;
 
       const existing = userMap.get(msg.user_id);
@@ -244,11 +262,12 @@ export class AdminMessagesService {
       }
     }
 
-    // Get user emails
+    // Get user emails and names
     const userIds = Array.from(userMap.keys());
     const usersWithEmails: Array<{
       user_id: string;
       email: string | null;
+      full_name: string | null;
       message_count: number;
       last_message_at: string;
       has_errors: boolean;
@@ -257,11 +276,13 @@ export class AdminMessagesService {
     for (const userId of userIds) {
       const stats = userMap.get(userId)!;
       let email: string | null = null;
+      let fullName: string | null = null;
 
       try {
         const { data: userData } =
           await this.supabase.auth.admin.getUserById(userId);
         email = userData?.user?.email || null;
+        fullName = userData?.user?.user_metadata?.full_name || null;
       } catch {
         // Ignore errors getting email
       }
@@ -269,6 +290,7 @@ export class AdminMessagesService {
       usersWithEmails.push({
         user_id: userId,
         email,
+        full_name: fullName,
         ...stats,
       });
     }
