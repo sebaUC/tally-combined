@@ -41,6 +41,14 @@ export class RegisterTransactionToolHandler implements ToolHandler {
           type: 'string',
           description: 'Descripción opcional del gasto',
         },
+        type: {
+          type: 'string',
+          description: 'Tipo: expense (default) o income',
+        },
+        name: {
+          type: 'string',
+          description: 'Nombre corto de la transacción',
+        },
       },
       required: ['amount', 'category'],
     },
@@ -61,7 +69,8 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       date,
       posted_at,
       description,
-      payment_method_id,
+      type,
+      name,
       _categories,
     } = args as {
       amount?: number;
@@ -69,7 +78,8 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       date?: string;
       posted_at?: string;
       description?: string;
-      payment_method_id?: string;
+      type?: string;
+      name?: string;
       _categories?: Array<{ id: string; name: string }>;
     };
 
@@ -78,7 +88,7 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       return {
         ok: true,
         action: 'register_transaction',
-        userMessage: '¿Cuánto fue el gasto exactamente?',
+        userMessage: '¿Cuánto fue exactamente?',
         pending: {
           collectedArgs: {
             ...(category ? { category } : {}),
@@ -184,44 +194,42 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       };
     }
 
-    // 4. Get payment_method_id - use provided or get user's default
-    let finalPaymentMethodId = payment_method_id;
-    if (!finalPaymentMethodId) {
-      const { data: defaultPaymentMethod, error: pmError } = await this.supabase
-        .from('payment_method')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
+    // 4. Get account_id - user's default account
+    const { data: defaultAccount, error: accError } = await this.supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
 
-      if (pmError) {
-        console.error(
-          '[RegisterTransactionToolHandler] Payment method query error:',
-          pmError,
-        );
-        return {
-          ok: false,
-          action: 'register_transaction',
-          errorCode: 'DB_QUERY_FAILED',
-          userMessage:
-            'Hubo un problema consultando tus métodos de pago. Intenta de nuevo.',
-        };
-      }
-
-      if (!defaultPaymentMethod) {
-        return {
-          ok: true,
-          action: 'register_transaction',
-          userMessage:
-            'Aún no tienes métodos de pago configurados. Primero configura uno desde la app web.',
-        };
-      }
-
-      finalPaymentMethodId = defaultPaymentMethod.id;
+    if (accError) {
+      console.error(
+        '[RegisterTransactionToolHandler] Account query error:',
+        accError,
+      );
+      return {
+        ok: false,
+        action: 'register_transaction',
+        errorCode: 'DB_QUERY_FAILED',
+        userMessage:
+          'Hubo un problema consultando tus cuentas. Intenta de nuevo.',
+      };
     }
+
+    if (!defaultAccount) {
+      return {
+        ok: true,
+        action: 'register_transaction',
+        userMessage:
+          'No tienes cuentas configuradas. Completa el onboarding.',
+      };
+    }
+
+    const accountId = defaultAccount.id;
 
     // 5. Insert transaction
     const parsedAmount = Number(amount);
+    const txType = type ?? 'expense';
     const { data: inserted, error } = await this.supabase
       .from('transactions')
       .insert({
@@ -230,9 +238,11 @@ export class RegisterTransactionToolHandler implements ToolHandler {
         category_id: matched.id,
         posted_at: postedAt,
         description: description ?? null,
-        payment_method_id: finalPaymentMethodId,
+        account_id: accountId,
         source: 'chat_intent',
         status: 'posted',
+        type: txType,
+        name: name ?? null,
       })
       .select('id')
       .single();
@@ -246,6 +256,22 @@ export class RegisterTransactionToolHandler implements ToolHandler {
       };
     }
 
+    // 6. Update account balance
+    const balanceDelta = txType === 'income' ? parsedAmount : -parsedAmount;
+    const { error: balanceError } = await this.supabase.rpc(
+      'update_account_balance',
+      { p_account_id: accountId, p_delta: balanceDelta },
+    );
+
+    if (balanceError) {
+      console.error(
+        '[RegisterTransactionToolHandler] Balance update error:',
+        balanceError,
+      );
+      // Non-critical: transaction was inserted, balance will be inconsistent
+      // but can be recalculated later
+    }
+
     return {
       ok: true,
       action: 'register_transaction',
@@ -255,7 +281,9 @@ export class RegisterTransactionToolHandler implements ToolHandler {
         category: matched.name,
         posted_at: postedAt,
         description: description ?? null,
-        payment_method_id: finalPaymentMethodId,
+        account_id: accountId,
+        type: txType,
+        name: name ?? null,
       },
     };
   }

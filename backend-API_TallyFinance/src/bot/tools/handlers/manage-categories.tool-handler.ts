@@ -102,7 +102,7 @@ export class ManageCategoriesToolHandler implements ToolHandler {
   private async handleList(userId: string): Promise<ActionResult> {
     const { data, error } = await this.supabase
       .from('categories')
-      .select('id, name, icon, parent_id')
+      .select('id, name, icon, parent_id, budget')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
 
@@ -123,9 +123,10 @@ export class ManageCategoriesToolHandler implements ToolHandler {
       id: p.id,
       name: p.name,
       icon: p.icon,
+      budget: p.budget ?? 0,
       children: children
         .filter((c: any) => c.parent_id === p.id)
-        .map((c: any) => ({ id: c.id, name: c.name, icon: c.icon })),
+        .map((c: any) => ({ id: c.id, name: c.name, icon: c.icon, budget: c.budget ?? 0 })),
     }));
 
     return {
@@ -245,9 +246,10 @@ export class ManageCategoriesToolHandler implements ToolHandler {
         name: trimmedName,
         icon: icon ?? null,
         parent_id: parentId,
+        budget: 0,
         created_at: new Date().toISOString(),
       })
-      .select('id, name, icon, parent_id')
+      .select('id, name, icon, parent_id, budget')
       .single();
 
     if (error) {
@@ -492,20 +494,20 @@ export class ManageCategoriesToolHandler implements ToolHandler {
     const description = (pendingTx.description as string) ?? null;
     const postedAt = (pendingTx.posted_at as string) ?? new Date().toISOString();
 
-    // Get payment method
-    const { data: pm } = await this.supabase
-      .from('payment_method')
+    // Get default account
+    const { data: account } = await this.supabase
+      .from('accounts')
       .select('id')
       .eq('user_id', userId)
       .limit(1)
       .maybeSingle();
 
-    if (!pm) {
+    if (!account) {
       return {
         ok: true,
         action: 'manage_categories',
-        data: { operation: 'create', name: category.name },
-        // Transaction can't be registered without payment method
+        data: { operation: 'create', category: { id: category.id, name: category.name } },
+        // Transaction can't be registered without account
       };
     }
 
@@ -517,12 +519,20 @@ export class ManageCategoriesToolHandler implements ToolHandler {
         category_id: category.id,
         posted_at: postedAt,
         description,
-        payment_method_id: pm.id,
+        account_id: account.id,
         source: 'chat_intent',
         status: 'posted',
       })
       .select('id')
       .single();
+
+    // Update account balance (expense by default)
+    if (!error && account.id) {
+      await this.supabase.rpc('update_account_balance', {
+        p_account_id: account.id,
+        p_delta: -amount,
+      });
+    }
 
     if (error) {
       return {

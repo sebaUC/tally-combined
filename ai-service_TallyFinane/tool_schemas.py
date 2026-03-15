@@ -63,13 +63,17 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                     type="string",
                     description="Fecha de la transaccion en formato ISO-8601 (YYYY-MM-DD). Si no se especifica, usar fecha de hoy.",
                 ),
-                "payment_method": ToolSchemaParameter(
-                    type="string",
-                    description="Metodo de pago usado (ej: efectivo, tarjeta, debito, credito). Si no se menciona, el backend usara el metodo por defecto del usuario.",
-                ),
                 "description": ToolSchemaParameter(
                     type="string",
                     description="Descripcion opcional del gasto (ej: almuerzo con amigos, uber al trabajo)",
+                ),
+                "type": ToolSchemaParameter(
+                    type="string",
+                    description="Tipo: 'expense' (default) o 'income' (sueldo, pago recibido, venta). Solo enviar si es ingreso.",
+                ),
+                "name": ToolSchemaParameter(
+                    type="string",
+                    description="Nombre corto deducido del contexto (2-4 palabras, ej: 'Almuerzo', 'Sueldo marzo'). SIEMPRE enviar.",
                 ),
             },
             required=["amount", "category"],

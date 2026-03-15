@@ -13,6 +13,12 @@ export interface BudgetInfo {
   spent?: number | null;
 }
 
+export interface AccountInfo {
+  id: string;
+  name: string;
+  currentBalance: number;
+}
+
 export interface MinimalUserContext {
   userId: string;
   displayName: string | null;
@@ -39,6 +45,8 @@ export interface MinimalUserContext {
   goalsSummary?: string[];
   // User's available categories for transaction matching
   categories?: CategoryInfo[];
+  // User's accounts with balance
+  accounts?: AccountInfo[];
 }
 
 @Injectable()
@@ -101,6 +109,7 @@ export class UserContextService {
       { data: spending, error: spendingError },
       { data: goals, error: goalsError },
       { data: categories, error: categoriesError },
+      { data: accounts, error: accountsError },
     ] = await Promise.all([
       // users table has: full_name, nickname, timezone, locale
       this.supabase
@@ -131,6 +140,11 @@ export class UserContextService {
         .eq('user_id', userId),
       // Fetch user's categories for transaction matching
       this.supabase.from('categories').select('id, name').eq('user_id', userId),
+      // Fetch user's accounts with balance
+      this.supabase
+        .from('accounts')
+        .select('id, name, current_balance')
+        .eq('user_id', userId),
     ]);
 
     if (profileError) {
@@ -155,6 +169,11 @@ export class UserContextService {
     if (categoriesError) {
       this.log.warn(
         `[fetchContext] Categories error: ${categoriesError.message}`,
+      );
+    }
+    if (accountsError) {
+      this.log.warn(
+        `[fetchContext] Accounts error: ${accountsError.message}`,
       );
     }
 
@@ -199,6 +218,12 @@ export class UserContextService {
         categories?.map((c: { id: string; name: string }) => ({
           id: c.id,
           name: c.name,
+        })) ?? [],
+      accounts:
+        accounts?.map((a: { id: string; name: string; current_balance: number }) => ({
+          id: a.id,
+          name: a.name,
+          currentBalance: Number(a.current_balance),
         })) ?? [],
     };
   }

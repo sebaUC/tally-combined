@@ -289,7 +289,6 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         # Extract personality or use defaults
         personality = user_context.personality
         tone = personality.tone if personality else "neutral"
-        intensity = personality.intensity if personality else 0.5
         base_mood = personality.mood if personality and personality.mood else "normal"
 
         # Calculate final mood from runtime context
@@ -362,7 +361,6 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
 
 {system_prompt_template.format(
     tone=tone,
-    intensity=intensity,
     mood=final_mood,
     tool_name=tool_name,
     ok=action_result.ok,
@@ -477,17 +475,25 @@ NUDGES PERMITIDOS:
         if tool_name == "register_transaction":
             amount = data.get("amount", "?")
             category = data.get("category", "gasto")
-            desc = data.get("description", "")
+            tx_type = data.get("type", "expense")
+            name = data.get("name", "")
             if isinstance(amount, (int, float)):
+                if tx_type == "income":
+                    label = name or "ingreso"
+                    return f"Registró ingreso de ${amount:,} ({label})."
                 base = f"Registró ${amount:,} en {category}"
-                if desc:
-                    base += f" ({desc})"
+                if name:
+                    base += f" ({name})"
                 return base + "."
-            return f"Registró gasto en {category}."
+            return f"Registró {'ingreso' if tx_type == 'income' else 'gasto'} en {category}."
         elif tool_name == "ask_balance":
-            total = data.get("totalSpent")
-            if total and isinstance(total, (int, float)):
-                return f"Consultó su balance (${total:,.0f} gastado este mes)."
+            total_balance = data.get("totalBalance")
+            total_spent = data.get("totalSpent")
+            if total_balance and isinstance(total_balance, (int, float)):
+                parts = [f"balance ${total_balance:,.0f}"]
+                if total_spent and isinstance(total_spent, (int, float)) and total_spent > 0:
+                    parts.append(f"${total_spent:,.0f} gastado este mes")
+                return f"Consultó su balance ({', '.join(parts)})."
             return "Consultó su balance."
         elif tool_name == "ask_budget_status":
             budget_data = data.get("budget") or data

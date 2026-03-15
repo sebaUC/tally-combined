@@ -29,12 +29,20 @@ export class GuardrailsService {
         posted_at: (v) =>
           v === undefined ||
           (typeof v === 'string' && v.length < 30 && !isNaN(Date.parse(v))),
+        type: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && ['expense', 'income'].includes(v)),
+        name: (v) =>
+          v === undefined ||
+          (typeof v === 'string' && v.length > 0 && v.length < 200),
       },
       sanitizers: {
         amount: (v) => Math.round(Number(v) * 100) / 100,
         category: (v) => String(v).trim().toLowerCase(),
         description: (v) => (v ? String(v).trim() : undefined),
         posted_at: (v) => (v ? String(v).trim() : undefined),
+        type: (v) => (v ? String(v).trim().toLowerCase() : undefined),
+        name: (v) => (v ? String(v).trim() : undefined),
       },
     },
     manage_transactions: {

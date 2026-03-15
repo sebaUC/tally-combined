@@ -24,9 +24,8 @@ export type NotificationLevel = (typeof notificationLevels)[number];
 export const botTones = [
   'neutral',
   'friendly',
-  'serious',
-  'motivational',
   'strict',
+  'toxic',
 ] as const;
 export type BotTone = (typeof botTones)[number];
 

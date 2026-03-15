@@ -7,6 +7,7 @@ interface CategoryRow {
   name: string;
   icon: string | null;
   parent_id: string | null;
+  budget: number;
   created_at: string;
 }
 
@@ -26,7 +27,7 @@ export class CategoriesService {
   async list(userId: string): Promise<{ categories: CategoryTree[] }> {
     const { data, error } = await this.supabase
       .from('categories')
-      .select('id, name, icon, parent_id, created_at')
+      .select('id, name, icon, parent_id, budget, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
 
@@ -94,9 +95,10 @@ export class CategoriesService {
         name: dto.name,
         icon: dto.icon ?? null,
         parent_id: dto.parentId ?? null,
+        budget: 0,
         created_at: new Date().toISOString(),
       })
-      .select('id, name, icon, parent_id')
+      .select('id, name, icon, parent_id, budget')
       .single();
 
     if (error) throw new Error(error.message);
@@ -108,7 +110,7 @@ export class CategoriesService {
   async update(
     userId: string,
     categoryId: string,
-    dto: { name?: string; icon?: string; parentId?: string },
+    dto: { name?: string; icon?: string; parentId?: string; budget?: number },
   ) {
     // Verify ownership
     const { data: existing } = await this.supabase
@@ -140,13 +142,14 @@ export class CategoriesService {
     if (dto.name !== undefined) payload.name = dto.name;
     if (dto.icon !== undefined) payload.icon = dto.icon;
     if (dto.parentId !== undefined) payload.parent_id = dto.parentId;
+    if (dto.budget !== undefined) payload.budget = dto.budget;
 
     const { data: updated, error } = await this.supabase
       .from('categories')
       .update(payload)
       .eq('id', categoryId)
       .eq('user_id', userId)
-      .select('id, name, icon, parent_id')
+      .select('id, name, icon, parent_id, budget')
       .single();
 
     if (error) throw new Error(error.message);

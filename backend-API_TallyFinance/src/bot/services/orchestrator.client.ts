@@ -409,7 +409,6 @@ export class OrchestratorClient {
       personality: context.personality
         ? {
             tone: context.personality.tone ?? null,
-            intensity: context.personality.intensity ?? null,
             mood: context.personality.mood ?? null,
           }
         : null,
@@ -536,6 +535,35 @@ export class OrchestratorClient {
         phase: 'A',
         response_type: 'direct_reply',
         direct_reply: '¡Hola! ¿En qué te puedo ayudar hoy?',
+      };
+    }
+
+    // Income detection (before expense pattern)
+    if (/me\s+pagar|recib[ií]\s+sueldo|me\s+deposit|cobr[eé]|me\s+abonar|lleg[oó]\s+(?:el\s+)?sueldo|vend[ií]/i.test(text)) {
+      const amountMatch = text.match(
+        /(\d+(?:[.,]\d+)?)\s*(?:lucas?|pesos?|clp)?/i,
+      );
+      let amount: number | null = null;
+      if (amountMatch) {
+        const numStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
+        amount = parseFloat(numStr) * (text.includes('luca') ? 1000 : 1);
+      }
+
+      if (!amount) {
+        return {
+          phase: 'A',
+          response_type: 'clarification',
+          clarification: '¿Cuánto fue exactamente?',
+        };
+      }
+
+      return {
+        phase: 'A',
+        response_type: 'tool_call',
+        tool_call: {
+          name: 'register_transaction',
+          args: { amount, category: '_no_match', type: 'income', name: 'Ingreso' },
+        },
       };
     }
 
@@ -888,11 +916,22 @@ export class OrchestratorClient {
       case 'register_transaction': {
         const amount = result.data?.amount;
         const category = result.data?.category;
-        if (amount && category) {
-          return {
-            phase: 'B',
-            final_message: `¡Listo! Registré $${Number(amount).toLocaleString('es-CL')} en ${category}.`,
-          };
+        const txType = result.data?.type ?? 'expense';
+        const txName = result.data?.name;
+        if (amount) {
+          const formatted = `$${Number(amount).toLocaleString('es-CL')}`;
+          if (txType === 'income') {
+            return {
+              phase: 'B',
+              final_message: `¡Anotado! Ingreso de ${formatted}${txName ? ` (${txName})` : ''}.`,
+            };
+          }
+          if (category) {
+            return {
+              phase: 'B',
+              final_message: `¡Listo! Registré ${formatted} en ${category}${txName ? ` (${txName})` : ''}.`,
+            };
+          }
         }
         return { phase: 'B', final_message: '¡Listo! Transacción registrada.' };
       }
@@ -900,8 +939,10 @@ export class OrchestratorClient {
       case 'ask_balance': {
         const data = result.data as {
           unifiedBalance: boolean;
+          totalBalance: number;
           totalSpent: number;
-          accounts: Array<{ name: string | null; totalSpent: number }>;
+          totalIncome: number;
+          accounts: Array<{ name: string | null; currentBalance: number }>;
           activeBudget: {
             period: string;
             amount: number;
@@ -921,23 +962,25 @@ export class OrchestratorClient {
         let message = '';
 
         if (data.unifiedBalance) {
-          // Cuenta unificada - mostrar total
-          message = `En ${data.periodLabel} has gastado ${formatCLP(data.totalSpent)}.`;
+          message = `Tu balance actual es ${formatCLP(data.totalBalance)}.`;
+          message += ` En ${data.periodLabel}: gastos ${formatCLP(data.totalSpent)}`;
+          if (data.totalIncome > 0) {
+            message += `, ingresos ${formatCLP(data.totalIncome)}`;
+          }
+          message += '.';
         } else {
-          // Múltiples cuentas - mostrar desglose
           const accountLines = data.accounts
-            .filter((a) => a.totalSpent > 0)
-            .map((a) => `• ${a.name || 'Cuenta'}: ${formatCLP(a.totalSpent)}`)
+            .map((a) => `• ${a.name || 'Cuenta'}: ${formatCLP(a.currentBalance)}`)
             .join('\n');
 
-          if (accountLines) {
-            message = `Gastos en ${data.periodLabel}:\n${accountLines}\n\nTotal: ${formatCLP(data.totalSpent)}`;
-          } else {
-            message = `En ${data.periodLabel} no tienes gastos registrados aún.`;
+          message = `Tus cuentas:\n${accountLines}\n\nBalance total: ${formatCLP(data.totalBalance)}`;
+          message += `\nEn ${data.periodLabel}: gastos ${formatCLP(data.totalSpent)}`;
+          if (data.totalIncome > 0) {
+            message += `, ingresos ${formatCLP(data.totalIncome)}`;
           }
+          message += '.';
         }
 
-        // Agregar información del presupuesto si existe
         if (data.activeBudget) {
           const { amount, remaining, period } = data.activeBudget;
           const periodNames: Record<string, string> = {

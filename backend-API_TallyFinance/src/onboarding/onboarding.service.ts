@@ -27,7 +27,8 @@ export class OnboardingService {
     await this.upsertUserPrefs(userId, answers, now);
     await this.upsertPersonalitySnapshot(userId, answers, now);
     await this.syncSpendingExpectations(userId, answers, now);
-    await this.syncPaymentMethods(userId, answers, now);
+    const accountIds = await this.syncAccounts(userId, answers, now);
+    await this.syncPaymentMethods(userId, answers, now, accountIds);
     await this.syncCategories(userId, answers, now);
     await this.syncGoals(userId, answers, now);
     await this.markOnboardingCompleted(userId, now);
@@ -175,10 +176,92 @@ export class OnboardingService {
     }
   }
 
+  private async syncAccounts(
+    userId: string,
+    answers: OnboardingAnswers,
+    _now: string,
+  ): Promise<string[]> {
+    const paymentMethods = answers.payment_method ?? [];
+    const unifiedBalance = answers.unifiedBalance ?? true;
+
+    this.logger.log(
+      `[onboarding] Sincronizando accounts para ${userId} unifiedBalance=${unifiedBalance}`,
+    );
+
+    // Clean existing accounts
+    await this.supabase.from('accounts').delete().eq('user_id', userId);
+
+    if (unifiedBalance || !paymentMethods.length) {
+      // Create a single unified account
+      const accountId = randomUUID();
+      const { error } = await this.supabase.from('accounts').insert({
+        id: accountId,
+        user_id: userId,
+        name: 'Cuenta Principal',
+        institution: null,
+        currency: 'CLP',
+        current_balance: 0,
+      });
+
+      if (error) {
+        this.logger.error(
+          `[onboarding] No se pudo crear account unificada: ${error.message}`,
+        );
+        throw new InternalServerErrorException(
+          'No se pudo crear la cuenta.',
+        );
+      }
+
+      this.logger.log(
+        `[onboarding] Account unificada creada id=${accountId}`,
+      );
+      return [accountId];
+    }
+
+    // Multi-account: group payment methods by institution, create one account per unique institution
+    const institutionMap = new Map<string, string>();
+    const accountIds: string[] = [];
+
+    for (const method of paymentMethods) {
+      const key = (method.institution ?? 'default').toLowerCase();
+      if (!institutionMap.has(key)) {
+        const accountId = randomUUID();
+        const { error } = await this.supabase.from('accounts').insert({
+          id: accountId,
+          user_id: userId,
+          name: method.institution
+            ? `Cuenta ${method.institution}`
+            : 'Cuenta Principal',
+          institution: method.institution ?? null,
+          currency: method.currency ?? 'CLP',
+          current_balance: 0,
+        });
+
+        if (error) {
+          this.logger.error(
+            `[onboarding] No se pudo crear account: ${error.message}`,
+          );
+          throw new InternalServerErrorException(
+            'No se pudo crear la cuenta.',
+          );
+        }
+
+        institutionMap.set(key, accountId);
+        accountIds.push(accountId);
+      }
+    }
+
+    this.logger.log(
+      `[onboarding] ${accountIds.length} accounts creadas`,
+    );
+    return accountIds;
+  }
+
   private async syncPaymentMethods(
     userId: string,
     answers: OnboardingAnswers,
     now: string,
+    accountIds: string[] = [],
   ) {
     const paymentMethods = answers.payment_method ?? [];
     const unifiedBalance = answers.unifiedBalance ?? false;
@@ -200,55 +283,35 @@ export class OnboardingService {
       );
     }
 
-    // Si unifiedBalance=true y no hay payment methods, crear uno por defecto
-    if (!paymentMethods.length && unifiedBalance) {
-      this.logger.log(
-        '[onboarding] unifiedBalance=true sin payment_method, creando cuenta unificada por defecto',
-      );
-
-      const defaultPaymentMethod = {
-        id: randomUUID(),
-        user_id: userId,
-        name: 'Cuenta Principal',
-        institution: null,
-        payment_type: 'debito' as const,
-        currency: 'CLP',
-        number_masked: null,
-      };
-
-      const { error } = await this.supabase
-        .from('payment_method')
-        .insert(defaultPaymentMethod);
-
-      if (error) {
-        this.logger.error(
-          `[onboarding] No se pudo crear cuenta unificada por defecto: ${error.message}`,
-        );
-        throw new InternalServerErrorException(
-          'No se pudo crear la cuenta unificada.',
-        );
-      }
-
-      this.logger.log(
-        `[onboarding] Cuenta unificada creada con id=${defaultPaymentMethod.id}`,
-      );
-      return;
-    }
-
     if (!paymentMethods.length) {
       this.logger.log('[onboarding] No se recibieron medios de pago.');
       return;
     }
 
-    const records = paymentMethods.map((method) => ({
-      id: randomUUID(),
-      user_id: userId,
-      name: method.name,
-      institution: method.institution,
-      payment_type: method.payment_type,
-      currency: method.currency,
-      number_masked: this.parser.sanitizeMaskedDigits(method.number_masked),
-    }));
+    // Look up accounts by institution to link payment methods
+    const { data: userAccounts } = await this.supabase
+      .from('accounts')
+      .select('id, institution')
+      .eq('user_id', userId);
+
+    const records = paymentMethods.map((method) => {
+      // Find matching account by institution
+      const matchedAccount = userAccounts?.find(
+        (a: any) =>
+          (a.institution ?? '').toLowerCase() ===
+          (method.institution ?? '').toLowerCase(),
+      );
+      return {
+        id: randomUUID(),
+        user_id: userId,
+        name: method.name,
+        institution: method.institution,
+        payment_type: method.payment_type,
+        currency: method.currency,
+        number_masked: this.parser.sanitizeMaskedDigits(method.number_masked),
+        account_id: matchedAccount?.id ?? accountIds[0] ?? null,
+      };
+    });
 
     const { error } = await this.supabase
       .from('payment_method')
@@ -301,6 +364,7 @@ export class OnboardingService {
         name: category.name,
         parent_id: null,
         icon: category.icon ?? null,
+        budget: 0,
         created_at: now,
       });
 
@@ -312,6 +376,7 @@ export class OnboardingService {
             name: child.name,
             parent_id: parentId,
             icon: child.icon ?? null,
+            budget: 0,
             created_at: now,
           });
         });
