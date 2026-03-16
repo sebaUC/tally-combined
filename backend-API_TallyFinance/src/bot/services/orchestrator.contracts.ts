@@ -5,7 +5,6 @@ export interface AiUserContextPayload {
   user_id: string;
   personality: {
     tone: string | null;
-    intensity: number | null;
     mood: string | null;
   } | null;
   prefs: {
