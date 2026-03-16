@@ -73,9 +73,22 @@ def orchestrate(
                     status_code=400,
                     detail={"detail": "Phase A requires user_text or media", "code": ERROR_MISSING_USER_TEXT},
                 )
-            # If no text but has media, set a default prompt
+            # If no text but has media, set a default prompt based on media type
             if (not req.user_text or not req.user_text.strip()) and has_media:
-                req.user_text = "Analiza este archivo y extrae la información financiera."
+                media_types = [m.type for m in req.media]
+                if "audio" in media_types:
+                    req.user_text = (
+                        "IMPORTANTE: El usuario envió un mensaje de voz. "
+                        "TRANSCRIBE lo que dice en el audio y usa ESA información para decidir. "
+                        "IGNORA transacciones previas del historial — solo procesa lo que dice el audio."
+                    )
+                elif "image" in media_types:
+                    req.user_text = (
+                        "El usuario envió una foto. Analiza la imagen y extrae la información financiera "
+                        "(monto, comercio, categoría). Si es una boleta o recibo, extrae el total."
+                    )
+                else:
+                    req.user_text = "Analiza este archivo y extrae la información financiera."
 
             response = orchestrator.phase_a(
                 user_text=req.user_text,
