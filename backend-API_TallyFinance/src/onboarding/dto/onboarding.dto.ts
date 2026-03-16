@@ -141,12 +141,33 @@ class PaymentMethodDto {
   number_masked?: string;
 }
 
-class IncomeExpectationDto {
-  @IsString()
-  period: string;
+class IncomeEntryDto {
+  @IsBoolean()
+  active: boolean;
 
   @IsString()
   amount: string;
+
+  @IsOptional()
+  @IsString()
+  payDay?: string;
+}
+
+class IncomeExpectationsDto {
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  monthly?: IncomeEntryDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  weekly?: IncomeEntryDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  daily?: IncomeEntryDto;
 }
 
 export class OnboardingAnswers {
@@ -166,8 +187,8 @@ export class OnboardingAnswers {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => IncomeExpectationDto)
-  incomeExpectations?: IncomeExpectationDto;
+  @Type(() => IncomeExpectationsDto)
+  incomeExpectations?: IncomeExpectationsDto;
 
   @IsObject()
   @ValidateNested()
