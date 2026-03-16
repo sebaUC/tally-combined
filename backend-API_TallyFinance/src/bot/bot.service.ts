@@ -371,7 +371,7 @@ export class BotService {
           }, cid);
 
           const txHandler = this.toolRegistry.getHandler('register_transaction');
-          const txArgs = {
+          const txArgs: Record<string, unknown> = {
             ...pending.collectedArgs,
             category: newCategoryName,
           };
