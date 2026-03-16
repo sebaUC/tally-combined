@@ -67,11 +67,15 @@ def orchestrate(
                     status_code=400,
                     detail={"detail": "Invalid request for Phase A", "code": ERROR_INVALID_PHASE},
                 )
-            if not req.user_text or not req.user_text.strip():
+            has_media = bool(req.media)
+            if (not req.user_text or not req.user_text.strip()) and not has_media:
                 raise HTTPException(
                     status_code=400,
-                    detail={"detail": "Phase A requires user_text", "code": ERROR_MISSING_USER_TEXT},
+                    detail={"detail": "Phase A requires user_text or media", "code": ERROR_MISSING_USER_TEXT},
                 )
+            # If no text but has media, set a default prompt
+            if (not req.user_text or not req.user_text.strip()) and has_media:
+                req.user_text = "Analiza este archivo y extrae la información financiera."
 
             response = orchestrator.phase_a(
                 user_text=req.user_text,
