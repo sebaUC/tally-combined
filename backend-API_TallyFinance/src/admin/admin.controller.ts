@@ -159,4 +159,17 @@ export class AdminController {
       data,
     };
   }
+
+  /**
+   * GET /admin/usage/per-user
+   * Returns estimated token usage and cost per user
+   */
+  @Get('usage/per-user')
+  async getUsagePerUser() {
+    const data = await this.messagesService.getUsagePerUser();
+    return {
+      ok: true,
+      data,
+    };
+  }
 }

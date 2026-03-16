@@ -194,6 +194,137 @@ export class AdminMessagesService {
     };
   }
 
+  async getUsagePerUser(): Promise<
+    Array<{
+      user_id: string;
+      email: string | null;
+      full_name: string | null;
+      message_count: number;
+      phase_a_count: number;
+      phase_b_count: number;
+      estimated_tokens: number;
+      estimated_cost_usd: number;
+      last_message_at: string;
+    }>
+  > {
+    // Fetch all messages with phase debug info to determine which phases ran
+    const PAGE_SIZE = 1000;
+    let allMessages: Array<{
+      user_id: string;
+      phase_a_debug: Record<string, unknown> | null;
+      phase_b_debug: Record<string, unknown> | null;
+      created_at: string;
+    }> = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data: page, error } = await this.supabase
+        .from('bot_message_log')
+        .select('user_id, phase_a_debug, phase_b_debug, created_at')
+        .not('user_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) throw new Error('Failed to fetch usage data');
+      allMessages = allMessages.concat(page || []);
+      hasMore = (page?.length ?? 0) === PAGE_SIZE;
+      offset += PAGE_SIZE;
+    }
+
+    // Token estimation per call (based on measured averages)
+    // Phase A (Gemini): ~550 input + ~50 output = 600 tokens
+    // Phase B (OpenAI): ~1020 input + ~80 output = 1100 tokens
+    const PHASE_A_TOKENS = 600;
+    const PHASE_B_TOKENS = 1100;
+    // Cost: Phase A = Gemini ($0.10/1M in + $0.40/1M out) ≈ $0.000075/call
+    // Phase B = OpenAI ($0.15/1M in + $0.60/1M out) ≈ $0.000201/call
+    const PHASE_A_COST = 0.000075;
+    const PHASE_B_COST = 0.000201;
+
+    // Aggregate by user
+    const userMap = new Map<
+      string,
+      {
+        message_count: number;
+        phase_a_count: number;
+        phase_b_count: number;
+        last_message_at: string;
+      }
+    >();
+
+    for (const msg of allMessages) {
+      if (!msg.user_id) continue;
+
+      const hasPhaseA = msg.phase_a_debug !== null;
+      const hasPhaseB = msg.phase_b_debug !== null;
+
+      const existing = userMap.get(msg.user_id);
+      if (existing) {
+        existing.message_count++;
+        if (hasPhaseA) existing.phase_a_count++;
+        if (hasPhaseB) existing.phase_b_count++;
+      } else {
+        userMap.set(msg.user_id, {
+          message_count: 1,
+          phase_a_count: hasPhaseA ? 1 : 0,
+          phase_b_count: hasPhaseB ? 1 : 0,
+          last_message_at: msg.created_at,
+        });
+      }
+    }
+
+    // Get user emails and calculate costs
+    const userIds = Array.from(userMap.keys());
+    const results: Array<{
+      user_id: string;
+      email: string | null;
+      full_name: string | null;
+      message_count: number;
+      phase_a_count: number;
+      phase_b_count: number;
+      estimated_tokens: number;
+      estimated_cost_usd: number;
+      last_message_at: string;
+    }> = [];
+
+    for (const userId of userIds) {
+      const stats = userMap.get(userId)!;
+      let email: string | null = null;
+      let fullName: string | null = null;
+
+      try {
+        const { data: userData } =
+          await this.supabase.auth.admin.getUserById(userId);
+        email = userData?.user?.email || null;
+        fullName = userData?.user?.user_metadata?.full_name || null;
+      } catch {
+        // Ignore
+      }
+
+      const estimatedTokens =
+        stats.phase_a_count * PHASE_A_TOKENS +
+        stats.phase_b_count * PHASE_B_TOKENS;
+      const estimatedCost =
+        stats.phase_a_count * PHASE_A_COST +
+        stats.phase_b_count * PHASE_B_COST;
+
+      results.push({
+        user_id: userId,
+        email,
+        full_name: fullName,
+        ...stats,
+        estimated_tokens: estimatedTokens,
+        estimated_cost_usd: Math.round(estimatedCost * 1000000) / 1000000,
+      });
+    }
+
+    // Sort by cost (highest first)
+    results.sort((a, b) => b.estimated_cost_usd - a.estimated_cost_usd);
+
+    return results;
+  }
+
   async getActiveUsers(): Promise<
     Array<{
       user_id: string;
