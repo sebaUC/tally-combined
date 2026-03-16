@@ -352,6 +352,56 @@ export class BotService {
         this.log.state('Context cache invalidated (category mutation)', undefined, cid);
       }
 
+      // 9d. Auto-complete pending register_transaction after category creation
+      // If user had a pending tx waiting for category, and just created a new category,
+      // complete the transaction with the newly created category
+      if (
+        toolCall.name === 'manage_categories' &&
+        result.ok &&
+        !result.userMessage &&
+        result.data?.operation === 'create' &&
+        pending?.tool === 'register_transaction' &&
+        pending.collectedArgs.amount
+      ) {
+        const newCategoryName = result.data?.category?.name;
+        if (newCategoryName) {
+          this.log.state('Auto-completing pending tx with new category', {
+            category: newCategoryName,
+            amount: pending.collectedArgs.amount,
+          }, cid);
+
+          const txHandler = this.toolRegistry.getHandler('register_transaction');
+          const txArgs = {
+            ...pending.collectedArgs,
+            category: newCategoryName,
+          };
+
+          // Re-fetch categories to include the newly created one
+          const freshContext = await this.userContext.getContext(userId);
+          if (freshContext.categories?.length) {
+            txArgs._categories = freshContext.categories;
+          }
+
+          const txResult = await txHandler.execute(userId, m, txArgs);
+
+          if (txResult.ok && !txResult.userMessage) {
+            await this.metricsService.recordTransaction(userId);
+            await this.conversation.clearPending(userId);
+            this.log.ok('Pending tx auto-completed', {
+              amount: pending.collectedArgs.amount,
+              category: newCategoryName,
+            }, cid);
+
+            // Override result so Phase B reports both: category created + tx registered
+            result.data = {
+              ...result.data,
+              operation: 'create_and_register',
+              transaction: txResult.data,
+            };
+          }
+        }
+      }
+
       // 10. If handler returns userMessage (slot-filling), save pending state and return
       if (result.userMessage) {
         if (result.pending) {
@@ -431,8 +481,21 @@ export class BotService {
           const cat = args.category || '';
           const name = args.name || '';
           phaseBUserText = `Registrar $${args.amount} en ${cat}${name ? ` (${name})` : ''}`;
+        } else if (toolCall.name === 'manage_categories') {
+          const op = args.operation || 'gestionar';
+          const name = args.name || '';
+          phaseBUserText = `${op === 'create' ? 'Crear categoría' : op === 'delete' ? 'Eliminar categoría' : op === 'rename' ? 'Renombrar categoría' : 'Gestionar categorías'} ${name}`.trim();
+        } else if (toolCall.name === 'manage_transactions') {
+          const op = args.operation || '';
+          phaseBUserText = `${op === 'list' ? 'Ver mis transacciones' : op === 'edit' ? 'Editar transacción' : op === 'delete' ? 'Eliminar transacción' : 'Gestionar transacciones'}`;
+        } else if (toolCall.name === 'ask_balance') {
+          phaseBUserText = 'Consultar mi balance';
+        } else if (toolCall.name === 'ask_budget_status') {
+          phaseBUserText = 'Ver mi presupuesto';
+        } else if (toolCall.name === 'ask_goal_status') {
+          phaseBUserText = 'Ver mis metas';
         } else {
-          phaseBUserText = `[Mensaje de voz/imagen procesado]`;
+          phaseBUserText = `[Solicitud por mensaje de voz]`;
         }
       }
 
