@@ -240,8 +240,8 @@ export class AdminUsageService {
           this.logger.log(`[costs] Raw amount sample: ${JSON.stringify(r.amount)}, line_item: ${r.line_item}`);
           this._loggedRawCost = true;
         }
-        // OpenAI costs API: amount.value needs *100 to match dashboard USD
-        const cost = (r.amount?.value ?? 0) * 100;
+        // OpenAI costs API: amount.value is in USD directly
+        const cost = r.amount?.value ?? 0;
         const lineItem = r.line_item ?? 'other';
 
         totalCostUsd += cost;
