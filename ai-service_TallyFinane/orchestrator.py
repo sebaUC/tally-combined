@@ -272,17 +272,13 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         else:
             categories_text = "Sin categorías disponibles (usar inferencia general)."
 
-        # Escape curly braces in dynamic JSON to prevent .format() KeyError
-        safe_user_context = user_context_json.replace("{", "{{").replace("}", "}}")
-        safe_tool_schemas = tool_schemas_json.replace("{", "{{").replace("}", "}}")
-        safe_pending = pending_context_text.replace("{", "{{").replace("}", "}}")
-
-        system_prompt = system_prompt_template.format(
-            user_context=safe_user_context,
-            tool_schemas=safe_tool_schemas,
-            pending_context=safe_pending,
-            available_categories=categories_text,
-        )
+        # Use manual replacement instead of .format() to avoid KeyError
+        # (.format() conflicts with JSON curly braces in templates and data)
+        system_prompt = system_prompt_template
+        system_prompt = system_prompt.replace("{user_context}", user_context_json)
+        system_prompt = system_prompt.replace("{tool_schemas}", tool_schemas_json)
+        system_prompt = system_prompt.replace("{pending_context}", pending_context_text)
+        system_prompt = system_prompt.replace("{available_categories}", categories_text)
 
         # Build message array: system + conversation history + current user message
         messages = [{"role": "system", "content": system_prompt}]
@@ -466,30 +462,24 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         # Resolve user name for personalization
         user_name = user_context.display_name or ""
 
-        # Escape curly braces in dynamic data to prevent .format() KeyError
-        # (tool results may contain {name}, {amount}, etc.)
-        safe_data = data_json.replace("{", "{{").replace("}", "}}")
-        safe_app_knowledge = app_knowledge_json.replace("{", "{{").replace("}", "}}")
-        safe_budget = budget_json.replace("{", "{{").replace("}", "}}")
-        safe_error = error_info.replace("{", "{{").replace("}", "}}")
-        safe_ai_instruction = ai_instruction.replace("{", "{{").replace("}", "}}")
+        # Use manual replacement instead of .format() to avoid KeyError
+        formatted_template = system_prompt_template
+        formatted_template = formatted_template.replace("{tone}", tone)
+        formatted_template = formatted_template.replace("{mood}", final_mood)
+        formatted_template = formatted_template.replace("{user_name}", user_name or "desconocido")
+        formatted_template = formatted_template.replace("{tool_name}", tool_name)
+        formatted_template = formatted_template.replace("{ok}", str(action_result.ok))
+        formatted_template = formatted_template.replace("{data}", data_json)
+        formatted_template = formatted_template.replace("{user_question}", user_question)
+        formatted_template = formatted_template.replace("{app_knowledge}", app_knowledge_json)
+        formatted_template = formatted_template.replace("{ai_instruction}", ai_instruction)
+        formatted_template = formatted_template.replace("{error_info}", error_info)
+        formatted_template = formatted_template.replace("{active_budget}", budget_json)
+        formatted_template = formatted_template.replace("{goals_summary}", goals_summary)
 
         system_prompt = f"""{gus_identity}
 
-{system_prompt_template.format(
-    tone=tone,
-    mood=final_mood,
-    user_name=user_name or "desconocido",
-    tool_name=tool_name,
-    ok=action_result.ok,
-    data=safe_data,
-    user_question=user_question,
-    app_knowledge=safe_app_knowledge,
-    ai_instruction=safe_ai_instruction,
-    error_info=safe_error,
-    active_budget=safe_budget,
-    goals_summary=goals_summary,
-)}
+{formatted_template}
 
 CONTEXTO DE LA SESION:
 {conv_summary if conv_summary else "Primera interaccion de esta sesion."}
@@ -604,12 +594,11 @@ NUDGES PERMITIDOS:
         else:
             categories_text = "Categorías del usuario: Alimentación, Transporte, Hogar, Salud, Personal, Entretenimiento, Educación, Servicios"
 
-        system_prompt = system_prompt_template.format(
-            user_context=user_context_json.replace("{", "{{").replace("}", "}}"),
-            tool_schemas=tool_schemas_json.replace("{", "{{").replace("}", "}}"),
-            pending_context=pending_context_text,
-            available_categories=categories_text,
-        )
+        system_prompt = system_prompt_template
+        system_prompt = system_prompt.replace("{user_context}", user_context_json)
+        system_prompt = system_prompt.replace("{tool_schemas}", tool_schemas_json)
+        system_prompt = system_prompt.replace("{pending_context}", pending_context_text)
+        system_prompt = system_prompt.replace("{available_categories}", categories_text)
 
         messages = [
             {"role": "system", "content": system_prompt},
