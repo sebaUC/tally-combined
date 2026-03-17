@@ -234,7 +234,8 @@ export class AdminUsageService {
       const results = bucket.results ?? [];
 
       for (const r of results) {
-        const cost = (r.amount?.value ?? 0) / 100; // cents to dollars
+        // OpenAI costs API returns amount.value in USD (not cents)
+        const cost = r.amount?.value ?? 0;
         const lineItem = r.line_item ?? 'other';
 
         totalCostUsd += cost;
