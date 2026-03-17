@@ -272,10 +272,15 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         else:
             categories_text = "Sin categorías disponibles (usar inferencia general)."
 
+        # Escape curly braces in dynamic JSON to prevent .format() KeyError
+        safe_user_context = user_context_json.replace("{", "{{").replace("}", "}}")
+        safe_tool_schemas = tool_schemas_json.replace("{", "{{").replace("}", "}}")
+        safe_pending = pending_context_text.replace("{", "{{").replace("}", "}}")
+
         system_prompt = system_prompt_template.format(
-            user_context=user_context_json,
-            tool_schemas=tool_schemas_json,
-            pending_context=pending_context_text,
+            user_context=safe_user_context,
+            tool_schemas=safe_tool_schemas,
+            pending_context=safe_pending,
             available_categories=categories_text,
         )
 
@@ -600,8 +605,8 @@ NUDGES PERMITIDOS:
             categories_text = "Categorías del usuario: Alimentación, Transporte, Hogar, Salud, Personal, Entretenimiento, Educación, Servicios"
 
         system_prompt = system_prompt_template.format(
-            user_context=user_context_json,
-            tool_schemas=tool_schemas_json,
+            user_context=user_context_json.replace("{", "{{").replace("}", "}}"),
+            tool_schemas=tool_schemas_json.replace("{", "{{").replace("}", "}}"),
             pending_context=pending_context_text,
             available_categories=categories_text,
         )
