@@ -119,105 +119,123 @@ export class ActionPlannerService {
       }
     }
 
-    // 3. Execute ready items in order
-    const readyItems = block.items
-      .filter((i) => i.status === 'ready')
-      .sort((a, b) => a.id - b.id);
+    // 3. Execute ready items in topological order.
+    // Use a while loop so that when an item unlocks a dependency, the newly
+    // unblocked item is also executed in the same pass (not deferred to next turn).
+    const processedIds = new Set<number>();
+    let madeProgress = true;
 
-    for (const item of readyItems) {
-      this.log.tool(`[item:${item.id}] Executing ${item.tool}`, { args: item.args }, cid);
+    while (madeProgress) {
+      madeProgress = false;
 
-      // Validate with guardrails
-      const toolCall = { name: item.tool, args: { ...item.args } };
-      const validation = this.guardrails.validate(toolCall);
+      const readyNow = block.items
+        .filter((i) => i.status === 'ready' && !processedIds.has(i.id))
+        .sort((a, b) => a.id - b.id);
 
-      if (!validation.valid) {
-        item.status = 'failed';
-        this.log.warn(
-          `[item:${item.id}] Guardrails rejected: ${validation.error}`,
-          undefined,
-          cid,
-        );
-        continue;
-      }
+      for (const item of readyNow) {
+        processedIds.add(item.id);
+        this.log.tool(`[item:${item.id}] Executing ${item.tool}`, { args: item.args }, cid);
 
-      const sanitizedArgs = validation.sanitized?.args ?? item.args;
+        // Validate with guardrails
+        const toolCall = { name: item.tool, args: { ...item.args } };
+        const validation = this.guardrails.validate(toolCall);
 
-      // Inject categories for tools that need them
-      if (
-        (item.tool === 'register_transaction' || item.tool === 'manage_transactions') &&
-        context.categories?.length
-      ) {
-        sanitizedArgs._categories = context.categories;
-      }
-
-      try {
-        const handler = this.toolRegistry.getHandler(item.tool);
-        const result = await handler.execute(userId, msg, sanitizedArgs);
-        item.result = result;
-
-        if (result.ok && !result.userMessage) {
-          item.status = 'executed';
-          executedCount++;
-          executedItems.push(item);
-
-          const txId = result.data?.id ?? result.data?.transaction?.id;
-          const confirmation = this.responseBuilder.buildConfirmation(
-            item.tool,
-            result.data ?? {},
-            txId,
-          );
-          if (confirmation.text) replies.push(confirmation);
-
-          this.log.ok(
-            `[item:${item.id}] ${item.tool} OK`,
-            { ms: 0 },
+        if (!validation.valid) {
+          item.status = 'failed';
+          this.log.warn(
+            `[item:${item.id}] Guardrails rejected: ${validation.error}`,
+            undefined,
             cid,
           );
+          continue;
+        }
 
-          // Unlock downstream dependencies
-          for (const dep of block.items) {
-            if (dep.status === 'depends_on' && dep.dependsOn === item.id) {
-              dep.status = 'ready';
+        const sanitizedArgs = validation.sanitized?.args ?? item.args;
+
+        // Inject categories for tools that need them
+        if (
+          (item.tool === 'register_transaction' || item.tool === 'manage_transactions') &&
+          context.categories?.length
+        ) {
+          sanitizedArgs._categories = context.categories;
+        }
+
+        try {
+          const handler = this.toolRegistry.getHandler(item.tool);
+          const result = await handler.execute(userId, msg, sanitizedArgs);
+          item.result = result;
+
+          if (result.ok && !result.userMessage) {
+            item.status = 'executed';
+            executedCount++;
+            executedItems.push(item);
+            madeProgress = true;
+
+            const txId = result.data?.id ?? result.data?.transaction?.id;
+            const confirmation = this.responseBuilder.buildConfirmation(
+              item.tool,
+              result.data ?? {},
+              txId,
+            );
+            if (confirmation.text) replies.push(confirmation);
+
+            this.log.ok(
+              `[item:${item.id}] ${item.tool} OK`,
+              { ms: 0 },
+              cid,
+            );
+
+            // Unlock downstream dependencies — they'll be picked up next iteration
+            for (const dep of block.items) {
+              if (dep.status === 'depends_on' && dep.dependsOn === item.id) {
+                dep.status = 'ready';
+                this.log.state(
+                  `[item:${dep.id}] Unlocked by item:${item.id}`,
+                  undefined,
+                  cid,
+                );
+              }
             }
+          } else if (result.userMessage) {
+            // Handler needs more info (slot-fill)
+            item.status = 'needs_info';
+            item.question = result.userMessage;
+            item.attempts++;
+            if (result.pending) {
+              item.args = { ...item.args, ...result.pending.collectedArgs };
+            }
+            this.log.slot(
+              `[item:${item.id}] Needs slot-fill`,
+              { question: result.userMessage.substring(0, 50) },
+              cid,
+            );
+          } else {
+            item.status = 'failed';
+            this.log.err(
+              `[item:${item.id}] Handler failed: ${result.errorCode}`,
+              undefined,
+              cid,
+            );
           }
-        } else if (result.userMessage) {
-          // Handler needs more info (slot-fill)
-          item.status = 'needs_info';
-          item.question = result.userMessage;
-          item.attempts++;
-          if (result.pending) {
-            item.args = { ...item.args, ...result.pending.collectedArgs };
-          }
-          this.log.slot(
-            `[item:${item.id}] Needs slot-fill`,
-            { question: result.userMessage.substring(0, 50) },
-            cid,
-          );
-        } else {
+        } catch (err) {
           item.status = 'failed';
           this.log.err(
-            `[item:${item.id}] Handler failed: ${result.errorCode}`,
+            `[item:${item.id}] Exception in ${item.tool}: ${String(err)}`,
             undefined,
             cid,
           );
         }
-      } catch (err) {
-        item.status = 'failed';
-        this.log.err(
-          `[item:${item.id}] Exception in ${item.tool}: ${String(err)}`,
-          undefined,
-          cid,
-        );
       }
     }
 
-    // 4. Ask for needs_info items (that weren't just transitioned from ready)
+    // 4. Ask for needs_info items
+    // Items that transitioned to needs_info during execution already had attempts++
+    // inside the loop. Items that were ALREADY needs_info before this pass get
+    // incremented here (they are NOT in processedIds).
     const needsInfoItems = block.items.filter((i) => i.status === 'needs_info');
     if (needsInfoItems.length > 0) {
-      // Increment attempts for items that were ALREADY needs_info (not just set)
       for (const item of needsInfoItems) {
-        if (!readyItems.includes(item)) {
+        if (!processedIds.has(item.id)) {
           item.attempts++;
         }
       }

@@ -86,14 +86,18 @@ export class AdminController {
   async getUserChat(
     @Param('userId') userId: string,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
-    const messages = await this.messagesService.getUserChat(
+    const result = await this.messagesService.getUserChat(
       userId,
-      limit ? parseInt(limit, 10) : 50,
+      limit ? parseInt(limit, 10) : 30,
+      offset ? parseInt(offset, 10) : 0,
     );
     return {
       ok: true,
-      data: messages,
+      data: result.data,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 

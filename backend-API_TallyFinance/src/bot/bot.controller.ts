@@ -146,6 +146,9 @@ export class BotController implements OnModuleInit {
     // Download media attachments (photos, voice, documents)
     await this.wa.downloadMedia(body, domainMsg);
 
+    // Mark as read — shows blue checkmarks while processing
+    this.wa.markAsRead(domainMsg.platformMessageId, domainMsg.externalId).catch(() => {});
+
     try {
       this.log.debug(`[WA] DomainMessage text="${domainMsg.text}" media=${domainMsg.media?.length ?? 0}`);
       const replies = await this.bot.handle(domainMsg);
@@ -210,12 +213,17 @@ export class BotController implements OnModuleInit {
     // Download media attachments (photos, voice, documents)
     await this.tg.downloadMedia(body, domainMsg);
 
+    // Start "typing..." indicator — repeats every 4s until reply is sent
+    const stopTyping = this.tg.startTyping(domainMsg);
+
     try {
       this.log.debug(`[TG] DomainMessage text="${domainMsg.text}" media=${domainMsg.media?.length ?? 0}`);
       const replies = await this.bot.handle(domainMsg);
+      stopTyping();
       await this.sendTgReplies(domainMsg, replies);
       return 'OK';
     } catch (err) {
+      stopTyping();
       if (err instanceof HttpException) throw err;
       console.error('[TG][ERROR]', err);
       throw new InternalServerErrorException(

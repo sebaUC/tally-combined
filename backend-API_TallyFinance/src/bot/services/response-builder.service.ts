@@ -13,7 +13,11 @@ export class ResponseBuilderService {
 
   formatDate(dateStr?: string): string {
     const d = dateStr ? new Date(dateStr) : new Date();
-    return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+    return d.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      timeZone: 'America/Santiago',
+    });
   }
 
   escapeHtml(text: string): string {

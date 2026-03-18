@@ -96,20 +96,32 @@ export class AdminMessagesService {
     };
   }
 
-  async getUserChat(userId: string, limit = 50): Promise<MessageLogEntry[]> {
-    const { data, error } = await this.supabase
+  async getUserChat(
+    userId: string,
+    limit = 30,
+    offset = 0,
+  ): Promise<{ data: MessageLogEntry[]; hasMore: boolean; total: number }> {
+    const { data, error, count } = await this.supabase
       .from('bot_message_log')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-      .limit(limit);
+      .order('created_at', { ascending: false }) // newest first
+      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error('[AdminMessagesService] Error fetching user chat:', error);
       throw new Error('Failed to fetch user chat');
     }
 
-    return data || [];
+    const total = count ?? 0;
+    // Return in ascending order so frontend renders oldest→newest
+    const reversed = (data || []).reverse();
+
+    return {
+      data: reversed,
+      hasMore: offset + limit < total,
+      total,
+    };
   }
 
   async getErrors(

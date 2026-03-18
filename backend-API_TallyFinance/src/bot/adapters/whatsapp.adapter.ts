@@ -142,6 +142,32 @@ export class WhatsappAdapter {
       .replace(/<[^>]*>/g, '');            // strip remaining tags
   }
 
+  /**
+   * Mark a WhatsApp message as read (shows blue double checkmarks).
+   * WhatsApp Cloud API doesn't support a true typing indicator,
+   * so read receipt is the closest equivalent UX signal.
+   */
+  async markAsRead(messageId: string, to: string): Promise<void> {
+    const token = this.cfg.get<string>('WHATSAPP_TOKEN');
+    const phoneNumberId = this.cfg.get<string>('WHATSAPP_PHONE_NUMBER_ID');
+    const base = this.cfg.get<string>('WHATSAPP_GRAPH_API_BASE');
+    const v = this.cfg.get<string>('WHATSAPP_GRAPH_API_VERSION');
+    if (!token || !phoneNumberId || !base || !v) return;
+
+    try {
+      await axios.post(
+        `${base}/${v}/${phoneNumberId}/messages`,
+        { messaging_product: 'whatsapp', status: 'read', message_id: messageId },
+        {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          timeout: 5_000,
+        },
+      );
+    } catch {
+      // Best-effort — silently ignore
+    }
+  }
+
   async sendReply(dm: DomainMessage, text: string, opts?: { parseMode?: 'HTML' }) {
     const token = this.cfg.get<string>('WHATSAPP_TOKEN');
     const phoneNumberId = this.cfg.get<string>('WHATSAPP_PHONE_NUMBER_ID');

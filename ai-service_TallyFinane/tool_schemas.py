@@ -73,7 +73,23 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
                 "name": ToolSchemaParameter(
                     type="string",
-                    description="Nombre corto deducido del contexto (2-4 palabras, ej: 'Almuerzo', 'Sueldo marzo'). SIEMPRE enviar.",
+                    description=(
+                        "Nombre breve e indicativo de la transaccion. SIEMPRE enviar. "
+                        "FORMATO: 2-4 palabras, Title Case, sin articulos (el/la/un/una), sin monto. "
+                        "PATRONES por contexto: "
+                        "Comida/Resto → [Ocasion o Lugar]: 'Almuerzo Trabajo', 'Cena Cumpleanos', 'Sushi Delivery', 'Cafe Reunion'. "
+                        "Transporte → [Servicio Destino]: 'Uber Aeropuerto', 'Bencina Auto', 'TAG Semana'. "
+                        "Streaming/Suscripciones → [Servicio]: 'Netflix', 'Spotify', 'Disney Plus'. "
+                        "Servicios/Hogar → [Servicio Mes]: 'Luz Abril', 'Arriendo Mayo', 'Internet'. "
+                        "Salud → [Tipo Contexto]: 'Consulta Medica', 'Farmacia Gripe', 'Gym Mensual'. "
+                        "Ropa → [Tipo Uso]: 'Zapatillas Running', 'Polera Trabajo', 'Ropa Verano'. "
+                        "Supermercado → [Lugar Frecuencia]: 'Super Semana', 'Jumbo Mensual'. "
+                        "Ingreso sueldo → 'Sueldo [Mes]': 'Sueldo Marzo'. "
+                        "Ingreso freelance → 'Freelance [Proyecto]': 'Freelance Logo', 'Freelance Web'. "
+                        "Ingreso venta → 'Venta [Objeto]': 'Venta Bicicleta', 'Venta Ropa'. "
+                        "Agrega mes solo cuando sea relevante (sueldos, arriendos, servicios recurrentes). "
+                        "Prioriza contexto util sobre genericidad: 'Uber Trabajo' es mejor que 'Transporte'."
+                    ),
                 ),
             },
             required=["amount"],
@@ -158,7 +174,17 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
                 "icon": ToolSchemaParameter(
                     type="string",
-                    description="Emoji/icono para la categoria (opcional en create)",
+                    description=(
+                        "Emoji representativo para la categoría. "
+                        "Para operation=create: OBLIGATORIO, siempre asignar uno acorde al nombre. "
+                        "Ejemplos: Comida/Alimentación→🍽️, Transporte→🚗, Salud→💊, "
+                        "Ropa/Vestuario→👕, Entretenimiento→🎬, Hogar→🏠, Trabajo→💼, "
+                        "Ahorro→💰, Deporte/Gym→💪, Educación→📚, Mascotas→🐾, "
+                        "Viaje/Vacaciones→✈️, Restaurante→🍴, Tecnología→💻, "
+                        "Bar/Alcohol→🍺, Supermercado→🛒, Gasolina→⛽, Ocio→🎯, "
+                        "Cuidado personal→💆, Servicios→🔧, Streaming→📺, "
+                        "Delivery→📦, Farmacia→💊, Café→☕, Gym→🏋️"
+                    ),
                 ),
                 "parent_name": ToolSchemaParameter(
                     type="string",

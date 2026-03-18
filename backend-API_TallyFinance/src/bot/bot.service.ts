@@ -280,7 +280,7 @@ export class BotService {
           null,
         );
         this.saveHistoryAsync(userId, m.text, phaseA.direct_reply!);
-        return { replies: [{ text: phaseA.direct_reply! }], metrics };
+        return { replies: [{ text: phaseA.direct_reply!, parseMode: 'HTML' }], metrics };
       }
 
       if (phaseA.response_type === 'clarification') {
@@ -301,7 +301,7 @@ export class BotService {
           null,
         );
         this.saveHistoryAsync(userId, m.text, phaseA.clarification!);
-        return { replies: [{ text: phaseA.clarification! }], metrics };
+        return { replies: [{ text: phaseA.clarification!, parseMode: 'HTML' }], metrics };
       }
 
       // =====================================================================
@@ -369,7 +369,50 @@ export class BotService {
       }
 
       // =====================================================================
+      // SINGLE-ACTION TEMPLATE PATH: action tools via unified template format
+      // When Phase A returns tool_call for an action tool (no pending slot-fill),
+      // wrap it as a 1-item ActionBlock so it uses the same template as multi-action.
+      // =====================================================================
+
+      const ACTION_TOOLS_FOR_TEMPLATE = new Set([
+        'register_transaction',
+        'manage_categories',
+        'manage_transactions',
+      ]);
+
+      if (ACTION_TOOLS_FOR_TEMPLATE.has(phaseA.tool_call?.name ?? '') && !pending) {
+        return await this.processActionsPath(
+          cid,
+          userId,
+          m,
+          context,
+          {
+            ...phaseA,
+            response_type: 'actions',
+            actions: [
+              {
+                id: 1,
+                tool: phaseA.tool_call!.name,
+                args: phaseA.tool_call!.args ?? {},
+                status: 'ready',
+              },
+            ],
+          },
+          null,
+          userMetrics,
+          cooldownFlags,
+          summary,
+          userStyle,
+          history,
+          metrics,
+          startTotal,
+        );
+      }
+
+      // =====================================================================
       // LEGACY PATH (single tool_call, no block)
+      // Used for: query tools (ask_balance, etc.), greeting, ask_app_info,
+      // and action tools when slot-fill pending state exists.
       // =====================================================================
 
       const toolCall = phaseA.tool_call!;
@@ -646,7 +689,7 @@ export class BotService {
 
       this.saveHistoryAsync(userId, m.text, phaseB.final_message);
 
-      return { replies: [{ text: phaseB.final_message }], metrics };
+      return { replies: [{ text: phaseB.final_message, parseMode: 'HTML' }], metrics };
     } catch (err) {
       metrics.totalMs = Date.now() - startTotal;
 
@@ -935,7 +978,7 @@ export class BotService {
     phaseBTimer();
 
     if (phaseB?.final_message) {
-      replies.push({ text: phaseB.final_message });
+      replies.push({ text: phaseB.final_message, parseMode: 'HTML' });
       this.log.phaseB(
         'Closing message generated',
         { length: phaseB.final_message.length },

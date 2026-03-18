@@ -249,6 +249,34 @@ export class TelegramAdapter {
     }
   }
 
+  /**
+   * Show "typing..." indicator in Telegram. Lasts ~5s.
+   * Returns a stop function — call it when the reply is sent.
+   * Automatically repeats every 4s so long processing stays visible.
+   */
+  startTyping(dm: DomainMessage): () => void {
+    const chatId = dm.externalId;
+    this.sendChatAction(chatId).catch(() => {});
+    const interval = setInterval(() => {
+      this.sendChatAction(chatId).catch(() => {});
+    }, 4_000);
+    return () => clearInterval(interval);
+  }
+
+  private async sendChatAction(chatId: string): Promise<void> {
+    const token = this.cfg.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) return;
+    try {
+      await axios.post(
+        `https://api.telegram.org/bot${token}/sendChatAction`,
+        { chat_id: chatId, action: 'typing' },
+        { timeout: 3_000, httpsAgent },
+      );
+    } catch {
+      // Silently ignore — typing is best-effort
+    }
+  }
+
   async sendReply(
     dm: DomainMessage,
     text: string,

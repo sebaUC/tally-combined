@@ -122,7 +122,9 @@ export class RegisterTransactionToolHandler implements ToolHandler {
     }
 
     // 2. Normalize date to ISO format for posted_at
-    const postedAt = posted_at ?? date ?? new Date().toISOString();
+    // Default to today in Chile timezone (America/Santiago) to avoid UTC date rollover
+    const chileToday = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Santiago' }); // YYYY-MM-DD
+    const postedAt = posted_at ?? date ?? chileToday;
 
     // 3. Get categories: prefer injected from context, fallback to DB query
     let categories = _categories ?? null;
