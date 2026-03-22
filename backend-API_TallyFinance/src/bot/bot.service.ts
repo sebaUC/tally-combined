@@ -381,6 +381,17 @@ export class BotService {
           (i) => i.status === 'needs_info',
         );
         if (needsInfoItem && phaseA.response_type === 'tool_call' && phaseA.tool_call) {
+          // Only resume block if Phase A is answering the SAME tool's slot-fill.
+          // If Phase A chose a different tool, the user changed topic — discard the block.
+          if (needsInfoItem.tool !== phaseA.tool_call.name) {
+            this.log.state(
+              `[block:discard] Phase A tool (${phaseA.tool_call.name}) differs from pending (${needsInfoItem.tool}) — discarding stale block`,
+              undefined,
+              cid,
+            );
+            await this.conversation.clearBlock(userId);
+            // Fall through to single-action template path or legacy path
+          } else {
           // Merge Phase A args into the block item (answer to slot-fill)
           needsInfoItem.args = {
             ...needsInfoItem.args,
@@ -408,6 +419,7 @@ export class BotService {
             metrics,
             startTotal,
           );
+          }
         }
       }
 
