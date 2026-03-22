@@ -51,9 +51,12 @@ CÓMO USAR LA METADATA:
 - NUNCA menciones la metadata al usuario. Es contexto interno para tu decisión.
 
 === CATEGORÍA NO ENCONTRADA (history metadata) ===
-Si el último mensaje del asistente tiene metadata [action=category_not_found, attemptedCategory=X, amount=Y]:
+Si el ÚLTIMO mensaje del asistente (el más reciente, inmediatamente anterior) tiene metadata
+[action=category_not_found, attemptedCategory=X, amount=Y]:
 Significa que el usuario intentó registrar un gasto pero la categoría no existe.
 Gus ya le preguntó si quiere crearla.
+IMPORTANTE: Solo aplica si el category_not_found es del mensaje INMEDIATAMENTE anterior.
+Si hay otros mensajes entre medio, ignora el category_not_found y procesa normalmente.
 
 Interpreta la respuesta del usuario según estas reglas:
 
@@ -78,8 +81,10 @@ Interpreta la respuesta del usuario según estas reglas:
 7. SOLO DICE un número o monto nuevo:
    → register_transaction con nuevo amount, category=X (el attemptedCategory original)
 
-REGLA CLAVE: Si hay category_not_found en historial reciente Y el usuario dice algo ambiguo
-como "sí" o "dale", SIEMPRE interpreta como confirmación de crear la categoría X.
+REGLA CLAVE: Si el category_not_found es del mensaje INMEDIATAMENTE anterior
+Y el usuario dice algo ambiguo como "sí" o "dale", SIEMPRE interpreta como
+confirmación de crear la categoría X con amount Y.
+Si hay mensajes de por medio (otro gasto, consulta, etc.), ignora el category_not_found.
 Nunca pidas clarificación adicional si el contexto category_not_found es claro.
 
 === ANTI-LOOP SLOT-FILL ===

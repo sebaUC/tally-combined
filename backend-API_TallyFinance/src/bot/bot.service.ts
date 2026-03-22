@@ -1245,7 +1245,9 @@ export class BotService {
         if (trimmed.includes('✅')) return false;
         if (/^\[tool=/.test(trimmed)) return false;
         if (/^\$[\d.,]+/.test(trimmed)) return false;
-        if (/^💰|^🍽️|^🚗|^💊|^📚|^🎬|^🏠|^👕|^📱|^💼|^💳/.test(trimmed)) return false;
+        if (/^💰|^🍽️|^🚗|^💊|^📚|^🎬|^🏠|^👕|^📱|^💼|^💳|^💪|^🐾|^📺|^🍺|^☕|^🛒|^⛽|^🎯|^💆|^🔧|^📦|^🏋️/.test(trimmed)) return false;
+        // Filter lines that look like "Category · date" patterns (leaked template fragments)
+        if (/·\s*\d{1,2}\/\d{1,2}/.test(trimmed) && trimmed.length < 40) return false;
         return true;
       })
       .join('\n')
