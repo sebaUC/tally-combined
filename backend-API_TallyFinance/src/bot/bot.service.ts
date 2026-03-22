@@ -1063,7 +1063,16 @@ export class BotService {
       phaseBTimer();
 
       if (phaseB?.final_message) {
-        const closingText = this.sanitizePhaseBOutput(phaseB.final_message);
+        let closingText = this.sanitizePhaseBOutput(phaseB.final_message);
+
+        // If sanitizer stripped everything and primary result is CATEGORY_NOT_FOUND,
+        // use a specific fallback instead of losing the message
+        if (!closingText && primaryResult.errorCode === 'CATEGORY_NOT_FOUND') {
+          const cat = primaryResult.data?.attemptedCategory ?? '';
+          closingText = cat
+            ? `No encontré la categoría "${cat}". ¿La creo como nueva?`
+            : '¿En qué categoría lo registro?';
+        }
 
         if (closingText) {
           replies.push({ text: closingText, parseMode: 'HTML' });
