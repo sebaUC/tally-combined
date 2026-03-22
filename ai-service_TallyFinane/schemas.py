@@ -149,6 +149,7 @@ class ConversationMessageMetadata(BaseModel):
     txId: Optional[str] = None
     slotFill: Optional[bool] = None
     media: Optional[List[MediaReference]] = None
+    attemptedCategory: Optional[str] = None
 
 
 class ConversationMessage(BaseModel):

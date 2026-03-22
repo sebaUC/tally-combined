@@ -539,50 +539,42 @@ export class BotService {
         this.log.state('Context cache invalidated (category mutation)', undefined, cid);
       }
 
-      // 9d. Auto-complete pending register_transaction after category creation
-      if (
-        toolCall.name === 'manage_categories' &&
-        result.ok &&
-        !result.userMessage &&
-        result.data?.operation === 'create' &&
-        pending?.tool === 'register_transaction' &&
-        pending.collectedArgs.amount
-      ) {
-        const newCategoryName = result.data?.category?.name;
-        if (newCategoryName) {
-          this.log.state('Auto-completing pending tx with new category', {
-            category: newCategoryName,
-            amount: pending.collectedArgs.amount,
-          }, cid);
+      // 9d. CATEGORY_NOT_FOUND: forward to Phase B for natural question
+      if (!result.ok && result.errorCode === 'CATEGORY_NOT_FOUND') {
+        this.log.state('CATEGORY_NOT_FOUND — forwarding to Phase B', {
+          attemptedCategory: result.data?.attemptedCategory,
+          amount: result.data?.amount,
+        }, cid);
 
-          const txHandler = this.toolRegistry.getHandler('register_transaction');
-          const txArgs: Record<string, unknown> = {
-            ...pending.collectedArgs,
-            category: newCategoryName,
-          };
+        const updatedSummary = await this.conversation.updateSessionSummary(userId, {
+          tool: toolCall.name,
+          success: false,
+        });
+        const runtimeContext = this.buildRuntimeContext(
+          context, userMetrics, cooldownFlags, userStyle, updatedSummary,
+        );
+        const phaseBUserText = this.buildPhaseBUserText(m, toolCall.name, toolCall.args);
 
-          const freshContext = await this.userContext.getContext(userId);
-          if (freshContext.categories?.length) {
-            txArgs._categories = freshContext.categories;
-          }
-
-          const txResult = await txHandler.execute(userId, m, txArgs);
-
-          if (txResult.ok && !txResult.userMessage) {
-            await this.metricsService.recordTransaction(userId);
-            await this.conversation.clearPending(userId);
-            this.log.ok('Pending tx auto-completed', {
-              amount: pending.collectedArgs.amount,
-              category: newCategoryName,
-            }, cid);
-
-            result.data = {
-              ...result.data,
-              operation: 'create_and_register',
-              transaction: txResult.data,
-            };
-          }
+        let phaseBMsg: string;
+        try {
+          const phaseB = await this.orchestrator.phaseB(
+            toolCall.name, result, context, runtimeContext, phaseBUserText, history,
+          );
+          phaseBMsg = phaseB.final_message;
+        } catch {
+          phaseBMsg = `No encontré la categoría "${result.data?.attemptedCategory}". ¿La creo como nueva?`;
         }
+
+        metrics.totalMs = Date.now() - startTotal;
+        this.logMessageAsync(userId, m.channel, m.text, phaseBMsg, toolCall.name,
+          phaseA as unknown as Record<string, unknown>, null, null);
+        this.saveHistoryAsync(userId, m.text, phaseBMsg, {
+          tool: 'register_transaction',
+          action: 'category_not_found',
+          attemptedCategory: result.data?.attemptedCategory,
+          amount: result.data?.amount,
+        }, m.media, m.channel);
+        return { replies: [{ text: phaseBMsg, parseMode: 'HTML' }], metrics };
       }
 
       // 10. Slot-fill: save pending state and return
@@ -1325,14 +1317,20 @@ export class BotService {
     result: ActionResult,
   ): ConversationMessageMetadata {
     const meta: ConversationMessageMetadata = { tool: toolName };
-    if (!result.ok || !result.data) return meta;
+    if (!result.data) return meta;
     const d = result.data;
     switch (toolName) {
       case 'register_transaction':
-        meta.action = d.type === 'income' ? 'income_registered' : 'expense_registered';
-        meta.amount = d.amount ?? d.transaction?.amount;
-        meta.category = d.category ?? d.transaction?.category;
-        meta.txId = d.id ?? d.transaction?.id;
+        if (!result.ok && result.errorCode === 'CATEGORY_NOT_FOUND') {
+          meta.action = 'category_not_found';
+          meta.attemptedCategory = d.attemptedCategory;
+          meta.amount = d.amount;
+        } else {
+          meta.action = d.type === 'income' ? 'income_registered' : 'expense_registered';
+          meta.amount = d.amount ?? d.transaction?.amount;
+          meta.category = d.category ?? d.transaction?.category;
+          meta.txId = d.id ?? d.transaction?.id;
+        }
         break;
       case 'manage_transactions':
         meta.action = `transaction_${d.operation ?? 'unknown'}`;

@@ -304,6 +304,8 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
                         meta_parts.append(f"txId={meta.txId}")
                     if meta.slotFill:
                         meta_parts.append("slotFill=true")
+                    if meta.attemptedCategory:
+                        meta_parts.append(f"attemptedCategory={meta.attemptedCategory}")
                     if meta.media:
                         for m_ref in meta.media:
                             icon = "📷" if m_ref.type == "image" else "🎤" if m_ref.type == "audio" else "📄"

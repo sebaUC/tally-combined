@@ -54,6 +54,7 @@ export interface ConversationMessageMetadata {
   txId?: string;               // Transaction ID (for undo/delete/edit references)
   slotFill?: boolean;          // true if this is a slot-fill question
   media?: MediaReference[];    // Media attachments sent by user
+  attemptedCategory?: string;  // Category user mentioned but doesn't exist
 }
 
 export interface ConversationMessage {

@@ -58,8 +58,10 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 "category": ToolSchemaParameter(
                     type="string",
                     description=(
-                        "Nombre de la categoria (ej: comida, transporte, entretenimiento). "
-                        "Para type='income' (ingresos) NO enviar este campo — los ingresos no requieren categoria."
+                        "Nombre de la categoria tal como la identifica el usuario. "
+                        "Mapear a categorías existentes cuando sea posible (ej: uber → Transporte). "
+                        "Si no existe una categoría adecuada, enviar el nombre que dijo el usuario. "
+                        "Para type='income' (ingresos) NO enviar este campo."
                     ),
                 ),
                 "posted_at": ToolSchemaParameter(

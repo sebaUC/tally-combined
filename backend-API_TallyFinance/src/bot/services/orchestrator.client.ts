@@ -920,6 +920,13 @@ export class OrchestratorClient {
     this.log.debug(`[stubPhaseB] Generating stub for tool: ${toolName}`);
 
     if (!result.ok) {
+      if (result.errorCode === 'CATEGORY_NOT_FOUND') {
+        const cat = result.data?.attemptedCategory ?? 'esa';
+        return {
+          phase: 'B',
+          final_message: `No encontré la categoría "${cat}". ¿La creo como nueva?`,
+        };
+      }
       return {
         phase: 'B',
         final_message:

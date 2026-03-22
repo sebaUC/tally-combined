@@ -165,6 +165,20 @@ export class ActionPlannerService {
           const result = await handler.execute(userId, msg, sanitizedArgs);
           item.result = result;
 
+          // CATEGORY_NOT_FOUND: forward to Phase B for natural question
+          if (!result.ok && result.errorCode === 'CATEGORY_NOT_FOUND') {
+            item.status = 'executed';
+            executedCount++;
+            executedItems.push(item);
+            madeProgress = true;
+            this.log.state(
+              `[item:${item.id}] CATEGORY_NOT_FOUND — forwarding to Phase B`,
+              { attemptedCategory: result.data?.attemptedCategory },
+              cid,
+            );
+            continue;
+          }
+
           if (result.ok && !result.userMessage) {
             item.status = 'executed';
             executedCount++;
