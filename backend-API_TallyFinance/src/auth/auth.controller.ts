@@ -159,10 +159,49 @@ export class AuthController {
 
     return {
       message: 'Código verificado',
+      userId: result.user?.id,
       session: {
         accessToken: result.session.access_token,
         refreshToken: result.session.refresh_token ?? null,
       },
+    };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() body: { email: string; code: string; password: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (!body.email || !body.code || !body.password) {
+      throw new BadRequestException('Email, código y contraseña son requeridos');
+    }
+    if (body.password.length < 6) {
+      throw new BadRequestException('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    // Verify OTP first to get user ID
+    const result = await this.auth.verifyRecoveryOtp(body.email, body.code);
+
+    // Change password using admin API (no JWT needed)
+    await this.auth.changePassword(result.user!.id, body.password);
+
+    // Sign in with new credentials for a full session
+    const session = await this.auth.signIn({
+      email: body.email.trim().toLowerCase(),
+      password: body.password,
+    });
+
+    if (session?.access_token) {
+      this.setAuthCookies(res, session.access_token, session.refresh_token ?? undefined);
+      this.aiWarmup.pingAsync();
+    }
+
+    return {
+      message: 'Contraseña actualizada',
+      session: session ? {
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token ?? null,
+      } : null,
     };
   }
 
