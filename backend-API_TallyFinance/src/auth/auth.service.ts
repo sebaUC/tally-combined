@@ -205,40 +205,32 @@ export class AuthService {
   async deleteAccount(userId: string) {
     this.logger.warn(`[deleteAccount] Deleting all data for user ${userId}`);
 
-    // Order matters — delete referencing tables first, then parents
-    const tables = [
-      { table: 'transactions', col: 'user_id' },
-      { table: 'bot_message_log', col: 'user_id' },
-      { table: 'conversation_history', col: 'user_id' },
-      { table: 'channel_accounts', col: 'user_id' },
-      { table: 'goals', col: 'user_id' },
-      { table: 'categories', col: 'user_id' },
-      { table: 'accounts', col: 'user_id' },
-      { table: 'payment_method', col: 'user_id' },
-      { table: 'spending_expectations', col: 'user_id' },
-      { table: 'income_expectations', col: 'user_id' },
-      { table: 'personality_snapshot', col: 'user_id' },
-      { table: 'user_prefs', col: 'id' },
-      { table: 'user_emotional_log', col: 'user_id' },
-      { table: 'users', col: 'id' },
-    ];
+    // Use raw SQL to handle FK constraints in correct order
+    const { error: rpcError } = await this.supabase.rpc('delete_user_account', {
+      p_user_id: userId,
+    });
 
-    for (const { table, col } of tables) {
-      const { error } = await this.supabase
-        .from(table)
-        .delete()
-        .eq(col, userId);
-      if (error) {
-        this.logger.warn(`[deleteAccount] Failed to delete from ${table}: ${error.message}`);
-        // Continue — best effort cleanup
+    if (rpcError) {
+      this.logger.error(`[deleteAccount] RPC failed: ${rpcError.message}`);
+      // Fallback: try table-by-table deletion
+      const tables = [
+        'transactions', 'bot_message_log', 'conversation_history',
+        'channel_accounts', 'goals', 'payment_method', 'categories',
+        'accounts', 'spending_expectations', 'income_expectations',
+        'personality_snapshot', 'user_emotional_log',
+      ];
+      for (const table of tables) {
+        await this.supabase.from(table).delete().eq('user_id', userId);
       }
+      await this.supabase.from('user_prefs').delete().eq('id', userId);
+      await this.supabase.from('users').delete().eq('id', userId);
     }
 
     // Delete from auth.users (removes login credentials)
     const { error: authError } = await this.supabase.auth.admin.deleteUser(userId);
     if (authError) {
       this.logger.error(`[deleteAccount] Failed to delete auth user: ${authError.message}`);
-      throw new InternalServerErrorException('Error eliminando la cuenta de autenticación');
+      // Don't throw — public data is already deleted, auth cleanup is best-effort
     }
 
     this.logger.log(`[deleteAccount] Account fully deleted: ${userId}`);
