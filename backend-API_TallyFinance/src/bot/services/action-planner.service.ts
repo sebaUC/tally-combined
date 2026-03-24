@@ -144,13 +144,15 @@ export class ActionPlannerService {
         ) {
           const amount = Number(item.args.amount);
           const text = msg.text || '';
-          const lucasMatch = text.match(/(\d[\d.]*)\s*lucas/i);
           const numbers = (text.match(/\d[\d.,]*/g) || []).map((n) =>
             Number(n.replace(/\./g, '').replace(',', '.')),
           );
-          if (lucasMatch) {
-            numbers.push(Number(lucasMatch[1].replace(/\./g, '')) * 1000);
-          }
+          const lucasMatch = text.match(/(\d[\d.]*)\s*lucas?/i);
+          if (lucasMatch) numbers.push(Number(lucasMatch[1].replace(/\./g, '')) * 1000);
+          const milMatch = text.match(/(\d[\d.]*)\s*mil\b/i);
+          if (milMatch) numbers.push(Number(milMatch[1].replace(/\./g, '')) * 1000);
+          const millonMatch = text.match(/(\d[\d.,]*)\s*mill[oó]n(?:es)?/i);
+          if (millonMatch) numbers.push(Number(millonMatch[1].replace(/\./g, '').replace(',', '.')) * 1000000);
           if (!numbers.some((n) => n === amount || Math.abs(n - amount) < 1)) {
             item.status = 'needs_info';
             item.question = '¿Cuánto fue exactamente?';

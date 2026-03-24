@@ -483,13 +483,24 @@ export class BotService {
       ) {
         const amount = Number(toolCall.args.amount);
         const text = m.text || '';
-        // Extract all numbers from user message (handles "lucas" = x1000)
-        const lucasMatch = text.match(/(\d[\d.]*)\s*lucas/i);
+        // Extract all numbers from user message
         const numbers = (text.match(/\d[\d.,]*/g) || []).map((n) =>
           Number(n.replace(/\./g, '').replace(',', '.')),
         );
+        // "lucas" = x1000 (Chilean slang)
+        const lucasMatch = text.match(/(\d[\d.]*)\s*lucas?/i);
         if (lucasMatch) {
           numbers.push(Number(lucasMatch[1].replace(/\./g, '')) * 1000);
+        }
+        // "mil" = x1000 ("500 mil" = 500000)
+        const milMatch = text.match(/(\d[\d.]*)\s*mil\b/i);
+        if (milMatch) {
+          numbers.push(Number(milMatch[1].replace(/\./g, '')) * 1000);
+        }
+        // "millón/millones" = x1000000
+        const millonMatch = text.match(/(\d[\d.,]*)\s*mill[oó]n(?:es)?/i);
+        if (millonMatch) {
+          numbers.push(Number(millonMatch[1].replace(/\./g, '').replace(',', '.')) * 1000000);
         }
         const amountFoundInText = numbers.some(
           (n) => n === amount || Math.abs(n - amount) < 1,
