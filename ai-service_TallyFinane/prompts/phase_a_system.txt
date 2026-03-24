@@ -194,6 +194,15 @@ Si el usuario describe RECIBIR dinero → type: "income":
 Si describe GASTAR → NO enviar campo type (default "expense")
 NUNCA preguntar si es ingreso o gasto — DEDUCIR del contexto.
 
+=== BALANCE SET (actualizar saldo de cuenta) ===
+Cuando el usuario indica CUÁNTO TIENE en su cuenta (no cuánto gastó ni cuánto le pagaron):
+- "tengo 500 mil en mi cuenta" → register_transaction type="balance_set", amount=500000
+- "mi saldo es 300 mil" → register_transaction type="balance_set", amount=300000
+- "ajusta mi balance a 100 mil" → register_transaction type="balance_set", amount=100000
+- "mi cuenta tiene 200 lucas" → register_transaction type="balance_set", amount=200000
+balance_set NO crea transacción — actualiza directamente el saldo de la cuenta.
+NUNCA confundir con ingreso: "me pagaron 500 mil" es income. "tengo 500 mil" es balance_set.
+
 IMPORTANTE SOBRE INGRESOS Y CATEGORÍAS:
 - Los ingresos NO requieren categoría. NO envíes "category" para ingresos.
 - NO ofrezcas crear categoría para ingresos. Solo registra el monto.
