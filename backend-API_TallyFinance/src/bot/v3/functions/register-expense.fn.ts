@@ -30,40 +30,21 @@ export async function registerExpense(
     .select('id, name')
     .eq('user_id', userId);
 
-  let matched = findCategory(category, categories || []);
-
-  // If category doesn't exist, create it automatically
-  if (!matched && category && category !== 'Sin categoría') {
-    const { data: created, error: createErr } = await supabase
-      .from('categories')
-      .insert({
-        user_id: userId,
-        name: category.charAt(0).toUpperCase() + category.slice(1),
-        icon: null, // Gemini sets this via manage_category if needed
-        budget: 0,
-      })
-      .select('id, name')
-      .single();
-
-    if (!createErr && created) {
-      matched = created;
-    } else {
-      return {
-        ok: false,
-        error: 'CATEGORY_CREATE_FAILED',
-        attemptedCategory: category,
-        availableCategories: (categories || []).map((c) => c.name),
-      };
-    }
-  }
-
-  // If still no match (e.g., "Sin categoría" or empty), use first available
-  if (!matched && categories?.length) {
-    matched = categories[0];
-  }
+  const matched = findCategory(category, categories || []);
 
   if (!matched) {
-    return { ok: false, error: 'NO_CATEGORIES', message: 'No tienes categorías configuradas.' };
+    // Return available categories so Gemini can decide:
+    // - suggest the closest one
+    // - or ask the user what to name the new category
+    // - then call manage_category(create) + register_expense again
+    return {
+      ok: false,
+      error: 'CATEGORY_NOT_FOUND',
+      attemptedCategory: category,
+      availableCategories: (categories || []).map((c) => c.name),
+      amount,
+      name,
+    };
   }
 
   // 2. Get default account

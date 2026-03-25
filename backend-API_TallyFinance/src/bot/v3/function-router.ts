@@ -5,6 +5,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { registerExpense } from './functions/register-expense.fn.js';
 import { registerIncome } from './functions/register-income.fn.js';
+import { manageCategory } from './functions/manage-category.fn.js';
 
 export function createFunctionRouter(supabase: SupabaseClient, userId: string) {
   return async (name: string, args: Record<string, any>): Promise<Record<string, any>> => {
@@ -25,7 +26,7 @@ export function createFunctionRouter(supabase: SupabaseClient, userId: string) {
         return { ok: false, error: 'NOT_IMPLEMENTED', message: 'delete_transaction coming soon' };
 
       case 'manage_category':
-        return { ok: false, error: 'NOT_IMPLEMENTED', message: 'manage_category coming soon' };
+        return manageCategory(supabase, userId, args as any);
 
       case 'get_balance':
         return { ok: false, error: 'NOT_IMPLEMENTED', message: 'get_balance coming soon' };
