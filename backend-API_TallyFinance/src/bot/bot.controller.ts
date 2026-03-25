@@ -311,4 +311,52 @@ export class BotController implements OnModuleInit {
       };
     }
   }
+
+  // ── V3 Prototype: Gemini Function Calling (dry run) ──
+
+  @Post('bot/test-v3')
+  async testV3(@Body() body: { message: string; userId: string; reset?: boolean }) {
+    if (!body.message || !body.userId) {
+      return { ok: false, error: 'Missing required fields: message, userId' };
+    }
+
+    const { chatV3, resetV3Conversation } = await import('./gemini-v3-prototype.js');
+
+    if (body.reset) {
+      resetV3Conversation(body.userId);
+      return { ok: true, message: 'Conversation reset' };
+    }
+
+    // Load user context for system prompt
+    let userContext = {
+      displayName: 'Usuario',
+      tone: 'toxic',
+      mood: 'normal',
+      categories: ['Alimentación', 'Transporte', 'Personal', 'Salud', 'Educación', 'Hogar'],
+    };
+
+    try {
+      const ctx = await this.userContext.getContext(body.userId);
+      userContext = {
+        displayName: ctx.displayName || 'Usuario',
+        tone: ctx.personality?.tone || 'toxic',
+        mood: ctx.personality?.mood || 'normal',
+        categories: (ctx.categories || []).map((c: any) => c.name),
+      };
+    } catch {
+      // Use defaults
+    }
+
+    try {
+      const result = await chatV3(body.userId, body.message, userContext);
+      return {
+        ok: true,
+        reply: result.reply,
+        functionsCalled: result.functionsCalled,
+        tokensUsed: result.tokensUsed,
+      };
+    } catch (err) {
+      return { ok: false, error: String(err) };
+    }
+  }
 }
