@@ -28,13 +28,16 @@ export const botTools: Tool[] = [
       },
       {
         name: 'register_income',
-        description: 'Registra un ingreso del usuario (sueldo, venta, freelance, transferencia recibida). Los ingresos NO tienen categoría. Llamar directamente cuando el usuario menciona que recibió dinero.',
+        description: 'Registra un ingreso del usuario (sueldo, venta, freelance, transferencia). Los ingresos NO tienen categoría. Llamar directamente cuando el usuario menciona que recibió dinero.',
         parameters: {
           type: 'object' as any,
           properties: {
             amount: S('number', 'Monto del ingreso en CLP'),
-            source: S('string', 'Fuente del ingreso. Si no se especifica, usar "Ingreso". Ej: "Sueldo", "Venta Bicicleta", "Freelance"'),
+            source: S('string', 'Fuente/nombre del ingreso. Ej: "Sueldo", "Venta Bicicleta", "Freelance". Default: "Ingreso"'),
             posted_at: S('string', 'Fecha ISO-8601. Default: hoy'),
+            description: S('string', 'Descripción adicional del ingreso'),
+            recurring: S('boolean', 'true si es ingreso recurrente (sueldo mensual, arriendo)'),
+            period: S('string', 'Periodicidad: "weekly" o "monthly" (solo si recurring=true)'),
           },
           required: ['amount'],
         },

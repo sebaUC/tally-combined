@@ -7,9 +7,12 @@ export async function registerIncome(
     amount: number;
     source?: string;
     posted_at?: string;
+    description?: string;
+    recurring?: boolean;
+    period?: string;
   },
 ): Promise<Record<string, any>> {
-  const { amount } = args;
+  const { amount, description } = args;
   const source = args.source || 'Ingreso';
   const postedAt =
     args.posted_at ||
@@ -27,7 +30,53 @@ export async function registerIncome(
     return { ok: false, error: 'NO_ACCOUNT' };
   }
 
-  // Insert as income transaction (no category)
+  // Try to match an existing income_expectation by name/source
+  let incomeExpId: string | null = null;
+  const { data: expectations } = await supabase
+    .from('income_expectations')
+    .select('id, name, source, period, amount')
+    .eq('user_id', userId)
+    .eq('active', true);
+
+  if (expectations?.length) {
+    const sourceLower = source.toLowerCase();
+    // Match by name or source (case-insensitive, substring)
+    const matched = expectations.find((e) => {
+      const eName = (e.name || '').toLowerCase();
+      const eSource = (e.source || '').toLowerCase();
+      return (
+        eName === sourceLower ||
+        eSource === sourceLower ||
+        sourceLower.includes(eName) ||
+        eName.includes(sourceLower) ||
+        sourceLower.includes(eSource) ||
+        eSource.includes(sourceLower)
+      );
+    });
+    if (matched) incomeExpId = matched.id;
+  }
+
+  // If recurring and no matching expectation exists, create one
+  if (args.recurring && !incomeExpId) {
+    const { data: newExp } = await supabase
+      .from('income_expectations')
+      .insert({
+        user_id: userId,
+        name: source,
+        source: source,
+        description: description ?? null,
+        period: args.period || 'monthly',
+        amount: Math.round(amount * 100) / 100,
+        pay_day: new Date(postedAt).getDate().toString(),
+        active: true,
+      })
+      .select('id')
+      .single();
+
+    if (newExp) incomeExpId = newExp.id;
+  }
+
+  // Insert income transaction linked to expectation
   const { data: inserted, error } = await supabase
     .from('transactions')
     .insert({
@@ -40,6 +89,8 @@ export async function registerIncome(
       status: 'posted',
       type: 'income',
       name: source,
+      description: description ?? null,
+      income_expectation_id: incomeExpId,
     })
     .select('id')
     .single();
@@ -48,7 +99,7 @@ export async function registerIncome(
     return { ok: false, error: 'DB_INSERT_FAILED', message: error.message };
   }
 
-  // Update account balance (add)
+  // Update account balance
   await supabase.rpc('update_account_balance', {
     p_account_id: account.id,
     p_delta: Math.abs(amount),
@@ -62,6 +113,9 @@ export async function registerIncome(
       source,
       type: 'income',
       posted_at: postedAt,
+      description: description ?? null,
+      linked_to_expectation: !!incomeExpId,
+      recurring: args.recurring ?? false,
     },
   };
 }
