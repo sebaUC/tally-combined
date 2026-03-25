@@ -2,12 +2,14 @@ import {
   Body,
   Controller,
   Post,
+  Inject,
   InternalServerErrorException,
   Logger,
   HttpException,
   HttpStatus,
   OnModuleInit,
 } from '@nestjs/common';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { BotService } from './bot.service';
 import { WhatsappAdapter } from './adapters/whatsapp.adapter';
 import { TelegramAdapter } from './adapters/telegram.adapter';
@@ -44,6 +46,7 @@ export class BotController implements OnModuleInit {
     private readonly userContext: UserContextService,
     private readonly channels: BotChannelService,
     private readonly redis: RedisService,
+    @Inject('SUPABASE') private readonly supabase: SupabaseClient,
   ) {}
 
   onModuleInit() {
@@ -271,7 +274,7 @@ export class BotController implements OnModuleInit {
         const userParts = [{ text: domainMsg.text || '' }];
         history.push({ role: 'user', parts: userParts });
 
-        const supabase = (this.userContext as any).supabase;
+        const supabase = this.supabase;
         const client = new GeminiClient(apiKey);
         const executeFn = createFunctionRouter(supabase, userId);
 
