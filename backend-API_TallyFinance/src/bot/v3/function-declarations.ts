@@ -126,6 +126,18 @@ export const botTools: Tool[] = [
         },
       },
       {
+        name: 'set_balance',
+        description: 'Ajusta el saldo de la cuenta del usuario. Usar cuando dice "tengo X en mi cuenta" o "mi saldo es X". NO es un ingreso ni gasto — solo actualiza el saldo.',
+        parameters: {
+          type: 'object' as any,
+          properties: {
+            amount: S('number', 'Nuevo saldo en CLP'),
+            account_name: S('string', 'Nombre de la cuenta (opcional, default: primera cuenta)'),
+          },
+          required: ['amount'],
+        },
+      },
+      {
         name: 'get_app_info',
         description: 'Responde preguntas sobre TallyFinance, sus funcionalidades, limitaciones, seguridad, y cómo usar el bot',
         parameters: {

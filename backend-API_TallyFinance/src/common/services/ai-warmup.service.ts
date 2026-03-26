@@ -56,26 +56,11 @@ export class AiWarmupService {
 
   /**
    * Fire-and-forget ping to wake up AI service.
-   * Used on login/signup to preemptively wake the service.
+   * V3 uses Gemini directly — no Python AI service to warm up. No-op.
    */
   async pingAsync(): Promise<void> {
-    // Don't ping if already warming or recently pinged
-    if (this.isWarming) {
-      this.logger.debug('Already warming, skipping ping');
-      return;
-    }
-
-    if (!this.isLikelyCold()) {
-      this.logger.debug('AI service likely warm, skipping ping');
-      return;
-    }
-
-    this.startWarming();
-
-    // Fire and forget - don't await
-    this.doPing().catch((err) => {
-      this.logger.warn(`Async ping failed: ${err.message}`);
-    });
+    // V3: Gemini is always-on, no cold start to handle
+    return;
   }
 
   /**

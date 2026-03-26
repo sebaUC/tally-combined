@@ -6,6 +6,12 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { registerExpense } from './functions/register-expense.fn.js';
 import { registerIncome } from './functions/register-income.fn.js';
 import { manageCategory } from './functions/manage-category.fn.js';
+import { queryTransactions } from './functions/query-transactions.fn.js';
+import { editTransaction } from './functions/edit-transaction.fn.js';
+import { deleteTransaction } from './functions/delete-transaction.fn.js';
+import { getBalance } from './functions/get-balance.fn.js';
+import { setBalance } from './functions/set-balance.fn.js';
+import { getAppInfo } from './functions/get-app-info.fn.js';
 
 export function createFunctionRouter(supabase: SupabaseClient, userId: string) {
   return async (name: string, args: Record<string, any>): Promise<Record<string, any>> => {
@@ -17,27 +23,25 @@ export function createFunctionRouter(supabase: SupabaseClient, userId: string) {
         return registerIncome(supabase, userId, args as any);
 
       case 'query_transactions':
-        return { ok: false, error: 'NOT_IMPLEMENTED', message: 'query_transactions coming soon' };
+        return queryTransactions(supabase, userId, args as any);
 
       case 'edit_transaction':
-        return { ok: false, error: 'NOT_IMPLEMENTED', message: 'edit_transaction coming soon' };
+        return editTransaction(supabase, userId, args as any);
 
       case 'delete_transaction':
-        return { ok: false, error: 'NOT_IMPLEMENTED', message: 'delete_transaction coming soon' };
+        return deleteTransaction(supabase, userId, args as any);
 
       case 'manage_category':
         return manageCategory(supabase, userId, args as any);
 
       case 'get_balance':
-        return { ok: false, error: 'NOT_IMPLEMENTED', message: 'get_balance coming soon' };
+        return getBalance(supabase, userId, args as any);
+
+      case 'set_balance':
+        return setBalance(supabase, userId, args as any);
 
       case 'get_app_info':
-        return {
-          ok: true,
-          data: {
-            answer: 'TallyFinance es tu asistente financiero personal. Puedes registrar gastos e ingresos, gestionar categorías, consultar tu balance y presupuesto, todo desde el chat con Gus.',
-          },
-        };
+        return getAppInfo(supabase, userId, args as any);
 
       default:
         return { ok: false, error: 'UNKNOWN_FUNCTION', message: `Unknown function: ${name}` };

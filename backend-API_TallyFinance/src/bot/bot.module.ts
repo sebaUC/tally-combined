@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { BotService } from './bot.service';
 import { BotController } from './bot.controller';
 import { WhatsappAdapter } from './adapters/whatsapp.adapter';
 import { TelegramAdapter } from './adapters/telegram.adapter';
@@ -7,56 +6,46 @@ import { CommonModule } from '../common/common.module';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { BotChannelService } from './delegates/bot-channel.service';
 import { UserContextService } from './services/user-context.service';
-import { ConversationService } from './services/conversation.service';
 import { ConversationHistoryService } from './services/conversation-history.service';
 import { MetricsService } from './services/metrics.service';
 import { CooldownService } from './services/cooldown.service';
-import { StyleDetectorService } from './services/style-detector.service';
-import { OrchestratorClient } from './services/orchestrator.client';
 import { GuardrailsService } from './services/guardrails.service';
 import { MessageLogService } from './services/message-log.service';
 import { ResponseBuilderService } from './services/response-builder.service';
-import { ActionPlannerService } from './services/action-planner.service';
 import { CallbackHandlerService } from './services/callback-handler.service';
-import { ConversationLogService } from './services/conversation-log.service';
-import { ToolRegistry } from './tools/tool-registry';
+import { BotV3Service } from './v3/bot-v3.service';
+import { ConversationV3Service } from './v3/conversation-v3.service';
 
 @Module({
   imports: [CommonModule, SupabaseModule],
   controllers: [BotController],
   providers: [
-    BotService,
     BotChannelService,
     WhatsappAdapter,
     TelegramAdapter,
     UserContextService,
-    ConversationService,
     ConversationHistoryService,
     MetricsService,
     CooldownService,
-    StyleDetectorService,
-    OrchestratorClient,
     GuardrailsService,
     MessageLogService,
     ResponseBuilderService,
-    ActionPlannerService,
     CallbackHandlerService,
-    ConversationLogService,
-    ToolRegistry,
+    // V3 pipeline
+    ConversationV3Service,
+    BotV3Service,
+    { provide: 'USER_CONTEXT_SERVICE', useExisting: UserContextService },
+    { provide: 'MESSAGE_LOG_SERVICE', useExisting: MessageLogService },
   ],
   exports: [
-    BotService,
+    BotV3Service,
     UserContextService,
-    ConversationService,
     ConversationHistoryService,
     MetricsService,
     CooldownService,
-    OrchestratorClient,
     GuardrailsService,
     MessageLogService,
     ResponseBuilderService,
-    ActionPlannerService,
-    ToolRegistry,
   ],
 })
 export class BotModule {}

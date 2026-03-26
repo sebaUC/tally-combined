@@ -48,6 +48,7 @@ export class GeminiClient {
       model: this.modelName,
       systemInstruction: systemPrompt,
       tools,
+      toolConfig: { functionCallingConfig: { mode: 'AUTO' as any } },
     });
 
     const chat = model.startChat({ history });

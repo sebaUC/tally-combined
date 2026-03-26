@@ -1,5 +1,11 @@
-import { ToolSchema } from '../tools/tool-schemas';
 import { ActionResult } from '../actions/action-result';
+
+/** Minimal tool schema type (previously from tools/tool-schemas) */
+export interface ToolSchema {
+  name: string;
+  description: string;
+  parameters: Record<string, any>;
+}
 import { MediaAttachment } from '../contracts';
 
 export interface MediaPayload {

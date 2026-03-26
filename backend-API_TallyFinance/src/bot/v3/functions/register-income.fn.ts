@@ -13,6 +13,12 @@ export async function registerIncome(
   },
 ): Promise<Record<string, any>> {
   const { amount, description } = args;
+
+  // Validate amount
+  if (typeof amount !== 'number' || amount <= 0 || amount >= 100_000_000) {
+    return { ok: false, error: 'INVALID_AMOUNT', message: 'El monto debe ser mayor a 0 y menor a 100 millones.' };
+  }
+
   const source = args.source || 'Ingreso';
   const postedAt =
     args.posted_at ||

@@ -10,7 +10,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { BotService } from './bot.service';
+import { BotV3Service } from './v3/bot-v3.service';
 import { WhatsappAdapter } from './adapters/whatsapp.adapter';
 import { TelegramAdapter } from './adapters/telegram.adapter';
 import { CallbackHandlerService } from './services/callback-handler.service';
@@ -39,7 +39,7 @@ export class BotController implements OnModuleInit {
   private rateLimiter!: AsyncRateLimiter;
 
   constructor(
-    private readonly bot: BotService,
+    private readonly botV3: BotV3Service,
     private readonly wa: WhatsappAdapter,
     private readonly tg: TelegramAdapter,
     private readonly callbackHandler: CallbackHandlerService,
@@ -154,8 +154,15 @@ export class BotController implements OnModuleInit {
 
     try {
       this.log.debug(`[WA] DomainMessage text="${domainMsg.text}" media=${domainMsg.media?.length ?? 0}`);
-      const replies = await this.bot.handle(domainMsg);
-      await this.sendWaReplies(domainMsg, replies);
+
+      const userId = await this.channels.getUserIdByExternalId(domainMsg.externalId, 'whatsapp');
+      if (!userId) {
+        await this.wa.sendReply(domainMsg, 'No tienes cuenta vinculada. Regístrate en tallyfinance.vercel.app', {});
+        return 'EVENT_RECEIVED';
+      }
+
+      const result = await this.botV3.handle(userId, domainMsg.text || '', 'whatsapp', domainMsg.platformMessageId);
+      await this.sendWaReplies(domainMsg, result.replies);
       return 'EVENT_RECEIVED';
     } catch (err) {
       if (err instanceof HttpException) throw err;
@@ -222,76 +229,24 @@ export class BotController implements OnModuleInit {
     try {
       this.log.debug(`[TG] DomainMessage text="${domainMsg.text}" media=${domainMsg.media?.length ?? 0}`);
 
-      // ── V3 Pipeline: Gemini Function Calling ──
-      const useV3 = process.env.BOT_V3 === '1';
-
-      if (useV3) {
-        const userId = await this.channels.getUserIdByExternalId(domainMsg.externalId, 'telegram');
-        if (!userId) {
-          stopTyping();
-          await this.tg.sendReply(domainMsg, 'No tienes cuenta vinculada. Regístrate en tallyfinance.vercel.app', {});
-          return 'OK';
-        }
-
-        const { GeminiClient } = await import('./v3/gemini.client.js');
-        const { botTools } = await import('./v3/function-declarations.js');
-        const { createFunctionRouter } = await import('./v3/function-router.js');
-        const { conversations } = await import('./gemini-v3-prototype.js');
-        const fs = await import('fs');
-        const path = await import('path');
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) { stopTyping(); return 'OK'; }
-
-        // Load context
-        let displayName = 'Usuario', tone = 'neutral', mood = 'normal';
-        let categories: string[] = [], budget = 'Sin presupuesto activo';
-        try {
-          const ctx = await this.userContext.getContext(userId);
-          displayName = ctx.displayName || 'Usuario';
-          tone = ctx.personality?.tone || 'neutral';
-          mood = ctx.personality?.mood || 'normal';
-          categories = (ctx.categories || []).map((c: any) => c.name);
-          if (ctx.activeBudget?.amount) budget = `${ctx.activeBudget.period}: $${Math.round(ctx.activeBudget.amount).toLocaleString('es-CL')}`;
-        } catch {}
-
-        // System prompt
-        let systemPrompt: string;
-        try {
-          systemPrompt = fs.readFileSync(path.join(__dirname, 'v3', 'prompts', 'gus_system.txt'), 'utf-8');
-        } catch {
-          systemPrompt = 'Eres Gus, asistente financiero. Tono: {tone}.';
-        }
-        systemPrompt = systemPrompt
-          .replace('{tone}', tone).replace('{mood}', mood)
-          .replace('{displayName}', displayName)
-          .replace('{categories}', categories.join(', ') || 'Sin categorías')
-          .replace('{budget}', budget);
-
-        // Conversation
-        if (!conversations.has(userId)) conversations.set(userId, []);
-        const history = conversations.get(userId)!;
-        const userParts = [{ text: domainMsg.text || '' }];
-        history.push({ role: 'user', parts: userParts });
-
-        const supabase = this.supabase;
-        const client = new GeminiClient(apiKey);
-        const executeFn = createFunctionRouter(supabase, userId);
-
-        const result = await client.chat(systemPrompt, history.slice(0, -1), userParts, botTools, executeFn);
-
-        history.push({ role: 'model', parts: [{ text: result.reply }] });
-        while (history.length > 50) history.shift();
-
+      const userId = await this.channels.getUserIdByExternalId(domainMsg.externalId, 'telegram');
+      if (!userId) {
         stopTyping();
-        await this.tg.sendReply(domainMsg, result.reply, { parseMode: 'HTML' });
+        await this.tg.sendReply(domainMsg, 'No tienes cuenta vinculada. Regístrate en tallyfinance.vercel.app', {});
         return 'OK';
       }
 
-      // ── V2 Pipeline (legacy) ──
-      const replies = await this.bot.handle(domainMsg);
+      // Handle /reset command
+      if (domainMsg.text?.trim() === '/reset') {
+        await this.botV3.reset(userId);
+        stopTyping();
+        await this.tg.sendReply(domainMsg, 'Conversación reiniciada.', {});
+        return 'OK';
+      }
+
+      const result = await this.botV3.handle(userId, domainMsg.text || '', 'telegram', domainMsg.platformMessageId);
       stopTyping();
-      await this.sendTgReplies(domainMsg, replies);
+      await this.sendTgReplies(domainMsg, result.replies);
       return 'OK';
     } catch (err) {
       stopTyping();
@@ -324,178 +279,48 @@ export class BotController implements OnModuleInit {
     this.log.debug(`[TEST] Request: ${JSON.stringify(body)}`);
 
     if (!body.message || !body.userId) {
-      return {
-        ok: false,
-        error: 'Missing required fields: message, userId',
-      };
-    }
-
-    const testMessage: DomainMessage = {
-      channel: body.channel ?? 'test',
-      externalId: `test-${body.userId}`,
-      platformMessageId: `test-${Date.now()}`,
-      text: body.message,
-      timestamp: new Date().toISOString(),
-    };
-
-    try {
-      const { replies, reply, metrics } = await this.bot.handleTest(
-        body.userId,
-        testMessage,
-      );
-
-      const response: any = {
-        ok: true,
-        reply,
-        replies: replies.map((r) => ({ text: r.text, hasButtons: !!r.buttons?.length })),
-        metrics: {
-          correlationId: metrics.correlationId,
-          totalMs: metrics.totalMs,
-          contextMs: metrics.contextMs,
-          phaseAMs: metrics.phaseAMs,
-          toolMs: metrics.toolMs,
-          phaseBMs: metrics.phaseBMs,
-        },
-      };
-
-      if (body.verbose) {
-        response.debug = {
-          phaseA: metrics.phaseAResponse,
-          toolName: metrics.toolName,
-          toolResult: metrics.toolResult,
-          input: testMessage,
-        };
-
-        try {
-          response.context = await this.userContext.getContext(body.userId);
-        } catch {
-          response.context = { error: 'Could not load user context' };
-        }
-      }
-
-      return response;
-    } catch (err) {
-      this.log.error(`[TEST] Error: ${String(err)}`);
-      return {
-        ok: false,
-        error: String(err),
-      };
-    }
-  }
-
-  // ── V3: Gemini Function Calling (real execution) ──
-
-  @Post('bot/test-v3')
-  async testV3(
-    @Body() body: { message: string; userId: string; reset?: boolean; dryRun?: boolean },
-  ) {
-    if (!body.message || !body.userId) {
       return { ok: false, error: 'Missing required fields: message, userId' };
     }
 
-    // Dry run mode: use prototype mock functions
-    if (body.dryRun) {
-      const { chatV3, resetV3Conversation } = await import('./gemini-v3-prototype.js');
-      if (body.reset) { resetV3Conversation(body.userId); return { ok: true, message: 'Reset' }; }
-      let uc = { displayName: 'Usuario', tone: 'toxic', mood: 'normal', categories: ['Alimentación', 'Transporte', 'Personal', 'Salud', 'Educación', 'Hogar'] };
-      try { const ctx = await this.userContext.getContext(body.userId); uc = { displayName: ctx.displayName || 'Usuario', tone: ctx.personality?.tone || 'toxic', mood: ctx.personality?.mood || 'normal', categories: (ctx.categories || []).map((c: any) => c.name) }; } catch {}
-      const r = await chatV3(body.userId, body.message, uc);
-      return { ok: true, reply: r.reply, functionsCalled: r.functionsCalled, tokensUsed: r.tokensUsed, mode: 'dry-run' };
-    }
-
-    // Real mode: Gemini + Supabase
-    const { GeminiClient } = await import('./v3/gemini.client.js');
-    const { botTools } = await import('./v3/function-declarations.js');
-    const { createFunctionRouter } = await import('./v3/function-router.js');
-    const fs = await import('fs');
-    const path = await import('path');
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { ok: false, error: 'GEMINI_API_KEY not configured' };
-
-    // Load user context
-    let displayName = 'Usuario';
-    let tone = 'toxic';
-    let mood = 'normal';
-    let categories: string[] = [];
-    let budget = 'Sin presupuesto activo';
-
     try {
-      const ctx = await this.userContext.getContext(body.userId);
-      displayName = ctx.displayName || 'Usuario';
-      tone = ctx.personality?.tone || 'toxic';
-      mood = ctx.personality?.mood || 'normal';
-      categories = (ctx.categories || []).map((c: any) => c.name);
-      if (ctx.activeBudget?.amount) {
-        budget = `${ctx.activeBudget.period}: $${Math.round(ctx.activeBudget.amount).toLocaleString('es-CL')}`;
-      }
-    } catch {}
-
-    // Build system prompt
-    let systemPrompt: string;
-    try {
-      const promptPath = path.join(__dirname, 'v3', 'prompts', 'gus_system.txt');
-      systemPrompt = fs.readFileSync(promptPath, 'utf-8');
-    } catch {
-      // Fallback: inline minimal prompt
-      systemPrompt = 'Eres Gus, asistente financiero de TallyFinance. Tono: {tone}. Mood: {mood}.';
+      const result = await this.botV3.handle(body.userId, body.message, body.channel ?? 'test');
+      return {
+        ok: true,
+        reply: result.reply,
+        replies: result.replies.map((r) => ({ text: r.text, hasButtons: !!r.buttons?.length })),
+        functionsCalled: result.functionsCalled.map((fc) => ({
+          name: fc.name,
+          args: fc.args,
+          result: fc.result,
+        })),
+        tokensUsed: result.tokensUsed,
+      };
+    } catch (err) {
+      this.log.error(`[TEST] Error: ${String(err)}`);
+      return { ok: false, error: String(err) };
     }
-    systemPrompt = systemPrompt
-      .replace('{tone}', tone)
-      .replace('{mood}', mood)
-      .replace('{displayName}', displayName)
-      .replace('{categories}', categories.join(', ') || 'Sin categorías')
-      .replace('{budget}', budget);
+  }
 
-    // Conversation history (in-memory for now — Redis later)
-    const { chatV3: _ignore, resetV3Conversation } = await import('./gemini-v3-prototype.js');
+  // ── V3: Gemini Function Calling ──
 
-    // Use in-memory conversation from prototype (shared store)
-    // TODO: Move to Redis-backed conversation service
-    const convModule = await import('./gemini-v3-prototype.js');
+  @Post('bot/test-v3')
+  async testV3(
+    @Body() body: { message: string; userId: string; reset?: boolean },
+  ) {
+    if (!body.message && !body.reset) {
+      return { ok: false, error: 'Missing required fields: message, userId' };
+    }
+    if (!body.userId) {
+      return { ok: false, error: 'Missing required field: userId' };
+    }
 
     if (body.reset) {
-      convModule.resetV3Conversation(body.userId);
+      await this.botV3.reset(body.userId);
       return { ok: true, message: 'Conversation reset' };
     }
 
-    // Get Supabase client from the UserContextService's injected instance
-    const supabase = (this.userContext as any).supabase;
-    if (!supabase) return { ok: false, error: 'Supabase client not available' };
-
-    const client = new GeminiClient(apiKey);
-    const executeFunction = createFunctionRouter(supabase, body.userId);
-
-    // Get conversation history (in-memory from prototype for now)
-    const conversations = (convModule as any).conversations || new Map();
-    if (!conversations.has(body.userId)) conversations.set(body.userId, []);
-    const history = conversations.get(body.userId)!;
-
-    const userParts = [{ text: body.message }];
-
     try {
-      // Add user message to history
-      history.push({ role: 'user', parts: userParts });
-
-      const result = await client.chat(
-        systemPrompt,
-        history.slice(0, -1), // all except current
-        userParts,
-        botTools,
-        executeFunction,
-      );
-
-      // Add model response to history
-      history.push({ role: 'model', parts: [{ text: result.reply }] });
-
-      // Add function calls to history (for context)
-      for (const fc of result.functionsCalled) {
-        // These are already in the chat via sendMessage, but we track them
-      }
-
-      // Trim history
-      while (history.length > 50) history.shift();
-
+      const result = await this.botV3.handle(body.userId, body.message, 'test');
       return {
         ok: true,
         reply: result.reply,
@@ -505,13 +330,8 @@ export class BotController implements OnModuleInit {
           result: fc.result,
         })),
         tokensUsed: result.tokensUsed,
-        mode: 'real',
       };
     } catch (err) {
-      // Remove the user message we added if it failed
-      if (history.length && history[history.length - 1]?.role === 'user') {
-        history.pop();
-      }
       return { ok: false, error: String(err) };
     }
   }
