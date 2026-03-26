@@ -26,10 +26,8 @@ export async function registerExpense(
   const category = args.category || 'Sin categoría';
   const name = args.name || category;
 
-  // Default date+time in Chile timezone (ISO format)
-  const postedAt =
-    args.posted_at ||
-    new Date().toLocaleString('sv-SE', { timeZone: 'America/Santiago' }).replace(' ', 'T');
+  // Default date+time in Chile timezone with offset (so Supabase stores correctly)
+  const postedAt = args.posted_at || getChileTimestamp();
 
   // 1. Match category
   const { data: categories } = await supabase
@@ -154,4 +152,15 @@ function isSimilar(a: string, b: string, maxDiff: number): boolean {
     if (diff > maxDiff) return false;
   }
   return diff + Math.abs(a.length - b.length) <= maxDiff;
+}
+
+/** Chile timestamp with timezone offset (e.g. 2026-03-26T17:30:00-03:00) */
+function getChileTimestamp(): string {
+  const d = new Date();
+  const local = d.toLocaleString('sv-SE', { timeZone: 'America/Santiago' }).replace(' ', 'T');
+  const parts = d.toLocaleString('en-US', { timeZone: 'America/Santiago', timeZoneName: 'shortOffset' });
+  const offset = parts.match(/GMT([+-]\d+)/)?.[1] || '-3';
+  const hours = parseInt(offset);
+  const offsetStr = (hours < 0 ? '-' : '+') + String(Math.abs(hours)).padStart(2, '0') + ':00';
+  return local + offsetStr;
 }

@@ -20,9 +20,7 @@ export async function registerIncome(
   }
 
   const source = args.source || 'Ingreso';
-  const postedAt =
-    args.posted_at ||
-    new Date().toLocaleString('sv-SE', { timeZone: 'America/Santiago' }).replace(' ', 'T');
+  const postedAt = args.posted_at || getChileTimestamp();
 
   // Get default account
   const { data: account } = await supabase
@@ -124,4 +122,15 @@ export async function registerIncome(
       recurring: args.recurring ?? false,
     },
   };
+}
+
+/** Chile timestamp with timezone offset (e.g. 2026-03-26T17:30:00-03:00) */
+function getChileTimestamp(): string {
+  const d = new Date();
+  const local = d.toLocaleString('sv-SE', { timeZone: 'America/Santiago' }).replace(' ', 'T');
+  const parts = d.toLocaleString('en-US', { timeZone: 'America/Santiago', timeZoneName: 'shortOffset' });
+  const offset = parts.match(/GMT([+-]\d+)/)?.[1] || '-3';
+  const hours = parseInt(offset);
+  const offsetStr = (hours < 0 ? '-' : '+') + String(Math.abs(hours)).padStart(2, '0') + ':00';
+  return local + offsetStr;
 }
