@@ -169,7 +169,7 @@ export class BotController implements OnModuleInit {
         return 'EVENT_RECEIVED';
       }
 
-      const result = await this.botV3.handle(userId, domainMsg.text || '', 'whatsapp', domainMsg.platformMessageId);
+      const result = await this.botV3.handle(userId, domainMsg.text || '', 'whatsapp', domainMsg.platformMessageId, domainMsg.media);
       await this.sendWaReplies(domainMsg, result.replies);
       return 'EVENT_RECEIVED';
     } catch (err) {
@@ -262,7 +262,7 @@ export class BotController implements OnModuleInit {
         return 'OK';
       }
 
-      const result = await this.botV3.handle(userId, domainMsg.text || '', 'telegram', domainMsg.platformMessageId);
+      const result = await this.botV3.handle(userId, domainMsg.text || '', 'telegram', domainMsg.platformMessageId, domainMsg.media);
       stopTyping();
       await this.sendTgReplies(domainMsg, result.replies);
       return 'OK';

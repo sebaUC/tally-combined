@@ -67,6 +67,7 @@ export class BotV3Service {
     text: string,
     channel: string,
     messageId?: string,
+    media?: { type: string; mimeType: string; data: string }[],
   ): Promise<BotV3Result> {
     // ── Dedup check ──
     if (messageId) {
@@ -90,7 +91,7 @@ export class BotV3Service {
     }
 
     try {
-      const result = await this.processMessage(userId, text, channel);
+      const result = await this.processMessage(userId, text, channel, media);
 
       // Mark dedup as done
       if (messageId) {
@@ -117,6 +118,7 @@ export class BotV3Service {
     userId: string,
     text: string,
     channel: string,
+    media?: { type: string; mimeType: string; data: string }[],
   ): Promise<BotV3Result> {
     const start = Date.now();
 
@@ -173,8 +175,16 @@ export class BotV3Service {
     // 4. Load conversation history from Redis
     const history = await this.conversation.getHistory(userId);
 
-    // 5. Build user message
-    const userParts = [{ text }];
+    // 5. Build user message (text + media if present)
+    const userParts: any[] = [];
+    if (text) userParts.push({ text });
+    if (media?.length) {
+      for (const m of media) {
+        userParts.push({ inlineData: { mimeType: m.mimeType, data: m.data } });
+      }
+      if (!text) userParts.push({ text: 'El usuario envió esta imagen. Analízala en contexto financiero.' });
+    }
+    if (userParts.length === 0) userParts.push({ text: '' });
 
     // 6. Add user message to history
     history.push({ role: 'user', parts: userParts });
