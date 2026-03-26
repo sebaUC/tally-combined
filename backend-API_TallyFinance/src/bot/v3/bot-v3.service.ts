@@ -172,6 +172,17 @@ export class BotV3Service {
       .replace('{budgets}', budgets)
       .replace('{accounts}', accounts);
 
+    // 3b. Quick responses (no Gemini call needed)
+    const quickReply = this.checkQuickResponse(text);
+    if (quickReply) {
+      return {
+        reply: quickReply,
+        replies: [{ text: quickReply, parseMode: 'HTML' }],
+        functionsCalled: [],
+        tokensUsed: { input: 0, output: 0, total: 0 },
+      };
+    }
+
     // 4. Load conversation history from Redis
     const history = await this.conversation.getHistory(userId);
 
@@ -369,6 +380,18 @@ export class BotV3Service {
       default:
         return null;
     }
+  }
+
+  // ── Quick responses (algorithmic, no Gemini) ──
+
+  private static readonly DASHBOARD_URL = 'https://frontend-tally-finance.vercel.app/app';
+  private static readonly DASHBOARD_PATTERN = /\b(dashboard|link|web|app|página|pagina|sitio|reporte|reportes|configurar|configuración)\b/i;
+
+  private checkQuickResponse(text: string): string | null {
+    if (BotV3Service.DASHBOARD_PATTERN.test(text)) {
+      return `Tu dashboard está acá 👉 ${BotV3Service.DASHBOARD_URL}\n\nAhí puedes ver tu resumen de gastos, gráficos por categoría, configurar presupuesto y gestionar tus cuentas.`;
+    }
+    return null;
   }
 
   // ── Helpers ──
