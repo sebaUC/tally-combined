@@ -69,15 +69,15 @@ export class UsersService {
     const metadataPatch: Record<string, any> = {};
 
     if (patch.full_name !== undefined) {
-      tablePatch.full_name = patch.full_name;
-      metadataPatch.full_name = patch.full_name;
+      tablePatch.full_name = patch.full_name || null;
+      metadataPatch.full_name = patch.full_name || null;
     }
     if (patch.nickname !== undefined) {
-      tablePatch.nickname = patch.nickname;
-      metadataPatch.nickname = patch.nickname;
+      tablePatch.nickname = patch.nickname || null;
+      metadataPatch.nickname = patch.nickname || null;
     }
     if (patch.age !== undefined) {
-      metadataPatch.age = patch.age;
+      metadataPatch.age = patch.age || null;
     }
 
     // Update public.users table
@@ -98,6 +98,82 @@ export class UsersService {
     }
 
     return { ...data, age: patch.age };
+  }
+
+  async adjustBalance(userId: string, newBalance: number) {
+    // 1. Get default account
+    const { data: account, error: accError } = await this.supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (accError) throw new Error(accError.message);
+    if (!account) throw new Error('No account found. Complete onboarding first.');
+
+    // 2. Delete all existing transactions
+    const { error: delError } = await this.supabase
+      .from('transactions')
+      .delete()
+      .eq('user_id', userId);
+
+    if (delError) throw new Error(delError.message);
+
+    // 3. Set account balance directly
+    const { error: updError } = await this.supabase
+      .from('accounts')
+      .update({ current_balance: newBalance, updated_at: new Date().toISOString() })
+      .eq('id', account.id);
+
+    if (updError) throw new Error(updError.message);
+
+    // 4. Create single income transaction for the full balance (shows in balance view)
+    if (newBalance > 0) {
+      const { error: txError } = await this.supabase
+        .from('transactions')
+        .insert({
+          user_id: userId,
+          amount: newBalance,
+          account_id: account.id,
+          posted_at: new Date().toISOString(),
+          type: 'income',
+          name: 'Balance inicial',
+          source: 'manual',
+          status: 'posted',
+        });
+
+      if (txError) throw new Error(txError.message);
+    }
+
+    return { adjusted: true, balance: newBalance };
+  }
+
+  async resetTransactions(userId: string) {
+    // 1. Delete all transactions
+    const { error: txError } = await this.supabase
+      .from('transactions')
+      .delete()
+      .eq('user_id', userId);
+
+    if (txError) throw new Error(txError.message);
+
+    // 2. Reset all account balances to 0
+    const { data: accounts, error: accError } = await this.supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId);
+
+    if (!accError && accounts?.length) {
+      for (const acc of accounts) {
+        await this.supabase
+          .from('accounts')
+          .update({ current_balance: 0 })
+          .eq('id', acc.id);
+      }
+    }
+
+    return { reset: true, deletedFrom: 'transactions', accountsReset: accounts?.length || 0 };
   }
 
   async getTransactions(userId: string, limit = 50) {

@@ -83,12 +83,67 @@ export class AuthService {
       );
     }
 
-    // 🗄️ Paso 2: Insertar perfil extendido en public.users
+    // Con "Confirm email" activo: data.session es null, OTP se envió automáticamente
+    // Con "Confirm email" desactivado: data.session existe, login inmediato
+    const sessionPayload = data.session ?? null;
+
+    if (sessionPayload) {
+      // Email confirmation OFF — crear perfil inmediatamente
+      const now = new Date().toISOString();
+      await this.supabase.from('users').upsert(
+        {
+          id: user.id,
+          email: dto.email,
+          full_name: fullName,
+          package: defaults.package,
+          is_active: true,
+          created_at: now,
+          updated_at: now,
+        },
+        { onConflict: 'id' },
+      );
+    }
+    // Si no hay session (email confirm ON), el perfil se crea después de verifyOtp
+
+    // Si el email ya existe con identidad verificada
+    if (user.identities?.length === 0) {
+      throw new BadRequestException('Ya existe una cuenta con este email');
+    }
+
+    this.logger.log(`[signup] User created: ${user.id} (session=${!!sessionPayload})`);
+    return {
+      user,
+      session: sessionPayload,
+      requiresVerification: !sessionPayload,
+    };
+  }
+
+  // 🔑 Verificar OTP de registro
+  async verifySignupOtp(email: string, code: string) {
+    const { data, error } = await this.supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: code,
+      type: 'signup',
+    });
+
+    if (error) {
+      this.logger.warn(`[verifyOtp] Failed for ${email}: ${error.message}`);
+      throw new BadRequestException('Código incorrecto o expirado');
+    }
+
+    if (!data.user || !data.session) {
+      throw new InternalServerErrorException('Verificación exitosa pero sin sesión');
+    }
+
+    // Crear perfil en public.users AHORA (después de verificar)
     const now = new Date().toISOString();
-    const { error: insertError } = await this.supabase.from('users').upsert(
+    const fullName = data.user.user_metadata?.full_name ?? '';
+    await this.supabase.from('users').upsert(
       {
-        id: user.id,
-        package: defaults.package,
+        id: data.user.id,
+        email: data.user.email,
+        full_name: fullName,
+        package: process.env.DEFAULT_PACKAGE ?? 'basic',
         is_active: true,
         created_at: now,
         updated_at: now,
@@ -96,17 +151,103 @@ export class AuthService {
       { onConflict: 'id' },
     );
 
-    if (insertError) {
-      this.logger.error(`[signup] DB insert failed: ${insertError.message}`);
-      throw new InternalServerErrorException(
-        `DB insert failed: ${insertError.message}`,
-      );
+    this.logger.log(`[verifyOtp] Signup verified for ${email}`);
+    return { user: data.user, session: data.session };
+  }
+
+  // 📧 Reenviar código OTP
+  async resendOtp(email: string, type: 'signup' | 'recovery') {
+    const resendType = type === 'recovery' ? 'email_change' : 'signup';
+    const { error } = await this.supabase.auth.resend({
+      type: resendType as any,
+      email: email.trim().toLowerCase(),
+    });
+
+    if (error) {
+      this.logger.warn(`[resendOtp] Failed: ${error.message}`);
+      throw new BadRequestException(error.message);
     }
 
-    const sessionPayload = data.session ?? null;
+    this.logger.log(`[resendOtp] Code resent to ${email} (type=${type})`);
+  }
 
-    this.logger.log(`[signup] User created successfully: ${user.id}`);
-    return { user, session: sessionPayload };
+  // 🔓 Solicitar recovery de contraseña
+  async requestPasswordReset(email: string) {
+    await this.supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+    );
+    // No revelar si el email existe (seguridad)
+    this.logger.log(`[requestReset] Reset requested for ${email}`);
+  }
+
+  // 🔑 Verificar OTP de recovery
+  async verifyRecoveryOtp(email: string, code: string) {
+    const { data, error } = await this.supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: code,
+      type: 'recovery',
+    });
+
+    if (error) {
+      this.logger.warn(`[verifyRecovery] Failed for ${email}: ${error.message}`);
+      throw new BadRequestException('Código incorrecto o expirado');
+    }
+
+    if (!data.session) {
+      throw new InternalServerErrorException('Verificación exitosa pero sin sesión');
+    }
+
+    this.logger.log(`[verifyRecovery] Recovery verified for ${email}`);
+    return { user: data.user, session: data.session };
+  }
+
+  // 🗑️ Eliminar cuenta completa
+  async deleteAccount(userId: string) {
+    this.logger.warn(`[deleteAccount] Deleting all data for user ${userId}`);
+
+    // Use raw SQL to handle FK constraints in correct order
+    const { error: rpcError } = await this.supabase.rpc('delete_user_account', {
+      p_user_id: userId,
+    });
+
+    if (rpcError) {
+      this.logger.error(`[deleteAccount] RPC failed: ${rpcError.message}`);
+      // Fallback: try table-by-table deletion
+      const tables = [
+        'transactions', 'bot_message_log', 'conversation_history',
+        'channel_accounts', 'goals', 'payment_method', 'categories',
+        'accounts', 'spending_expectations', 'income_expectations',
+        'personality_snapshot', 'user_emotional_log',
+      ];
+      for (const table of tables) {
+        await this.supabase.from(table).delete().eq('user_id', userId);
+      }
+      await this.supabase.from('user_prefs').delete().eq('id', userId);
+      await this.supabase.from('users').delete().eq('id', userId);
+    }
+
+    // Delete from auth.users (removes login credentials)
+    const { error: authError } = await this.supabase.auth.admin.deleteUser(userId);
+    if (authError) {
+      this.logger.error(`[deleteAccount] Failed to delete auth user: ${authError.message}`);
+      // Don't throw — public data is already deleted, auth cleanup is best-effort
+    }
+
+    this.logger.log(`[deleteAccount] Account fully deleted: ${userId}`);
+  }
+
+  // 🔒 Cambiar contraseña (autenticado)
+  async changePassword(userId: string, newPassword: string) {
+    const { error } = await this.supabase.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
+
+    if (error) {
+      this.logger.warn(`[changePassword] Failed: ${error.message}`);
+      throw new BadRequestException(error.message);
+    }
+
+    this.logger.log(`[changePassword] Password changed for user ${userId}`);
   }
 
   // 🟢 Login clásico (email/password)

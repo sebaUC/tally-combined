@@ -1,4 +1,4 @@
-import { IsString, MinLength, MaxLength, IsOptional, IsUUID } from 'class-validator';
+import { IsString, MinLength, MaxLength, IsOptional, IsUUID, IsNumber, Min } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -15,4 +15,9 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsUUID()
   parentId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  budget?: number;
 }

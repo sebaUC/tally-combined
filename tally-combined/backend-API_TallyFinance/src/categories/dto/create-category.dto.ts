@@ -4,6 +4,8 @@ import {
   MaxLength,
   IsOptional,
   IsUUID,
+  IsNumber,
+  Min,
 } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -20,4 +22,9 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsUUID()
   parentId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  budget?: number;
 }

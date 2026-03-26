@@ -7,7 +7,7 @@ from typing import List
 
 from openai import OpenAI
 
-from config import Settings
+from config import Settings, settings as app_settings
 from schemas import (
     ActionResult,
     ConversationMessage,
@@ -15,6 +15,7 @@ from schemas import (
     OrchestrateResponsePhaseA,
     OrchestrateResponsePhaseB,
     PendingSlotContext,
+    PhaseAActionItem,
     RuntimeContext,
     ToolCall,
     ToolSchema,
@@ -81,6 +82,79 @@ class Orchestrator:
             target_idx = 5  # proud
 
         return MOOD_LADDER[target_idx]
+
+    def _call_gemini_json(
+        self,
+        messages: list,
+        temperature: float,
+        media: list | None = None,
+        cid: str | None = None,
+    ) -> dict:
+        """Call Gemini API with JSON response format. Supports multimodal (images, audio, docs)."""
+        try:
+            from google import genai
+            from google.genai import types
+            import base64
+        except ImportError:
+            raise RuntimeError("google-genai not installed. Run: pip install google-genai")
+
+        if not app_settings.GEMINI_API_KEY:
+            raise RuntimeError("GEMINI_API_KEY not configured")
+
+        start = time.time()
+        log = debug_log.openai
+        log.link("Calling Gemini (JSON)", {
+            "model": app_settings.GEMINI_MODEL,
+            "temp": temperature,
+            "media": len(media) if media else 0,
+        }, cid)
+
+        client = genai.Client(api_key=app_settings.GEMINI_API_KEY)
+
+        # Convert OpenAI message format to Gemini format
+        system_instruction = None
+        contents = []
+        for msg in messages:
+            if msg["role"] == "system":
+                system_instruction = msg["content"]
+            elif msg["role"] == "user":
+                # Build parts: text + any media attachments
+                parts = [types.Part.from_text(text=msg["content"])]
+
+                # Append media to the last user message
+                if media and msg == messages[-1]:
+                    for m in media:
+                        try:
+                            raw_bytes = base64.b64decode(m.data if hasattr(m, 'data') else m['data'])
+                            mime = m.mime_type if hasattr(m, 'mime_type') else m['mime_type']
+                            parts.append(types.Part.from_bytes(data=raw_bytes, mime_type=mime))
+                            log.state("Media attached", {"type": m.type if hasattr(m, 'type') else m['type'], "mime": mime}, cid)
+                        except Exception as media_err:
+                            log.warn(f"Failed to attach media: {str(media_err)[:50]}", cid=cid)
+
+                contents.append(types.Content(role="user", parts=parts))
+            elif msg["role"] == "assistant":
+                contents.append(types.Content(role="model", parts=[types.Part.from_text(text=msg["content"])]))
+
+        config = types.GenerateContentConfig(
+            temperature=temperature,
+            response_mime_type="application/json",
+            system_instruction=system_instruction,
+        )
+
+        response = client.models.generate_content(
+            model=app_settings.GEMINI_MODEL,
+            contents=contents,
+            config=config,
+        )
+
+        raw = (response.text or "").strip()
+        # Sanitize: Flash-Lite sometimes wraps JSON in markdown code fences
+        if raw.startswith("```"):
+            raw = raw.strip("`").removeprefix("json").strip()
+        elapsed = (time.time() - start) * 1000
+        log.perf("Gemini JSON response", elapsed, cid)
+        return json.loads(raw) if raw else {}
 
     def _call_openai_json(
         self,
@@ -153,6 +227,7 @@ class Orchestrator:
         pending: PendingSlotContext | None = None,
         available_categories: List[str] | None = None,
         conversation_history: List[ConversationMessage] | None = None,
+        media: list | None = None,
         cid: str | None = None,
     ) -> OrchestrateResponsePhaseA:
         """
@@ -198,29 +273,83 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         else:
             categories_text = "Sin categorías disponibles (usar inferencia general)."
 
-        system_prompt = system_prompt_template.format(
-            user_context=user_context_json,
-            tool_schemas=tool_schemas_json,
-            pending_context=pending_context_text,
-            available_categories=categories_text,
-        )
+        # Use manual replacement instead of .format() to avoid KeyError
+        # (.format() conflicts with JSON curly braces in templates and data)
+        system_prompt = system_prompt_template
+        system_prompt = system_prompt.replace("{user_context}", user_context_json)
+        system_prompt = system_prompt.replace("{tool_schemas}", tool_schemas_json)
+        system_prompt = system_prompt.replace("{pending_context}", pending_context_text)
+        system_prompt = system_prompt.replace("{available_categories}", categories_text)
 
         # Build message array: system + conversation history + current user message
         messages = [{"role": "system", "content": system_prompt}]
 
-        # Inject Tier 1 conversation history (if available)
+        # Inject Tier 1 conversation history with metadata enrichment
         if conversation_history:
             for msg in conversation_history:
-                messages.append({"role": msg.role, "content": msg.content})
+                content = msg.content
+                # Enrich messages with metadata for contextual reference
+                if msg.metadata:
+                    meta = msg.metadata
+                    meta_parts = []
+                    if meta.tool:
+                        meta_parts.append(f"tool={meta.tool}")
+                    if meta.action:
+                        meta_parts.append(f"action={meta.action}")
+                    if meta.amount is not None:
+                        meta_parts.append(f"amount={meta.amount}")
+                    if meta.category:
+                        meta_parts.append(f"category={meta.category}")
+                    if meta.txId:
+                        meta_parts.append(f"txId={meta.txId}")
+                    if meta.slotFill:
+                        meta_parts.append("slotFill=true")
+                    if meta.attemptedCategory:
+                        meta_parts.append(f"attemptedCategory={meta.attemptedCategory}")
+                    if meta.media:
+                        for m_ref in meta.media:
+                            icon = "📷" if m_ref.type == "image" else "🎤" if m_ref.type == "audio" else "📄"
+                            desc = m_ref.description or m_ref.fileName or m_ref.type
+                            meta_parts.append(f"media={icon} {desc}")
+                    if meta_parts:
+                        content = f"[{', '.join(meta_parts)}] {content}"
+                messages.append({"role": msg.role, "content": content})
             log.state("History injected (Phase A)", {"count": len(conversation_history)}, cid)
 
         messages.append({"role": "user", "content": user_text})
 
-        data = self._call_openai_json(
-            messages=messages,
-            temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
-            cid=cid,
-        )
+        # Select provider for Phase A
+        provider = app_settings.PHASE_A_PROVIDER
+        has_media = bool(media)
+        # Force Gemini if media is present (OpenAI doesn't support multimodal in JSON mode)
+        use_gemini = (provider == "gemini" or has_media) and app_settings.GEMINI_API_KEY
+
+        if use_gemini:
+            log.phase_a("Using Gemini", {"model": app_settings.GEMINI_MODEL, "media": len(media) if media else 0}, cid)
+            try:
+                data = self._call_gemini_json(
+                    messages=messages,
+                    temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
+                    media=media,
+                    cid=cid,
+                )
+            except Exception as exc:
+                if has_media:
+                    # Can't fallback to OpenAI with media
+                    raise
+                # Fallback to OpenAI on Gemini failure (503, rate limit, etc.)
+                log.warn(f"Gemini failed, falling back to OpenAI: {str(exc)[:60]}", cid=cid)
+                data = self._call_openai_json(
+                    messages=messages,
+                    temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
+                    cid=cid,
+                )
+        else:
+            data = self._call_openai_json(
+                messages=messages,
+                temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
+                cid=cid,
+            )
 
         # Log raw LLM response for debugging
         log.state("LLM raw response", {"data": data}, cid)
@@ -228,7 +357,7 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         response_type = data.get("response_type", "clarification")
 
         # Validate response_type before constructing Pydantic model
-        valid_types = ("tool_call", "clarification", "direct_reply")
+        valid_types = ("tool_call", "clarification", "direct_reply", "actions")
         if response_type not in valid_types:
             log.err(
                 "Invalid response_type from LLM",
@@ -242,6 +371,7 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         tool_call = None
         clarification = None
         direct_reply = None
+        actions = None
 
         if response_type == "tool_call":
             tool_call_data = data.get("tool_call", {})
@@ -256,6 +386,37 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         elif response_type == "direct_reply":
             direct_reply = data.get("direct_reply", "¡Hola! ¿En que puedo ayudarte?")
             log.phase_a("Direct reply", {"text": direct_reply[:50]}, cid)
+        elif response_type == "actions":
+            raw_actions = data.get("actions", [])
+            if not isinstance(raw_actions, list) or len(raw_actions) == 0:
+                log.err(
+                    "response_type=actions but no actions array",
+                    {"full_response": data},
+                    cid,
+                )
+                # Fallback to clarification
+                response_type = "clarification"
+                clarification = "No entendí bien. ¿Puedes repetir qué necesitas?"
+            else:
+                actions = []
+                for i, item in enumerate(raw_actions):
+                    try:
+                        actions.append(PhaseAActionItem(
+                            id=item.get("id", i),
+                            tool=item.get("tool", "unknown"),
+                            args=item.get("args", {}),
+                            status=item.get("status", "ready"),
+                            missing=item.get("missing"),
+                            question=item.get("question"),
+                            depends_on=item.get("depends_on"),
+                        ))
+                    except Exception as e:
+                        log.warn(f"Skipping malformed action item {i}: {e}", cid=cid)
+                log.phase_a(
+                    f"Multi-action: {len(actions)} items",
+                    {"tools": [a.tool for a in actions]},
+                    cid,
+                )
 
         return OrchestrateResponsePhaseA(
             phase="A",
@@ -263,6 +424,7 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
             tool_call=tool_call,
             clarification=clarification,
             direct_reply=direct_reply,
+            actions=actions,
         )
 
     def phase_b(
@@ -357,21 +519,27 @@ IMPORTANTE: Combina los args recolectados con lo nuevo del usuario."""
         # Count actions in summary for session depth awareness
         session_action_count = len([s for s in conv_summary.split('.') if s.strip()]) if conv_summary else 0
 
+        # Resolve user name for personalization
+        user_name = user_context.display_name or ""
+
+        # Use manual replacement instead of .format() to avoid KeyError
+        formatted_template = system_prompt_template
+        formatted_template = formatted_template.replace("{tone}", tone)
+        formatted_template = formatted_template.replace("{mood}", final_mood)
+        formatted_template = formatted_template.replace("{user_name}", user_name or "desconocido")
+        formatted_template = formatted_template.replace("{tool_name}", tool_name)
+        formatted_template = formatted_template.replace("{ok}", str(action_result.ok))
+        formatted_template = formatted_template.replace("{data}", data_json)
+        formatted_template = formatted_template.replace("{user_question}", user_question)
+        formatted_template = formatted_template.replace("{app_knowledge}", app_knowledge_json)
+        formatted_template = formatted_template.replace("{ai_instruction}", ai_instruction)
+        formatted_template = formatted_template.replace("{error_info}", error_info)
+        formatted_template = formatted_template.replace("{active_budget}", budget_json)
+        formatted_template = formatted_template.replace("{goals_summary}", goals_summary)
+
         system_prompt = f"""{gus_identity}
 
-{system_prompt_template.format(
-    tone=tone,
-    mood=final_mood,
-    tool_name=tool_name,
-    ok=action_result.ok,
-    data=data_json,
-    user_question=user_question,
-    app_knowledge=app_knowledge_json,
-    ai_instruction=ai_instruction,
-    error_info=error_info,
-    active_budget=budget_json,
-    goals_summary=goals_summary,
-)}
+{formatted_template}
 
 CONTEXTO DE LA SESION:
 {conv_summary if conv_summary else "Primera interaccion de esta sesion."}
@@ -389,10 +557,31 @@ NUDGES PERMITIDOS:
         # Build message array: system + conversation history + user message
         messages = [{"role": "system", "content": system_prompt}]
 
-        # Inject Tier 1 conversation history (if available)
+        # Inject Tier 1 conversation history with metadata enrichment
         if conversation_history:
             for msg in conversation_history:
-                messages.append({"role": msg.role, "content": msg.content})
+                content = msg.content
+                if msg.metadata:
+                    meta = msg.metadata
+                    meta_parts = []
+                    if meta.tool:
+                        meta_parts.append(f"tool={meta.tool}")
+                    if meta.action:
+                        meta_parts.append(f"action={meta.action}")
+                    if meta.amount is not None:
+                        meta_parts.append(f"amount={meta.amount}")
+                    if meta.category:
+                        meta_parts.append(f"category={meta.category}")
+                    if meta.txId:
+                        meta_parts.append(f"txId={meta.txId}")
+                    if meta.media:
+                        for m_ref in meta.media:
+                            icon = "📷" if m_ref.type == "image" else "🎤" if m_ref.type == "audio" else "📄"
+                            desc = m_ref.description or m_ref.fileName or m_ref.type
+                            meta_parts.append(f"media={icon} {desc}")
+                    if meta_parts:
+                        content = f"[{', '.join(meta_parts)}] {content}"
+                messages.append({"role": msg.role, "content": content})
             log.state("History injected (Phase B)", {"count": len(conversation_history)}, cid)
 
         # Use real user text for natural continuation, fallback to fixed prompt
@@ -447,6 +636,80 @@ NUDGES PERMITIDOS:
             did_nudge=did_nudge,
             nudge_type=nudge_type,
         )
+
+    def nlu_test(
+        self,
+        user_text: str,
+        provider: str = "openai",
+        available_categories: List[str] | None = None,
+        cid: str | None = None,
+    ) -> dict:
+        """
+        Test NLU (Phase A only) with different providers.
+        Returns raw LLM response + timing for comparison.
+        """
+        import time as _time
+
+        log = debug_log.orchestrator
+        log.phase_a(f"NLU Test ({provider})", {"text": user_text[:50]}, cid)
+
+        # Build minimal context for testing
+        from tool_schemas import get_tool_schemas
+        tools = get_tool_schemas()
+
+        dummy_context = MinimalUserContext(
+            user_id="nlu-test",
+            personality=None,
+            prefs=None,
+            active_budget=None,
+            goals_summary=[],
+        )
+
+        system_prompt_template = self.load_prompt("phase_a_system.txt")
+        user_context_json = json.dumps(dummy_context.model_dump(), ensure_ascii=False, indent=2)
+        tool_schemas_json = json.dumps([t.model_dump() for t in tools], ensure_ascii=False, indent=2)
+        pending_context_text = "Sin contexto pendiente (mensaje nuevo)."
+
+        if available_categories:
+            categories_text = "Categorías del usuario: " + ", ".join(available_categories)
+        else:
+            categories_text = "Categorías del usuario: Alimentación, Transporte, Hogar, Salud, Personal, Entretenimiento, Educación, Servicios"
+
+        system_prompt = system_prompt_template
+        system_prompt = system_prompt.replace("{user_context}", user_context_json)
+        system_prompt = system_prompt.replace("{tool_schemas}", tool_schemas_json)
+        system_prompt = system_prompt.replace("{pending_context}", pending_context_text)
+        system_prompt = system_prompt.replace("{available_categories}", categories_text)
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_text},
+        ]
+
+        start = _time.time()
+
+        if provider == "gemini":
+            data = self._call_gemini_json(
+                messages=messages,
+                temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
+                cid=cid,
+            )
+        else:
+            data = self._call_openai_json(
+                messages=messages,
+                temperature=self.config.OPENAI_TEMPERATURE_PHASE_A,
+                cid=cid,
+            )
+
+        elapsed_ms = round((_time.time() - start) * 1000)
+
+        return {
+            "provider": provider,
+            "model": app_settings.GEMINI_MODEL if provider == "gemini" else self.config.OPENAI_MODEL,
+            "user_text": user_text,
+            "response": data,
+            "elapsed_ms": elapsed_ms,
+        }
 
     def _extract_opening(self, response: str) -> str | None:
         """Extract opening word from response for variability tracking."""

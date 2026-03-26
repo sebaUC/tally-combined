@@ -19,7 +19,7 @@ export class GuardrailsService {
 
   private readonly schemas: Record<string, ToolSchema> = {
     register_transaction: {
-      required: ['amount', 'category'],
+      required: ['amount'],
       validators: {
         amount: (v) => typeof v === 'number' && v > 0 && v < 100_000_000,
         category: (v) =>

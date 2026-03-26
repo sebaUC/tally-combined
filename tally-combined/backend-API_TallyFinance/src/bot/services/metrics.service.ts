@@ -57,6 +57,58 @@ export class MetricsService {
   }
 
   /**
+   * Records N transactions for a block close (action pipeline).
+   * Updates streak once (block = 1 day unit) and weekCount by N.
+   */
+  async recordTransactions(userId: string, count: number): Promise<void> {
+    if (count <= 0) return;
+    const key = RedisKeys.convMetrics(userId);
+    try {
+      const current = await this.getMetrics(userId);
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      let newStreak = 1;
+      if (current.lastTxIso) {
+        const lastTxDate = new Date(current.lastTxIso).toISOString().split('T')[0];
+        if (lastTxDate === todayStr) {
+          newStreak = current.txStreakDays;
+        } else {
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          if (lastTxDate === yesterdayStr) {
+            newStreak = current.txStreakDays + 1;
+          }
+        }
+      }
+
+      let newWeekCount = count;
+      if (current.lastTxIso) {
+        const daysSinceLast = Math.floor(
+          (now.getTime() - new Date(current.lastTxIso).getTime()) / (24 * 60 * 60 * 1000),
+        );
+        if (daysSinceLast <= 7) {
+          newWeekCount = current.weekTxCount + count;
+        }
+      }
+
+      const updated: UserMetrics = {
+        txStreakDays: newStreak,
+        lastTxIso: now.toISOString(),
+        weekTxCount: newWeekCount,
+      };
+
+      await this.redis.set(key, JSON.stringify(updated), RedisTTL.METRICS);
+      this.log.debug(
+        `[recordTransactions] Updated metrics for user ${userId}: streak=${newStreak}, weekCount=${newWeekCount} (+${count})`,
+      );
+    } catch (err) {
+      this.log.warn(`[recordTransactions] Error for user ${userId}`, err);
+    }
+  }
+
+  /**
    * Records a new transaction and updates streak/count.
    * Called after successful transaction registration.
    */

@@ -39,6 +39,7 @@ export interface UsageResult {
 export class AdminUsageService {
   private readonly logger = new Logger(AdminUsageService.name);
   private readonly client: AxiosInstance;
+  private _loggedRawCost = false;
 
   constructor(private readonly config: ConfigService) {
     const adminKey = this.config.get<string>('OPENAI_ADMIN_KEY');
@@ -234,7 +235,13 @@ export class AdminUsageService {
       const results = bucket.results ?? [];
 
       for (const r of results) {
-        const cost = (r.amount?.value ?? 0) / 100; // cents to dollars
+        // Log raw value for debugging
+        if (!this._loggedRawCost) {
+          this.logger.log(`[costs] Raw amount sample: ${JSON.stringify(r.amount)}, line_item: ${r.line_item}`);
+          this._loggedRawCost = true;
+        }
+        // OpenAI costs API: amount.value is in USD directly
+        const cost = r.amount?.value ?? 0;
         const lineItem = r.line_item ?? 'other';
 
         totalCostUsd += cost;

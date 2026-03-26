@@ -1,11 +1,25 @@
-import { ToolSchema } from '../tools/tool-schemas';
 import { ActionResult } from '../actions/action-result';
+
+/** Minimal tool schema type (previously from tools/tool-schemas) */
+export interface ToolSchema {
+  name: string;
+  description: string;
+  parameters: Record<string, any>;
+}
+import { MediaAttachment } from '../contracts';
+
+export interface MediaPayload {
+  type: string; // image, audio, document
+  mime_type: string;
+  data: string; // base64
+  file_name?: string;
+}
 
 export interface AiUserContextPayload {
   user_id: string;
+  display_name: string | null;
   personality: {
     tone: string | null;
-    intensity: number | null;
     mood: string | null;
   } | null;
   prefs: {
@@ -31,9 +45,29 @@ export interface PendingSlotContext {
 
 // ============ Conversation History ============
 
+export interface MediaReference {
+  type: 'image' | 'audio' | 'document';
+  mimeType: string;
+  fileName?: string;
+  description?: string;          // Generated description (OCR, transcription, etc.)
+}
+
+export interface ConversationMessageMetadata {
+  tool?: string;               // Tool used (register_transaction, ask_balance, etc.)
+  action?: string;             // Result: 'expense_registered', 'income_registered', etc.
+  amount?: number;             // Amount if applicable
+  category?: string;           // Category if applicable
+  txId?: string;               // Transaction ID (for undo/delete/edit references)
+  slotFill?: boolean;          // true if this is a slot-fill question
+  media?: MediaReference[];    // Media attachments sent by user
+  attemptedCategory?: string;  // Category user mentioned but doesn't exist
+}
+
 export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
+  timestamp?: string;          // ISO-8601 (optional for backward compat)
+  metadata?: ConversationMessageMetadata;
 }
 
 // ============ Phase A ============
@@ -44,19 +78,30 @@ export interface PhaseARequest {
   user_text: string;
   user_context: AiUserContextPayload;
   tools: ToolSchema[];
-  // NEW: Pending slot-fill context for multi-turn completion
   pending?: PendingSlotContext | null;
-  // NEW: Available categories for matching
   available_categories?: string[];
-  // Tier 1: Conversation history (last N exchanges)
   conversation_history?: ConversationMessage[];
+  media?: MediaPayload[];
 }
 
-export type PhaseAResponseType = 'tool_call' | 'clarification' | 'direct_reply';
+export type PhaseAResponseType = 'tool_call' | 'clarification' | 'direct_reply' | 'actions';
 
 export interface ToolCall {
   name: string;
   args: Record<string, any>;
+}
+
+/**
+ * A single action item returned by Phase A in multi-action mode.
+ */
+export interface PhaseAActionItem {
+  id: number;
+  tool: string;
+  args: Record<string, any>;
+  status: 'ready' | 'needs_info' | 'depends_on';
+  missing?: string[];
+  question?: string;
+  depends_on?: number; // id of another item that must execute first
 }
 
 export interface PhaseAResponse {
@@ -65,6 +110,7 @@ export interface PhaseAResponse {
   tool_call?: ToolCall;
   clarification?: string;
   direct_reply?: string;
+  actions?: PhaseAActionItem[]; // Present when response_type === 'actions'
 }
 
 // ============ Phase B ============

@@ -10,6 +10,7 @@ export interface MessageLogData {
   phaseADebug: Record<string, unknown> | null;
   phaseBDebug: Record<string, unknown> | null;
   error: string | null;
+  blockId?: string | null; // Action pipeline block grouping
 }
 
 @Injectable()
@@ -27,6 +28,7 @@ export class MessageLogService {
         phase_a_debug: data.phaseADebug,
         phase_b_debug: data.phaseBDebug,
         error: data.error,
+        ...(data.blockId ? { block_id: data.blockId } : {}),
       });
 
       if (error) {

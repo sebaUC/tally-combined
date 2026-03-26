@@ -141,6 +141,35 @@ class PaymentMethodDto {
   number_masked?: string;
 }
 
+class IncomeEntryDto {
+  @IsBoolean()
+  active: boolean;
+
+  @IsString()
+  amount: string;
+
+  @IsOptional()
+  @IsString()
+  payDay?: string;
+}
+
+class IncomeExpectationsDto {
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  monthly?: IncomeEntryDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  weekly?: IncomeEntryDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeEntryDto)
+  daily?: IncomeEntryDto;
+}
+
 export class OnboardingAnswers {
   @IsEnum(notificationLevels)
   notifications: NotificationLevel;
@@ -151,6 +180,15 @@ export class OnboardingAnswers {
   @ValidateNested()
   @Type(() => PersonalityDto)
   personality: PersonalityDto;
+
+  @IsOptional()
+  @IsBoolean()
+  noIncome?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => IncomeExpectationsDto)
+  incomeExpectations?: IncomeExpectationsDto;
 
   @IsObject()
   @ValidateNested()
@@ -177,6 +215,12 @@ export class OnboardingAnswers {
   @ArrayMaxSize(20)
   @Type(() => PaymentMethodDto)
   payment_method?: PaymentMethodDto[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  initialBalance?: number;
 }
 
 export class OnboardingDto {

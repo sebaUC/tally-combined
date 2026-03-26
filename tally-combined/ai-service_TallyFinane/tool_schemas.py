@@ -57,7 +57,12 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
                 "category": ToolSchemaParameter(
                     type="string",
-                    description="Nombre de la categoria (ej: comida, transporte, entretenimiento, arriendo, servicios)",
+                    description=(
+                        "Nombre de la categoria tal como la identifica el usuario. "
+                        "Mapear a categorías existentes cuando sea posible (ej: uber → Transporte). "
+                        "Si no existe una categoría adecuada, enviar el nombre que dijo el usuario. "
+                        "Para type='income' (ingresos) NO enviar este campo."
+                    ),
                 ),
                 "posted_at": ToolSchemaParameter(
                     type="string",
@@ -69,14 +74,35 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
                 "type": ToolSchemaParameter(
                     type="string",
-                    description="Tipo: 'expense' (default) o 'income' (sueldo, pago recibido, venta). Solo enviar si es ingreso.",
+                    description=(
+                        "Tipo: 'expense' (default), 'income' (sueldo, pago recibido, venta), "
+                        "o 'balance_set' (setear balance de cuenta — cuando el usuario dice cuánto tiene, "
+                        "ej: 'tengo 500 mil en mi cuenta', 'mi saldo es 300 mil', 'ajusta mi balance a 100 mil'). "
+                        "'balance_set' NO crea transacción, solo actualiza el saldo de la cuenta."
+                    ),
                 ),
                 "name": ToolSchemaParameter(
                     type="string",
-                    description="Nombre corto deducido del contexto (2-4 palabras, ej: 'Almuerzo', 'Sueldo marzo'). SIEMPRE enviar.",
+                    description=(
+                        "Nombre breve e indicativo de la transaccion. SIEMPRE enviar. "
+                        "FORMATO: 2-4 palabras, Title Case, sin articulos (el/la/un/una), sin monto. "
+                        "PATRONES por contexto: "
+                        "Comida/Resto → [Ocasion o Lugar]: 'Almuerzo Trabajo', 'Cena Cumpleanos', 'Sushi Delivery', 'Cafe Reunion'. "
+                        "Transporte → [Servicio Destino]: 'Uber Aeropuerto', 'Bencina Auto', 'TAG Semana'. "
+                        "Streaming/Suscripciones → [Servicio]: 'Netflix', 'Spotify', 'Disney Plus'. "
+                        "Servicios/Hogar → [Servicio Mes]: 'Luz Abril', 'Arriendo Mayo', 'Internet'. "
+                        "Salud → [Tipo Contexto]: 'Consulta Medica', 'Farmacia Gripe', 'Gym Mensual'. "
+                        "Ropa → [Tipo Uso]: 'Zapatillas Running', 'Polera Trabajo', 'Ropa Verano'. "
+                        "Supermercado → [Lugar Frecuencia]: 'Super Semana', 'Jumbo Mensual'. "
+                        "Ingreso sueldo → 'Sueldo [Mes]': 'Sueldo Marzo'. "
+                        "Ingreso freelance → 'Freelance [Proyecto]': 'Freelance Logo', 'Freelance Web'. "
+                        "Ingreso venta → 'Venta [Objeto]': 'Venta Bicicleta', 'Venta Ropa'. "
+                        "Agrega mes solo cuando sea relevante (sueldos, arriendos, servicios recurrentes). "
+                        "Prioriza contexto util sobre genericidad: 'Uber Trabajo' es mejor que 'Transporte'."
+                    ),
                 ),
             },
-            required=["amount", "category"],
+            required=["amount"],
         ),
     ),
     ToolSchema(
@@ -158,7 +184,17 @@ TOOL_SCHEMAS: List[ToolSchema] = [
                 ),
                 "icon": ToolSchemaParameter(
                     type="string",
-                    description="Emoji/icono para la categoria (opcional en create)",
+                    description=(
+                        "Emoji representativo para la categoría. "
+                        "Para operation=create: OBLIGATORIO, siempre asignar uno. "
+                        "Elige el emoji que MEJOR represente el concepto de la categoría. "
+                        "Puedes usar CUALQUIER emoji existente — no te limites a una lista fija. "
+                        "Busca el emoji más específico y semánticamente correcto. "
+                        "Ej: Filosofía→🧠, Gaming→🎮, Pilates→🧘, Cerveza→🍺, "
+                        "Natación→🏊, Cine→🎬, Sushi→🍣, Peluquería→💇, Dentista→🦷, "
+                        "Veterinario→🐕, Lavandería→👔, Bicicleta→🚴, Parking→🅿️. "
+                        "Sé creativo y preciso — el emoji debe ser reconocible al instante."
+                    ),
                 ),
                 "parent_name": ToolSchemaParameter(
                     type="string",
@@ -183,9 +219,46 @@ TOOL_SCHEMAS: List[ToolSchema] = [
     ),
     ToolSchema(
         name="ask_balance",
-        description="Consulta el saldo actual del usuario en sus cuentas/metodos de pago",
+        description=(
+            "Consulta el saldo, gastos e ingresos del usuario. "
+            "Soporta filtros por período, categoría y tipo. "
+            "Usar cuando el usuario pregunta cuánto gastó, su balance, "
+            "o consultas como 'cuánto gasté en comida esta semana'."
+        ),
         parameters=ToolSchemaParameters(
-            properties={},
+            properties={
+                "period": ToolSchemaParameter(
+                    type="string",
+                    description=(
+                        "Período a consultar: 'today' (hoy), 'week' (esta semana), "
+                        "'month' (este mes, default), 'custom' (rango personalizado). "
+                        "Usa 'today' para 'hoy', 'week' para 'esta semana', 'month' para 'este mes'."
+                    ),
+                ),
+                "start_date": ToolSchemaParameter(
+                    type="string",
+                    description="Fecha inicio ISO-8601 (solo si period='custom'). Ej: '2026-03-01'",
+                ),
+                "end_date": ToolSchemaParameter(
+                    type="string",
+                    description="Fecha fin ISO-8601 (solo si period='custom'). Ej: '2026-03-15'",
+                ),
+                "category": ToolSchemaParameter(
+                    type="string",
+                    description=(
+                        "Filtrar por categoría específica. "
+                        "Usar el nombre exacto de la categoría del usuario. "
+                        "Ej: 'Alimentación', 'Transporte'"
+                    ),
+                ),
+                "type": ToolSchemaParameter(
+                    type="string",
+                    description=(
+                        "Filtrar por tipo: 'expense' (solo gastos), 'income' (solo ingresos), "
+                        "'all' (ambos, default). Usar cuando el usuario especifica."
+                    ),
+                ),
+            },
             required=[],
         ),
     ),

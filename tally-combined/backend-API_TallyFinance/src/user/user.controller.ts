@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Body, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { JwtGuard } from '../auth/middleware/jwt.guard';
 import { User } from '../auth/decorators/user.decorator';
@@ -72,5 +72,23 @@ export class UsersController {
     }
 
     return results;
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('adjust-balance')
+  async adjustBalance(
+    @User() user: any,
+    @Body() body: { balance: number },
+  ) {
+    if (body.balance == null || !isFinite(body.balance) || body.balance < 0) {
+      return { error: 'Balance must be a non-negative number' };
+    }
+    return this.users.adjustBalance(user.id, body.balance);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete('reset')
+  async resetTransactions(@User() user: any) {
+    return this.users.resetTransactions(user.id);
   }
 }

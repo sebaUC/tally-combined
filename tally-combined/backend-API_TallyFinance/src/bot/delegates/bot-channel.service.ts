@@ -266,6 +266,29 @@ export class BotChannelService {
   }
 
   /**
+   * Looks up a user ID by external channel ID (phone for WA, chat_id for TG).
+   * Used by the callback handler to resolve undo operations.
+   */
+  async getUserIdByExternalId(
+    externalId: string,
+    channel: 'telegram' | 'whatsapp',
+  ): Promise<string | null> {
+    const { data, error, status } = await this.supabase
+      .from('channel_accounts')
+      .select('user_id')
+      .eq('channel', channel)
+      .eq('external_user_id', externalId)
+      .maybeSingle<{ user_id: string }>();
+
+    if (error && status !== 406) {
+      this.log.warn(
+        `[getUserIdByExternalId] Error querying channel_accounts: ${error.message}`,
+      );
+    }
+    return data?.user_id ?? null;
+  }
+
+  /**
    * Extracts a code from a /start command.
    * Only works for Telegram messages.
    *

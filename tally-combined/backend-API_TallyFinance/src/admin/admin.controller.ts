@@ -86,14 +86,18 @@ export class AdminController {
   async getUserChat(
     @Param('userId') userId: string,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
-    const messages = await this.messagesService.getUserChat(
+    const result = await this.messagesService.getUserChat(
       userId,
-      limit ? parseInt(limit, 10) : 50,
+      limit ? parseInt(limit, 10) : 30,
+      offset ? parseInt(offset, 10) : 0,
     );
     return {
       ok: true,
-      data: messages,
+      data: result.data,
+      hasMore: result.hasMore,
+      total: result.total,
     };
   }
 
@@ -154,6 +158,19 @@ export class AdminController {
   @Get('usage')
   async getUsage(@Query() query: UsageQueryDto) {
     const data = await this.usageService.getUsage(query.month);
+    return {
+      ok: true,
+      data,
+    };
+  }
+
+  /**
+   * GET /admin/usage/per-user?month=2026-03
+   * Returns estimated token usage and cost per user, filtered by month
+   */
+  @Get('usage/per-user')
+  async getUsagePerUser(@Query('month') month?: string) {
+    const data = await this.messagesService.getUsagePerUser(month);
     return {
       ok: true,
       data,

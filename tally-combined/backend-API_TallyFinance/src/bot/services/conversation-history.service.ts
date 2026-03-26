@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisService, RedisKeys, RedisTTL } from '../../redis';
-import { ConversationMessage } from './orchestrator.contracts';
+import { ConversationMessage, ConversationMessageMetadata, MediaReference } from './orchestrator.contracts';
 
-/** Maximum entries in history array (10 pairs = 20 entries). */
-const MAX_HISTORY_ENTRIES = 20;
+/** Maximum entries in history array (25 pairs = 50 entries). */
+const MAX_HISTORY_ENTRIES = 50;
 
 /**
  * Tier 1 — Working Memory.
  *
- * Stores the last 10 user/assistant exchange pairs verbatim in Redis.
- * TTL refreshes on every append, keeping active conversations alive.
- * When TTL expires (10 min inactivity), memory clears automatically.
+ * Stores the last 25 user/assistant exchange pairs in Redis with metadata.
+ * TTL refreshes on every append (4h), keeping active conversations alive.
+ * When TTL expires, memory clears automatically.
  *
  * Thread-safety: `lock:{userId}` in BotService guarantees single-writer per user,
  * so the non-atomic get-then-set pattern is safe.
@@ -46,13 +46,51 @@ export class ConversationHistoryService {
     userMessage: string,
     assistantMessage: string,
   ): Promise<void> {
+    return this.appendWithMetadata(userId, userMessage, assistantMessage);
+  }
+
+  /**
+   * Appends a user/assistant pair with optional metadata (tool, amount, txId, etc.).
+   * Metadata is used by Phase A to resolve contextual references like "elimínalo".
+   */
+  async appendWithMetadata(
+    userId: string,
+    userMessage: string,
+    assistantMessage: string,
+    metadata?: ConversationMessageMetadata,
+    userMedia?: MediaReference[],
+  ): Promise<void> {
     const key = RedisKeys.convHistory(userId);
     try {
       const history = await this.getHistory(userId);
+      const now = new Date().toISOString();
+
+      // Build user entry — enrich content with media labels if present
+      let userContent = userMessage;
+      const userMeta: ConversationMessageMetadata | undefined =
+        userMedia?.length ? { media: userMedia } : undefined;
+      if (userMedia?.length) {
+        const mediaLabels = userMedia.map((m) => {
+          const icon = m.type === 'image' ? '📷' : m.type === 'audio' ? '🎤' : '📄';
+          const desc = m.description ?? m.fileName ?? m.type;
+          return `[${icon} ${desc}]`;
+        });
+        userContent = `${mediaLabels.join(' ')} ${userMessage}`.trim();
+      }
 
       history.push(
-        { role: 'user', content: userMessage },
-        { role: 'assistant', content: assistantMessage },
+        {
+          role: 'user',
+          content: userContent,
+          timestamp: now,
+          ...(userMeta ? { metadata: userMeta } : {}),
+        },
+        {
+          role: 'assistant',
+          content: assistantMessage,
+          timestamp: now,
+          ...(metadata ? { metadata } : {}),
+        },
       );
 
       // FIFO trim: keep only the last MAX_HISTORY_ENTRIES
@@ -63,10 +101,10 @@ export class ConversationHistoryService {
 
       await this.redis.set(key, JSON.stringify(trimmed), RedisTTL.CONV_HISTORY);
       this.log.debug(
-        `[appendToHistory] Saved ${trimmed.length} entries for user ${userId}`,
+        `[appendWithMetadata] Saved ${trimmed.length} entries for user ${userId}`,
       );
     } catch (err) {
-      this.log.warn(`[appendToHistory] Redis error for user ${userId}`, err);
+      this.log.warn(`[appendWithMetadata] Redis error for user ${userId}`, err);
     }
   }
 

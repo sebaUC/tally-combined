@@ -47,7 +47,7 @@ export class CategoriesService {
 
   async create(
     userId: string,
-    dto: { name: string; icon?: string; parentId?: string },
+    dto: { name: string; icon?: string; parentId?: string; budget?: number },
   ) {
     // Check max 50
     const { count } = await this.supabase
@@ -95,7 +95,7 @@ export class CategoriesService {
         name: dto.name,
         icon: dto.icon ?? null,
         parent_id: dto.parentId ?? null,
-        budget: 0,
+        budget: dto.budget ?? 0,
         created_at: new Date().toISOString(),
       })
       .select('id, name, icon, parent_id, budget')

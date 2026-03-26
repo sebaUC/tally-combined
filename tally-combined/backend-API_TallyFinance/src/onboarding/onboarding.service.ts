@@ -27,6 +27,7 @@ export class OnboardingService {
     await this.upsertUserPrefs(userId, answers, now);
     await this.upsertPersonalitySnapshot(userId, answers, now);
     await this.syncSpendingExpectations(userId, answers, now);
+    await this.syncIncomeExpectations(userId, answers, now);
     const accountIds = await this.syncAccounts(userId, answers, now);
     await this.syncPaymentMethods(userId, answers, now, accountIds);
     await this.syncCategories(userId, answers, now);
@@ -176,6 +177,79 @@ export class OnboardingService {
     }
   }
 
+  private async syncIncomeExpectations(
+    userId: string,
+    answers: OnboardingAnswers,
+    now: string,
+  ) {
+    // Clean existing income expectations
+    const { error: deleteError } = await this.supabase
+      .from('income_expectations')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      this.logger.error(
+        `[onboarding] No se pudieron limpiar income_expectations: ${deleteError.message}`,
+      );
+      throw new InternalServerErrorException(
+        'No se pudieron preparar las expectativas de ingreso previas.',
+      );
+    }
+
+    // If user marked "no income" or no data, skip
+    if (answers.noIncome || !answers.incomeExpectations) {
+      this.logger.log(
+        `[onboarding] noIncome=${answers.noIncome}, se omite income_expectations para ${userId}`,
+      );
+      return;
+    }
+
+    const periods = ['monthly', 'weekly', 'daily'] as const;
+    const records: Array<Record<string, any>> = [];
+
+    for (const period of periods) {
+      const entry = answers.incomeExpectations[period];
+      if (!entry?.active) continue;
+
+      const amount = this.parser.parseAmount(entry.amount);
+      if (!amount || amount <= 0) continue;
+
+      records.push({
+        id: randomUUID(),
+        user_id: userId,
+        period,
+        amount,
+        pay_day: entry.payDay?.trim() || null,
+        active: true,
+        created_at: now,
+        updated_at: now,
+      });
+    }
+
+    if (!records.length) {
+      this.logger.log('[onboarding] No hay ingresos activos para guardar.');
+      return;
+    }
+
+    const { error } = await this.supabase
+      .from('income_expectations')
+      .insert(records);
+
+    if (error) {
+      this.logger.error(
+        `[onboarding] No se pudieron guardar income_expectations: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'No se pudieron guardar las expectativas de ingreso.',
+      );
+    }
+
+    this.logger.log(
+      `[onboarding] ${records.length} income_expectations guardadas para ${userId}`,
+    );
+  }
+
   private async syncAccounts(
     userId: string,
     answers: OnboardingAnswers,
@@ -191,6 +265,8 @@ export class OnboardingService {
     // Clean existing accounts
     await this.supabase.from('accounts').delete().eq('user_id', userId);
 
+    const initialBalance = Number(answers.initialBalance) || 0;
+
     if (unifiedBalance || !paymentMethods.length) {
       // Create a single unified account
       const accountId = randomUUID();
@@ -200,7 +276,7 @@ export class OnboardingService {
         name: 'Cuenta Principal',
         institution: null,
         currency: 'CLP',
-        current_balance: 0,
+        current_balance: initialBalance,
       });
 
       if (error) {
@@ -226,6 +302,7 @@ export class OnboardingService {
       const key = (method.institution ?? 'default').toLowerCase();
       if (!institutionMap.has(key)) {
         const accountId = randomUUID();
+        const isFirst = accountIds.length === 0;
         const { error } = await this.supabase.from('accounts').insert({
           id: accountId,
           user_id: userId,
@@ -234,7 +311,7 @@ export class OnboardingService {
             : 'Cuenta Principal',
           institution: method.institution ?? null,
           currency: method.currency ?? 'CLP',
-          current_balance: 0,
+          current_balance: isFirst ? initialBalance : 0,
         });
 
         if (error) {

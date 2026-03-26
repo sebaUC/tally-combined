@@ -42,7 +42,6 @@ class ToolCall(BaseModel):
 class Personality(BaseModel):
     """Maps to personality_snapshot table."""
     tone: ToneType
-    intensity: float  # 0.0 - 1.0
     mood: Optional[MoodType] = None  # Optional for backward compatibility
 
 
@@ -76,6 +75,7 @@ class MinimalUserContext(BaseModel):
     Aggregated from multiple Supabase tables.
     """
     user_id: str
+    display_name: Optional[str] = None  # Nickname or full_name
     personality: Optional[Personality] = None  # From personality_snapshot
     prefs: Optional[UserPrefs] = None  # From user_prefs
     active_budget: Optional[Budget] = None  # From spending_expectations WHERE active=true
@@ -132,10 +132,40 @@ class PendingSlotContext(BaseModel):
     asked_at: Optional[str] = None  # ISO timestamp when we asked
 
 
+class MediaReference(BaseModel):
+    """Reference to media sent in conversation (no base64, just metadata)."""
+    type: str  # image, audio, document
+    mimeType: str
+    fileName: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ConversationMessageMetadata(BaseModel):
+    """Metadata for messages in conversation history."""
+    tool: Optional[str] = None
+    action: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    txId: Optional[str] = None
+    slotFill: Optional[bool] = None
+    media: Optional[List[MediaReference]] = None
+    attemptedCategory: Optional[str] = None
+
+
 class ConversationMessage(BaseModel):
     """A single message in conversation history (Tier 1 working memory)."""
     role: Literal["user", "assistant"]
     content: str
+    timestamp: Optional[str] = None
+    metadata: Optional[ConversationMessageMetadata] = None
+
+
+class MediaPayload(BaseModel):
+    """Media attachment (image, audio, document) as base64."""
+    type: str  # image, audio, document
+    mime_type: str  # image/jpeg, audio/ogg, application/pdf
+    data: str  # base64-encoded bytes
+    file_name: Optional[str] = None
 
 
 class OrchestrateRequestPhaseA(BaseModel):
@@ -146,23 +176,33 @@ class OrchestrateRequestPhaseA(BaseModel):
     user_text: str
     user_context: MinimalUserContext
     tools: List[ToolSchema]
-    # NEW: Slot-filling context from previous turn
     pending: Optional[PendingSlotContext] = None
-    # NEW: User's actual category names for matching
     available_categories: List[str] = Field(default_factory=list)
-    # Tier 1: Conversation history (last N exchanges)
     conversation_history: List[ConversationMessage] = Field(default_factory=list)
+    media: List[MediaPayload] = Field(default_factory=list)
+
+
+class PhaseAActionItem(BaseModel):
+    """A single action item in a multi-action response from Phase A."""
+    id: int
+    tool: str
+    args: Dict[str, Any] = Field(default_factory=dict)
+    status: Literal["ready", "needs_info", "depends_on"] = "ready"
+    missing: Optional[List[str]] = None
+    question: Optional[str] = None
+    depends_on: Optional[int] = None  # id of item that must execute first
 
 
 class OrchestrateResponsePhaseA(BaseModel):
     """
-    Phase A response: Returns tool_call, clarification, or direct_reply.
+    Phase A response: Returns tool_call, clarification, direct_reply, or actions.
     """
     phase: Literal["A"] = "A"
-    response_type: Literal["tool_call", "clarification", "direct_reply"]
+    response_type: Literal["tool_call", "clarification", "direct_reply", "actions"]
     tool_call: Optional[ToolCall] = None
     clarification: Optional[str] = None
     direct_reply: Optional[str] = None
+    actions: Optional[List[PhaseAActionItem]] = None  # Present when response_type == "actions"
 
 
 # =============================================================================

@@ -1,6 +1,7 @@
 export type ActionType =
   | 'none'
   | 'register_transaction'
+  | 'balance_set'
   | 'manage_transactions'
   | 'manage_categories'
   | 'ask_balance'
