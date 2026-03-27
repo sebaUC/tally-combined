@@ -16,7 +16,7 @@ const TOKEN_DAILY_KEY = (id: string) => `tokens:${id}:daily`;
 const TOKEN_MONTHLY_KEY = (id: string) => `tokens:${id}:monthly`;
 const DEDUP_KEY = (id: string) => `msg:${id}`;
 const LOCK_KEY = (id: string) => `lock:${id}`;
-const DAILY_LIMIT = 200_000;
+const DAILY_LIMIT = 2_000_000;
 
 export interface BotV3Result {
   reply: string;
