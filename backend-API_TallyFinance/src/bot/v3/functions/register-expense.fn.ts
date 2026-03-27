@@ -25,7 +25,7 @@ export async function registerExpense(
   }
 
   const category = args.category || 'Sin categoría';
-  const name = args.name || generateExpenseName(category, description);
+  const name = args.name || generateExpenseName(category, description, amount);
 
   // Default date+time in Chile timezone with offset (so Supabase stores correctly)
   const postedAt = args.posted_at || getChileTimestamp();
@@ -108,6 +108,12 @@ export async function registerExpense(
     (matched as any)?.budget ?? 0, amount, account.id,
   );
 
+  // 6. Detect ant expense (gasto hormiga)
+  const antExpense = isAntExpense(amount, category, name);
+  if (antExpense) {
+    context.antExpense = true;
+  }
+
   return {
     ok: true,
     data: {
@@ -119,35 +125,25 @@ export async function registerExpense(
       posted_at: postedAt,
       description: description ?? null,
       ...(wasAutoCreated ? { categoryCreated: true } : {}),
+      ...(antExpense ? { antExpense: true } : {}),
     },
     context,
   };
 }
 
-// ── Name generation: always provide a descriptive name ──
+// ── Name generation + ant expense detection ──
 
-const CATEGORY_NAME_MAP: Record<string, string> = {
-  alimentación: 'Comida',
-  alimentacion: 'Comida',
-  comida: 'Comida',
-  transporte: 'Transporte',
-  salud: 'Salud',
-  educación: 'Educación',
-  educacion: 'Educación',
-  entretenimiento: 'Entretenimiento',
-  hogar: 'Gasto Hogar',
-  personal: 'Gasto Personal',
-  suscripciones: 'Suscripción',
-  supermercado: 'Supermercado',
-  servicios: 'Servicios',
-  ropa: 'Ropa',
-  tecnología: 'Tecnología',
-  tecnologia: 'Tecnología',
-  mascotas: 'Mascotas',
-  deporte: 'Deporte',
+/** Gastos hormiga: montos pequeños y recurrentes en categorías típicas */
+const ANT_EXPENSE_THRESHOLD = 5000 // CLP — gastos <= this are candidates
+const ANT_CATEGORIES = /café|coffee|snack|golosin|dulce|chicle|bebida|jugo|agua|galleta|completo|sopaipilla|mote|empanada|helad|vending/i
+
+function isAntExpense(amount: number, category: string, name?: string): boolean {
+  if (amount > ANT_EXPENSE_THRESHOLD) return false
+  const text = `${category} ${name || ''}`.toLowerCase()
+  return ANT_CATEGORIES.test(text)
 }
 
-function generateExpenseName(category: string, description?: string): string {
+function generateExpenseName(category: string, description?: string, amount?: number): string {
   // If description has useful info, use it (title case, max 4 words)
   if (description) {
     const words = description.trim().split(/\s+/).slice(0, 4)
@@ -156,11 +152,7 @@ function generateExpenseName(category: string, description?: string): string {
     }
   }
 
-  // Map common categories to better names
-  const lower = category.toLowerCase().trim()
-  if (CATEGORY_NAME_MAP[lower]) return CATEGORY_NAME_MAP[lower]
-
-  // Title-case the category itself
+  // Title-case the category as name
   return category
     .trim()
     .split(/\s+/)

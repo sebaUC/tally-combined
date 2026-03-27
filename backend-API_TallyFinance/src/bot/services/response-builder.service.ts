@@ -81,8 +81,9 @@ export class ResponseBuilderService {
             `💰 Ingreso · ${date}`
           );
         }
+        const antLabel = data?.antExpense ? ' 🐜' : '';
         return (
-          `✅ <b>$${this.formatCLP(amount)}</b> — ${this.escapeHtml(name)}\n` +
+          `✅ <b>$${this.formatCLP(amount)}</b> — ${this.escapeHtml(name)}${antLabel}\n` +
           `${icon} ${this.escapeHtml(category ?? 'Sin categoría')} · ${date}`
         );
       }
@@ -185,11 +186,14 @@ export class ResponseBuilderService {
           return txs
             .map(
               (tx, i) => {
-                const icon = this.getCategoryIcon(tx.category);
-                const displayName = tx.name && tx.name !== tx.category ? tx.name : '';
+                const icon = tx.icon || this.getCategoryIcon(tx.category);
+                const displayName = tx.name && tx.name !== tx.category ? this.escapeHtml(tx.name) : '';
                 const catLabel = tx.category ? `${icon} ${this.escapeHtml(tx.category)}` : '';
-                const nameLabel = displayName ? ` (${this.escapeHtml(displayName)})` : '';
-                return `${i + 1}. <b>$${this.formatCLP(tx.amount)}</b> — ${catLabel}${nameLabel} · ${this.formatDate(tx.posted_at)}`;
+                // Show: "1. $4.000 — 💊 Salud · Pasta de Dientes · 26/3"
+                const parts = [`${i + 1}. <b>$${this.formatCLP(tx.amount)}</b> — ${catLabel}`];
+                if (displayName) parts.push(displayName);
+                parts.push(this.formatDate(tx.posted_at));
+                return parts.join(' · ');
               },
             )
             .join('\n');

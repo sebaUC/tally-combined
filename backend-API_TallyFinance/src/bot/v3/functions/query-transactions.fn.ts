@@ -39,7 +39,7 @@ export async function queryTransactions(
     .from('transactions')
     .select(
       operation === 'list'
-        ? 'id, amount, type, name, description, posted_at, categories:category_id(name)'
+        ? 'id, amount, type, name, description, posted_at, categories:category_id(name, icon)'
         : 'amount',
     )
     .eq('user_id', userId)
@@ -73,6 +73,7 @@ export async function queryTransactions(
             name: r.name,
             description: r.description,
             category: r.categories?.name || null,
+            icon: r.categories?.icon || null,
             posted_at: r.posted_at,
           })),
           count: rows.length,
