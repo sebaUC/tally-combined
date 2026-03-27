@@ -25,7 +25,7 @@ export async function registerExpense(
   }
 
   const category = args.category || 'Sin categoría';
-  const name = args.name || category;
+  const name = args.name || generateExpenseName(category, description);
 
   // Default date+time in Chile timezone with offset (so Supabase stores correctly)
   const postedAt = args.posted_at || getChileTimestamp();
@@ -122,6 +122,50 @@ export async function registerExpense(
     },
     context,
   };
+}
+
+// ── Name generation: always provide a descriptive name ──
+
+const CATEGORY_NAME_MAP: Record<string, string> = {
+  alimentación: 'Comida',
+  alimentacion: 'Comida',
+  comida: 'Comida',
+  transporte: 'Transporte',
+  salud: 'Salud',
+  educación: 'Educación',
+  educacion: 'Educación',
+  entretenimiento: 'Entretenimiento',
+  hogar: 'Gasto Hogar',
+  personal: 'Gasto Personal',
+  suscripciones: 'Suscripción',
+  supermercado: 'Supermercado',
+  servicios: 'Servicios',
+  ropa: 'Ropa',
+  tecnología: 'Tecnología',
+  tecnologia: 'Tecnología',
+  mascotas: 'Mascotas',
+  deporte: 'Deporte',
+}
+
+function generateExpenseName(category: string, description?: string): string {
+  // If description has useful info, use it (title case, max 4 words)
+  if (description) {
+    const words = description.trim().split(/\s+/).slice(0, 4)
+    if (words.length > 0 && words[0].length > 1) {
+      return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+    }
+  }
+
+  // Map common categories to better names
+  const lower = category.toLowerCase().trim()
+  if (CATEGORY_NAME_MAP[lower]) return CATEGORY_NAME_MAP[lower]
+
+  // Title-case the category itself
+  return category
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
 }
 
 // ── Reactive context: financial signals for Gemini ──

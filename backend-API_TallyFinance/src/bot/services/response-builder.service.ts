@@ -184,8 +184,13 @@ export class ResponseBuilderService {
           if (txs.length === 0) return 'No hay transacciones recientes.';
           return txs
             .map(
-              (tx, i) =>
-                `${i + 1}. <b>$${this.formatCLP(tx.amount)}</b> — ${this.escapeHtml(tx.name ?? tx.category ?? '')} · ${this.formatDate(tx.posted_at)}`,
+              (tx, i) => {
+                const icon = this.getCategoryIcon(tx.category);
+                const displayName = tx.name && tx.name !== tx.category ? tx.name : '';
+                const catLabel = tx.category ? `${icon} ${this.escapeHtml(tx.category)}` : '';
+                const nameLabel = displayName ? ` (${this.escapeHtml(displayName)})` : '';
+                return `${i + 1}. <b>$${this.formatCLP(tx.amount)}</b> — ${catLabel}${nameLabel} · ${this.formatDate(tx.posted_at)}`;
+              },
             )
             .join('\n');
         }
