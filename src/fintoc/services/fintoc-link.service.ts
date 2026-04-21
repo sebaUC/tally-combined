@@ -13,6 +13,8 @@ import { RedisService } from '../../redis/redis.service';
 import { FintocApiClient, FintocApiError } from './fintoc-api.client';
 import { FintocCryptoService } from './fintoc-crypto.service';
 import { FintocAuditService } from './fintoc-audit.service';
+import { FintocSyncService } from './fintoc-sync.service';
+import { fromFintocMinorUnits } from './fintoc-money';
 import {
   FINTOC_INTENT_TTL_SECONDS,
   FINTOC_LINK_STATUS,
@@ -46,6 +48,7 @@ export class FintocLinkService {
     private readonly crypto: FintocCryptoService,
     private readonly redis: RedisService,
     private readonly audit: FintocAuditService,
+    private readonly sync: FintocSyncService,
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
   ) {
     const publicKey = this.config.get<string>('FINTOC_PUBLIC_KEY');
@@ -186,6 +189,25 @@ export class FintocLinkService {
       },
     });
 
+    // 5. Sync inicial de movimientos (best-effort: no bloquea la respuesta)
+    //    Si falla, el link queda conectado igual y el próximo webhook los traerá.
+    try {
+      const syncResults = await this.sync.syncLink(persisted.link.id);
+      const totalInserted = syncResults.reduce(
+        (acc, r) => acc + r.transactionsInserted,
+        0,
+      );
+      this.logger.log(
+        `[fintoc] initial sync ok link=${persisted.link.id} movements_inserted=${totalInserted}`,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `[fintoc] initial sync failed link=${persisted.link.id}: ${
+          err instanceof Error ? err.message : String(err)
+        }. El próximo webhook los traerá.`,
+      );
+    }
+
     return persisted;
   }
 
@@ -316,7 +338,10 @@ export class FintocLinkService {
         name: acc.name,
         institution: fintocLink.institution.name,
         currency: acc.currency,
-        current_balance: (acc.balance.current ?? 0) / 100,
+        current_balance: fromFintocMinorUnits(
+          acc.balance.current ?? 0,
+          acc.currency,
+        ),
         fintoc_account_id: acc.id,
         fintoc_link_id: linkRow.id,
         last_synced_at: new Date().toISOString(),
@@ -343,12 +368,23 @@ export class FintocLinkService {
         fintoc_link_id: linkRow.id,
       }));
 
-      const { error: pmErr } = await this.supabase
+      const { data: pmData, error: pmErr } = await this.supabase
         .from('payment_method')
-        .insert(paymentMethodRows);
+        .insert(paymentMethodRows)
+        .select('id');
 
       if (pmErr) {
         throw new Error(`insert payment_method failed: ${pmErr.message}`);
+      }
+
+      this.logger.log(
+        `[fintoc] payment_method inserted count=${pmData?.length ?? 0} expected=${paymentMethodRows.length}`,
+      );
+
+      if ((pmData?.length ?? 0) !== paymentMethodRows.length) {
+        throw new Error(
+          `payment_method insert returned ${pmData?.length ?? 0} rows, expected ${paymentMethodRows.length}`,
+        );
       }
 
       return {

@@ -1,14 +1,20 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
+  Get,
   Post,
+  Query,
+  Req,
   Inject,
   InternalServerErrorException,
   Logger,
   HttpException,
   HttpStatus,
   OnModuleInit,
+  UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { BotV3Service } from './v3/bot-v3.service';
 import { WhatsappAdapter } from './adapters/whatsapp.adapter';
@@ -16,6 +22,8 @@ import { TelegramAdapter } from './adapters/telegram.adapter';
 import { CallbackHandlerService } from './services/callback-handler.service';
 import { UserContextService } from './services/user-context.service';
 import { BotChannelService } from './delegates/bot-channel.service';
+import { TelegramWebhookGuard } from './guards/telegram-webhook.guard';
+import { WhatsappWebhookGuard } from './guards/whatsapp-webhook.guard';
 import { DomainMessage } from './contracts';
 import { BotReply } from './actions/action-block';
 import {
@@ -36,8 +44,12 @@ interface TestRequest {
 export class BotController implements OnModuleInit {
   private readonly log = new Logger(BotController.name);
 
-  // Rate limiter: 30 messages per minute per user (Redis-backed with in-memory fallback)
+  // Dual rate limit: 30 msgs/min per externalId (user/phone) and 60
+  // msgs/min per source IP. Either limit hitting returns 429. The IP
+  // limit is the defence against an attacker rotating externalIds to
+  // bypass the per-user cap — see security baseline H3.
   private rateLimiter!: AsyncRateLimiter;
+  private ipRateLimiter!: AsyncRateLimiter;
 
   constructor(
     private readonly botV3: BotV3Service,
@@ -51,8 +63,29 @@ export class BotController implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    // Initialize async rate limiter with Redis (30 msgs/60s per user)
     this.rateLimiter = createAsyncRateLimiter(this.redis, 30, 60_000);
+    this.ipRateLimiter = createAsyncRateLimiter(this.redis, 60, 60_000);
+  }
+
+  /** Read the first-hop client IP — main.ts sets `trust proxy: 1`. */
+  private getClientIp(req: Request): string {
+    return req.ip || req.socket?.remoteAddress || 'unknown';
+  }
+
+  /** Enforce the per-IP limit. Throws 429 on excess. */
+  private async checkIpRateLimit(
+    req: Request,
+    channel: string,
+  ): Promise<void> {
+    const ip = this.getClientIp(req);
+    const allowed = await this.ipRateLimiter.isAllowed(`bot-ip:${ip}`);
+    if (!allowed) {
+      this.log.warn(`[RateLimit] IP exceeded for ${channel}/${ip}`);
+      throw new HttpException(
+        'Demasiadas solicitudes desde esta IP. Intenta más tarde.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 
   /**
@@ -113,8 +146,26 @@ export class BotController implements OnModuleInit {
     }
   }
 
+  // Meta webhook verification (GET handshake).
+  // Meta hits this once when registering the webhook, and periodically.
+  @Get('whatsapp/webhook')
+  whatsappVerify(@Query() query: Record<string, any>) {
+    const challenge = this.wa.verifyChallenge(query);
+    if (challenge === null) {
+      throw new ForbiddenException('Webhook verification failed');
+    }
+    return challenge;
+  }
+
+  // WhatsApp signature guard is wired but disabled.
+  // Re-enable once WHATSAPP_APP_SECRET is set in Render:
+  //   1. Enable `rawBody: true` in main.ts bootstrap.
+  //   2. Add WhatsappWebhookGuard to bot.module.ts providers.
+  //   3. Uncomment the decorator below.
+  // @UseGuards(WhatsappWebhookGuard)
   @Post('whatsapp/webhook')
-  async whatsapp(@Body() body: any) {
+  async whatsapp(@Body() body: any, @Req() req: Request) {
+    await this.checkIpRateLimit(req, 'whatsapp');
     this.log.debug(`[WA] Webhook body=${JSON.stringify(body)}`);
 
     // Handle WhatsApp interactive button reply (callback equivalent)
@@ -208,8 +259,10 @@ export class BotController implements OnModuleInit {
     }
   }
 
+  @UseGuards(TelegramWebhookGuard)
   @Post('telegram/webhook')
-  async telegram(@Body() body: any) {
+  async telegram(@Body() body: any, @Req() req: Request) {
+    await this.checkIpRateLimit(req, 'telegram');
     this.log.debug(`[TG] Webhook body=${JSON.stringify(body)}`);
 
     // Handle Telegram callback_query (button press)

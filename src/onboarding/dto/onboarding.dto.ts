@@ -54,6 +54,7 @@ class CategoryDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => SubCategoryDto)
   children?: SubCategoryDto[];

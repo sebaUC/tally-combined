@@ -11,6 +11,9 @@ import {
   Res,
   UnauthorizedException,
   InternalServerErrorException,
+  OnModuleInit,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -25,6 +28,11 @@ import { AuthProfileService } from './services/auth-profile.service';
 import { AuthChannelService } from './services/auth-channel.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { ChannelLinkCodeService } from '../common/utils/channel-link-code.service';
+import { RedisService } from '../redis';
+import {
+  AsyncRateLimiter,
+  createAsyncRateLimiter,
+} from '../common/utils/resilience';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const ACCESS_COOKIE = 'access_token';
@@ -50,20 +58,85 @@ const refreshCookieOptions: CookieOptions = {
 type RequestWithCookies = Request & { cookies?: Record<string, string> };
 
 @Controller('auth')
-export class AuthController {
+export class AuthController implements OnModuleInit {
+  // Brute-force protection on sensitive auth endpoints.
+  // 5 attempts per 15 minutes, keyed separately by IP and by email
+  // so a single attacker can't exhaust the limit for a victim's account
+  // nor rotate IPs to bypass the per-account limit.
+  private authIpLimiter!: AsyncRateLimiter;
+  private authEmailLimiter!: AsyncRateLimiter;
+
   constructor(
     private readonly auth: AuthService,
     private readonly profile: AuthProfileService,
     private readonly channels: AuthChannelService,
     private readonly onboarding: OnboardingService,
     private readonly linkCodes: ChannelLinkCodeService,
+    private readonly redis: RedisService,
   ) {}
+
+  onModuleInit() {
+    const windowMs = 15 * 60 * 1000;
+    this.authIpLimiter = createAsyncRateLimiter(this.redis, 5, windowMs);
+    this.authEmailLimiter = createAsyncRateLimiter(this.redis, 5, windowMs);
+  }
+
+  private getClientIp(req: Request): string {
+    // main.ts sets `trust proxy: 1`, so req.ip already honours the first
+    // X-Forwarded-For hop set by the Render edge. Keep a last-resort
+    // fallback for the local socket in case the adapter is misconfigured.
+    return req.ip || req.socket?.remoteAddress || 'unknown';
+  }
+
+  private assertStrongPassword(
+    pw: string | undefined,
+  ): asserts pw is string {
+    // Min 12 chars + at least one lowercase, uppercase, digit, and symbol.
+    const STRONG_PW_REGEX =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+    if (!pw || !STRONG_PW_REGEX.test(pw)) {
+      throw new BadRequestException(
+        'La contraseña debe tener al menos 12 caracteres e incluir mayúscula, minúscula, número y símbolo.',
+      );
+    }
+  }
+
+  private async enforceAuthRateLimit(
+    req: Request,
+    action: string,
+    email?: string,
+  ): Promise<void> {
+    const ip = this.getClientIp(req);
+    const ipAllowed = await this.authIpLimiter.isAllowed(
+      `auth:ip:${ip}:${action}`,
+    );
+    if (!ipAllowed) {
+      throw new HttpException(
+        'Demasiados intentos desde esta IP. Intenta de nuevo en unos minutos.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+    if (email) {
+      const normalized = email.trim().toLowerCase();
+      const emailAllowed = await this.authEmailLimiter.isAllowed(
+        `auth:email:${normalized}:${action}`,
+      );
+      if (!emailAllowed) {
+        throw new HttpException(
+          'Demasiados intentos para esta cuenta. Intenta de nuevo más tarde.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+  }
 
   @Post('signup')
   async signUp(
     @Body() dto: SignUpDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    await this.enforceAuthRateLimit(req, 'signup', dto.email);
     const result = await this.auth.signUp(dto);
     const session = result.session;
 
@@ -97,11 +170,13 @@ export class AuthController {
   @Post('verify-signup')
   async verifySignup(
     @Body() body: { email: string; code: string },
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!body.email || !body.code) {
       throw new BadRequestException('Email y código son requeridos');
     }
+    await this.enforceAuthRateLimit(req, 'verify-signup', body.email);
     const result = await this.auth.verifySignupOtp(body.email, body.code);
     this.setAuthCookies(
       res,
@@ -122,16 +197,24 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  async resendOtp(@Body() body: { email: string; type?: string }) {
+  async resendOtp(
+    @Body() body: { email: string; type?: string },
+    @Req() req: Request,
+  ) {
     if (!body.email) throw new BadRequestException('Email requerido');
+    await this.enforceAuthRateLimit(req, 'resend-otp', body.email);
     const type = body.type === 'recovery' ? 'recovery' : 'signup';
     await this.auth.resendOtp(body.email, type);
     return { message: 'Código reenviado' };
   }
 
   @Post('request-password-reset')
-  async requestPasswordReset(@Body() body: { email: string }) {
+  async requestPasswordReset(
+    @Body() body: { email: string },
+    @Req() req: Request,
+  ) {
     if (!body.email) throw new BadRequestException('Email requerido');
+    await this.enforceAuthRateLimit(req, 'request-password-reset', body.email);
     await this.auth.requestPasswordReset(body.email);
     return {
       message: 'Si el email existe, recibirás un código de recuperación',
@@ -141,11 +224,13 @@ export class AuthController {
   @Post('verify-recovery')
   async verifyRecovery(
     @Body() body: { email: string; code: string },
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!body.email || !body.code) {
       throw new BadRequestException('Email y código son requeridos');
     }
+    await this.enforceAuthRateLimit(req, 'verify-recovery', body.email);
     const result = await this.auth.verifyRecoveryOtp(body.email, body.code);
     this.setAuthCookies(
       res,
@@ -166,6 +251,7 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(
     @Body() body: { email: string; code: string; password: string },
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!body.email || !body.code || !body.password) {
@@ -173,11 +259,8 @@ export class AuthController {
         'Email, código y contraseña son requeridos',
       );
     }
-    if (body.password.length < 6) {
-      throw new BadRequestException(
-        'La contraseña debe tener al menos 6 caracteres',
-      );
-    }
+    await this.enforceAuthRateLimit(req, 'reset-password', body.email);
+    this.assertStrongPassword(body.password);
 
     // Verify OTP first to get user ID
     const result = await this.auth.verifyRecoveryOtp(body.email, body.code);
@@ -213,11 +296,7 @@ export class AuthController {
   @Post('change-password')
   @UseGuards(JwtGuard)
   async changePassword(@Body() body: { password: string }, @User() user: any) {
-    if (!body.password || body.password.length < 6) {
-      throw new BadRequestException(
-        'La contraseña debe tener al menos 6 caracteres',
-      );
-    }
+    this.assertStrongPassword(body?.password);
     await this.auth.changePassword(user.id, body.password);
     return { message: 'Contraseña actualizada' };
   }
@@ -238,8 +317,10 @@ export class AuthController {
   @Post('signin')
   async signIn(
     @Body() dto: SignInDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    await this.enforceAuthRateLimit(req, 'signin', dto.email);
     const session = await this.auth.signIn(dto);
 
     if (!session?.access_token || !session.refresh_token) {
@@ -281,19 +362,14 @@ export class AuthController {
     @Query('access_token') queryAccessToken?: string,
     @Query('refresh_token') queryRefreshToken?: string,
   ) {
+    // Only accept tokens from query params or the URL fragment of the
+    // current request. Reading from the Referer header is unsafe — a
+    // crafted page could smuggle someone else's token to this endpoint.
     const fragmentAccess = this.extractFragmentParam(req.url, 'access_token');
-    const refererAccess = this.extractFragmentParam(
-      req.headers.referer,
-      'access_token',
-    );
-    const accessToken = queryAccessToken || fragmentAccess || refererAccess;
+    const accessToken = queryAccessToken || fragmentAccess;
 
     const fragmentRefresh = this.extractFragmentParam(req.url, 'refresh_token');
-    const refererRefresh = this.extractFragmentParam(
-      req.headers.referer,
-      'refresh_token',
-    );
-    const refreshToken = queryRefreshToken || fragmentRefresh || refererRefresh;
+    const refreshToken = queryRefreshToken || fragmentRefresh;
 
     if (!accessToken) {
       throw new BadRequestException('Missing access_token');

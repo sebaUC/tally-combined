@@ -4,8 +4,10 @@ import { AdminGuard } from './guards/admin.guard';
 import { AdminMessagesService } from './services/admin-messages.service';
 import { AdminDashboardService } from './services/admin-dashboard.service';
 import { AdminUsageService } from './services/admin-usage.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   controllers: [AdminController],
   providers: [
     AdminGuard,

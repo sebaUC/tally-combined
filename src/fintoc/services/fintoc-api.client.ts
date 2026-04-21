@@ -50,18 +50,20 @@ export class FintocApiClient implements OnModuleInit {
   async createLinkIntent(params: {
     product: 'movements';
     country: 'cl';
+    holderType?: 'individual' | 'business';
   }): Promise<FintocLinkIntent> {
     return this.request<FintocLinkIntent>('POST', '/link_intents', {
       body: {
         product: params.product,
         country: params.country,
+        holder_type: params.holderType ?? 'individual',
       },
     });
   }
 
   async exchangeLinkToken(exchangeToken: string): Promise<FintocLink> {
-    return this.request<FintocLink>('POST', '/link_tokens/_exchange', {
-      body: { exchange_token: exchangeToken },
+    return this.request<FintocLink>('GET', '/links/exchange', {
+      query: { exchange_token: exchangeToken },
     });
   }
 
@@ -80,8 +82,8 @@ export class FintocApiClient implements OnModuleInit {
     accountId: string;
     since?: string;
     until?: string;
-    limit?: number;
-    startingAfter?: string;
+    page?: number;
+    perPage?: number;
   }): Promise<FintocMovement[]> {
     return this.request<FintocMovement[]>(
       'GET',
@@ -91,8 +93,8 @@ export class FintocApiClient implements OnModuleInit {
           link_token: params.linkToken,
           since: params.since,
           until: params.until,
-          limit: params.limit,
-          starting_after: params.startingAfter,
+          page: params.page,
+          per_page: params.perPage,
         },
       },
     );
@@ -102,11 +104,13 @@ export class FintocApiClient implements OnModuleInit {
 
   async createRefreshIntent(
     linkToken: string,
-    type: 'only_last' | 'historical' = 'only_last',
+    refreshType: 'only_last' | 'historical' = 'only_last',
   ): Promise<FintocRefreshIntent> {
     return this.request<FintocRefreshIntent>('POST', '/refresh_intents', {
-      query: { link_token: linkToken },
-      body: { type },
+      query: {
+        link_token: linkToken,
+        refresh_type: refreshType,
+      },
     });
   }
 

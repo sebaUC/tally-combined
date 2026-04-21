@@ -243,6 +243,8 @@ export class UsersService {
         .select('*')
         .eq('user_id', userId)
         .eq('active', true)
+        .order('period', { ascending: true })
+        .limit(1)
         .maybeSingle(),
       this.supabase.auth.admin.getUserById(userId).catch(() => null),
     ]);
