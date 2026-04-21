@@ -11,7 +11,8 @@ export type FintocAuditAction =
   | 'webhook_processed'
   | 'webhook_invalid_signature'
   | 'link_revoked'
-  | 'link_status_changed';
+  | 'link_status_changed'
+  | 'admin_manual_sync';
 
 export type FintocAuditActor = 'user' | 'system' | 'webhook' | 'admin';
 

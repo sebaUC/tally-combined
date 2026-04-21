@@ -5,13 +5,16 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtGuard } from '../auth/middleware/jwt.guard';
+import { MfaRequiredGuard } from '../auth/middleware/mfa.guard';
 import { User } from '../auth/decorators/user.decorator';
+import { AdminGuard } from '../admin/guards/admin.guard';
 import { CreateLinkIntentDto } from './dto/create-link-intent.dto';
 import { ExchangeTokenDto } from './dto/exchange-token.dto';
 import {
@@ -20,6 +23,8 @@ import {
   FintocLinkPublicDto,
 } from './dto/fintoc-link-response.dto';
 import { FintocLinkService } from './services/fintoc-link.service';
+import { FintocSyncService } from './services/fintoc-sync.service';
+import { FintocAuditService } from './services/fintoc-audit.service';
 
 interface AuthUser {
   id: string;
@@ -34,7 +39,11 @@ interface AuthUser {
 @Controller('api/fintoc')
 @UseGuards(JwtGuard)
 export class FintocController {
-  constructor(private readonly linkService: FintocLinkService) {}
+  constructor(
+    private readonly linkService: FintocLinkService,
+    private readonly syncService: FintocSyncService,
+    private readonly audit: FintocAuditService,
+  ) {}
 
   @Post('link-intent')
   @HttpCode(201)
@@ -78,5 +87,59 @@ export class FintocController {
       ip: req.ip ?? null,
       userAgent: req.headers['user-agent'] ?? null,
     });
+  }
+
+  /**
+   * Admin-only manual sync trigger. Replays the same sync logic the webhook
+   * would run, used for backfill when a webhook was missed or dropped before
+   * the resolver could handle a new payload shape.
+   *
+   * Security:
+   *   - `AdminGuard`: only users in the hardcoded UUID whitelist.
+   *   - `MfaRequiredGuard`: the session must already be stepped-up to aal2.
+   *   - `ParseUUIDPipe`: rejects any linkId that is not a valid UUID v4.
+   *   - All invocations are audit-logged to `fintoc_access_log` with the
+   *     acting admin's id, ip, and user-agent.
+   *
+   * Overrides the controller-level `JwtGuard` with the stricter pair.
+   */
+  @Post('admin/sync/:linkId')
+  @UseGuards(AdminGuard, MfaRequiredGuard)
+  @HttpCode(200)
+  async adminSync(
+    @User() admin: AuthUser,
+    @Param('linkId', new ParseUUIDPipe({ version: '4' })) linkId: string,
+    @Req() req: Request,
+  ): Promise<{ ok: true; results: unknown[] }> {
+    this.audit.log({
+      linkId,
+      actorType: 'admin',
+      actorId: admin.id,
+      action: 'admin_manual_sync',
+      ipAddress: req.ip ?? null,
+      userAgent: req.headers['user-agent'] ?? null,
+      detail: { phase: 'start' },
+    });
+
+    const results = await this.syncService.syncLink(linkId);
+
+    this.audit.log({
+      linkId,
+      actorType: 'admin',
+      actorId: admin.id,
+      action: 'admin_manual_sync',
+      ipAddress: req.ip ?? null,
+      userAgent: req.headers['user-agent'] ?? null,
+      detail: {
+        phase: 'done',
+        accounts: results.length,
+        transactions_inserted: results.reduce(
+          (acc, r) => acc + r.transactionsInserted,
+          0,
+        ),
+      },
+    });
+
+    return { ok: true, results };
   }
 }

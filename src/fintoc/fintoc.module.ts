@@ -8,13 +8,18 @@ import { FintocSyncService } from './services/fintoc-sync.service';
 import { FintocWebhookService } from './services/fintoc-webhook.service';
 import { FintocAuditService } from './services/fintoc-audit.service';
 import { FintocWebhookGuard } from './guards/fintoc-webhook.guard';
+import { AdminGuard } from '../admin/guards/admin.guard';
+import { MfaRequiredGuard } from '../auth/middleware/mfa.guard';
 
 /**
  * Módulo Fintoc — integración de cuentas bancarias chilenas via Fintoc.
  *
- * Seguridad: link_token en Supabase Vault (AES-256-GCM).
+ * Seguridad:
+ *   - link_token en Supabase Vault (AES-256-GCM)
+ *   - webhook: HMAC-SHA256 + IP allowlist opcional + anti-replay 5min
+ *   - admin backfill endpoint: AdminGuard (whitelist UUID) + MfaRequiredGuard (aal2)
  * Auditoría: todo acceso/mutación queda en `fintoc_access_log`.
- * Idempotencia: webhook dedup vía Redis SETNX.
+ * Idempotencia: webhook dedup vía Redis SETNX, `transactions.external_id` UNIQUE.
  */
 @Module({
   controllers: [FintocController, FintocWebhookController],
@@ -26,6 +31,8 @@ import { FintocWebhookGuard } from './guards/fintoc-webhook.guard';
     FintocWebhookService,
     FintocAuditService,
     FintocWebhookGuard,
+    AdminGuard,
+    MfaRequiredGuard,
   ],
   exports: [FintocLinkService, FintocSyncService],
 })

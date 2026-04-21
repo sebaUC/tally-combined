@@ -174,16 +174,37 @@ export class FintocWebhookService {
     event: FintocWebhookEvent,
   ): Promise<string | null> {
     const data = (event.data ?? {}) as Record<string, any>;
-    // Buscar fintoc_link_id en varios shapes posibles del payload
+
+    // Shape 1: refresh_intent events reference an account, not a link.
+    // The accounts table stores our internal link UUID in fintoc_link_id.
+    // Fintoc sends: { refreshed_object: 'account', refreshed_object_id: 'acc_...' }
+    if (
+      data?.refreshed_object === 'account' &&
+      typeof data?.refreshed_object_id === 'string'
+    ) {
+      const { data: account } = await this.supabase
+        .from('accounts')
+        .select('fintoc_link_id')
+        .eq('fintoc_account_id', data.refreshed_object_id)
+        .maybeSingle();
+      if (account?.fintoc_link_id) return account.fintoc_link_id;
+    }
+
+    // Shape 2: events that embed the Fintoc link id directly in the payload.
     const candidate =
       data?.link?.id ??
       data?.link_id ??
+      data?.account?.link?.id ??
       data?.account?.link_id ??
       null;
 
     if (!candidate || typeof candidate !== 'string') {
+      // Dump the data keys + truncated payload so we can extend the resolver
+      // if Fintoc introduces another shape in the future.
       this.logger.warn(
-        `Event ${event.id} (${event.type}) has no resolvable link id`,
+        `Event ${event.id} (${event.type}) has no resolvable link id. ` +
+          `data_keys=${Object.keys(data).join(',')} ` +
+          `data=${JSON.stringify(data).slice(0, 400)}`,
       );
       return null;
     }
