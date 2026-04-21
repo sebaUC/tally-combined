@@ -177,16 +177,110 @@ const MERCHANT_CATALOG: MerchantRule[] = [
   },
 ];
 
+/**
+ * Patrones genéricos usados por bancos chilenos para cargos con tarjeta.
+ * Extraen el nombre del comercio sin necesidad de catálogo explícito.
+ * Se aplican como fallback cuando MERCHANT_CATALOG no matchea.
+ *
+ * Los patrones están ordenados por especificidad: los más restrictivos primero.
+ */
+const GENERIC_MERCHANT_PATTERNS: RegExp[] = [
+  // "Pago Recurrente Vd APPLE.COM/BILL" / "Pago Vd NETFLIX.COM"
+  // El "Vd" identifica pago con débito (vendor). Capturamos hasta antes de "el <fecha>".
+  /Pago\s+(?:Recurrente\s+)?Vd\s+([A-Z0-9*.\-& /%]+?)(?:\s+el\s+\d|\s+\d{2}\/\d{2}|$)/i,
+
+  // BICE, Itaú: "Cargo por compra en LIDER el 05/04..."
+  /Cargo\s+por\s+compra\s+en\s+([A-Z0-9*.\-& /]+?)\s+(?:el\s+\d|monto|$)/i,
+
+  // BancoEstado: "COMPRA NAC 05/04 LIDER"
+  /COMPRA\s+(?:NAC|INT)\s+\d{2}\/\d{2}\s+([A-Z0-9*.\-& /]+)/i,
+
+  // "Compra en UNIMARC LAS CONDES"
+  /\bCompra\s+en\s+([A-Z0-9*.\-& /]+?)(?:\s+el\s+|$)/i,
+
+  // "Pago de SPOTIFY" / "Pago a ENTEL"
+  /\bPago\s+(?:de\s+|a\s+)([A-Z0-9*.\-& /]+?)(?:\s+por|\s+el|$)/i,
+
+  // "MERCADOPAGO*GLORIASUBWAY" → extraer el nombre tras el *
+  /\bMERCADOPAGO\*([A-Z0-9 ]+)/i,
+
+  // "MERPAGO*JOTA" (variante de Mercado Pago)
+  /\bMERPAGO\*([A-Z0-9 ]+)/i,
+];
+
+/**
+ * Limpia sufijos de dominio comunes para dejar el merchant core.
+ * "APPLE.COM/BILL" → "Apple", "NETFLIX.COM" → "Netflix"
+ */
+function stripDomainSuffix(merchant: string): string {
+  return merchant
+    .replace(/\.(com|cl|org|net|io)(\/\w+)?/gi, '')
+    .replace(/%2f\w+/gi, '') // URL-encoded "/bill" etc
+    .trim();
+}
+
+/**
+ * Detecta transferencias entre personas / cuentas.
+ * No tienen merchant (son a personas, no comercios).
+ */
+const TRANSFER_PATTERNS: RegExp[] = [
+  /\bTransferencia\s+(?:de|a|desde|hacia)\b/i,
+  /\bTransferencia\s+de\s+Fondos\b/i,
+  /\bTraspaso\b/i,
+];
+
+function isTransferDescription(text: string): boolean {
+  return TRANSFER_PATTERNS.some((r) => r.test(text));
+}
+
+function cleanMerchantName(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[*_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    // Title case
+    .split(' ')
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(' ');
+}
+
 export function inferMerchant(text: string | null | undefined): string | null {
   if (!text) return null;
-  const match = MERCHANT_CATALOG.find((m) => m.pattern.test(text));
-  return match?.merchant ?? null;
+
+  // Transfers nunca tienen merchant
+  if (isTransferDescription(text)) return null;
+
+  // 1. Catálogo explícito (alta confianza, marca conocida)
+  const catalogMatch = MERCHANT_CATALOG.find((m) => m.pattern.test(text));
+  if (catalogMatch) return catalogMatch.merchant;
+
+  // 2. Patrón genérico de "Cargo por compra en X" / "Pago Vd X" / etc
+  for (const pattern of GENERIC_MERCHANT_PATTERNS) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const stripped = stripDomainSuffix(match[1]);
+      const candidate = cleanMerchantName(stripped);
+      // Evitar basura de <3 chars
+      if (candidate.length >= 3) {
+        // Antes de devolver, verificar una vez más contra catálogo
+        // (ej: extrajo "APPLE.COM/BILL" → stripped="APPLE" → match con catálogo)
+        const hit = MERCHANT_CATALOG.find((m) => m.pattern.test(candidate));
+        if (hit) return hit.merchant;
+        return candidate;
+      }
+    }
+  }
+
+  return null;
 }
 
 export function inferCategoryFromMerchant(
   text: string | null | undefined,
 ): string | null {
   if (!text) return null;
+  if (isTransferDescription(text)) return 'Transferencia';
   const match = MERCHANT_CATALOG.find((m) => m.pattern.test(text));
   return match?.category ?? null;
 }

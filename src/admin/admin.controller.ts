@@ -7,14 +7,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AdminGuard } from './guards/admin.guard';
+import { MfaRequiredGuard } from '../auth/middleware/mfa.guard';
 import { AdminMessagesService } from './services/admin-messages.service';
 import { AdminDashboardService } from './services/admin-dashboard.service';
 import { AdminUsageService } from './services/admin-usage.service';
 import { MessagesQueryDto, DashboardQueryDto } from './dto/query.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
 
+// Admin endpoints require (1) valid session via AdminGuard (JWT + whitelist),
+// and (2) a session stepped-up to AAL2 via MfaRequiredGuard. The latter can
+// be temporarily bypassed with DISABLE_MFA_ENFORCEMENT=true on Render if a
+// lockout happens before both admins have enrolled TOTP.
 @Controller('admin')
-@UseGuards(AdminGuard)
+@UseGuards(AdminGuard, MfaRequiredGuard)
 export class AdminController {
   constructor(
     private readonly messagesService: AdminMessagesService,

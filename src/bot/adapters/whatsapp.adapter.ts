@@ -9,7 +9,30 @@ export class WhatsappAdapter {
   private readonly log = new Logger(WhatsappAdapter.name);
   constructor(private readonly cfg: ConfigService) {}
 
-  // --- VERIFICATION (opcional dejar igual que hoy en un controller GET) ---
+  /**
+   * Meta webhook verification handshake (GET /whatsapp/webhook).
+   * Returns the challenge string when hub.verify_token matches the env var;
+   * returns null otherwise so the controller can respond with 403.
+   */
+  verifyChallenge(query: Record<string, any>): string | null {
+    const mode = query?.['hub.mode'];
+    const token = query?.['hub.verify_token'];
+    const challenge = query?.['hub.challenge'];
+    const expected = this.cfg.get<string>('WHATSAPP_VERIFY_TOKEN');
+
+    if (!expected) {
+      this.log.error('[verifyChallenge] WHATSAPP_VERIFY_TOKEN not configured');
+      return null;
+    }
+    if (mode === 'subscribe' && token === expected && challenge) {
+      this.log.log('[verifyChallenge] Webhook verified by Meta');
+      return String(challenge);
+    }
+    this.log.warn(
+      `[verifyChallenge] Rejected: mode=${mode} tokenMatch=${token === expected}`,
+    );
+    return null;
+  }
 
   fromIncoming(body: any): DomainMessage | null {
     const change = body?.entry?.[0]?.changes?.[0];

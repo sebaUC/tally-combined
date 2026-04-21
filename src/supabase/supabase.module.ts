@@ -1,6 +1,7 @@
 // src/supabase/supabase.module.ts
 import { Module, Global } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import { SupabaseUserClientFactory } from './supabase-user-client.service';
 
 @Global()
 @Module({
@@ -31,7 +32,8 @@ import { createClient } from '@supabase/supabase-js';
         });
       },
     },
+    SupabaseUserClientFactory,
   ],
-  exports: ['SUPABASE'],
+  exports: ['SUPABASE', SupabaseUserClientFactory],
 })
 export class SupabaseModule {}

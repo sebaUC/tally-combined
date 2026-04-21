@@ -685,6 +685,20 @@ Only **Google** supported (ProviderLoginDto validates `@IsIn(['google'])`). Uses
 - Media download: images, audio, documents → base64
 - Mark as read: `markAsRead()` for blue checkmarks
 - Timeout: 10s, no retry
+- Verification handshake: `verifyChallenge(query)` — used by `GET /whatsapp/webhook` to answer Meta's `hub.challenge` when `hub.verify_token` matches `WHATSAPP_VERIFY_TOKEN`
+
+### Meta WhatsApp setup (Cloud API)
+
+Prod webhook URL: `https://tally-combined.onrender.com/whatsapp/webhook`
+
+1. In Meta App dashboard → WhatsApp → Configuration → Webhook → Edit:
+   - **Callback URL**: prod webhook URL above
+   - **Verify Token**: must match `WHATSAPP_VERIFY_TOKEN` env var
+   - Meta hits `GET /whatsapp/webhook` → returns `hub.challenge` if match
+2. Subscribe to the `messages` field in "Webhook fields".
+3. Add recipient phone numbers in API Setup (sandbox: only verified numbers receive messages).
+4. For production: generate a permanent **System User token** (24h tokens die — don't use in Render).
+5. HMAC signature guard (`WhatsappWebhookGuard`) is disabled by default. Enable by (a) `rawBody: true` in `main.ts`, (b) adding `WHATSAPP_APP_SECRET` env var + provider in `bot.module.ts`, (c) uncommenting `@UseGuards` on the POST handler.
 
 ### Channel Linking Flow
 
@@ -777,11 +791,13 @@ MULTI_INSTANCE=false                 # If true, fail hard when Redis unavailable
 TELEGRAM_BOT_TOKEN=123456:ABC...
 TELEGRAM_SECRET=secret               # Webhook verification
 
-# WhatsApp
-WHATSAPP_TOKEN=EAAx...
-WHATSAPP_PHONE_NUMBER_ID=123456789
+# WhatsApp (Meta Cloud API)
+WHATSAPP_TOKEN=EAAx...                              # System User permanent token
+WHATSAPP_PHONE_NUMBER_ID=123456789                  # From Meta API Setup
 WHATSAPP_GRAPH_API_BASE=https://graph.facebook.com
-WHATSAPP_GRAPH_API_VERSION=v17.0
+WHATSAPP_GRAPH_API_VERSION=v25.0
+WHATSAPP_VERIFY_TOKEN=your-verify-token             # Random string, must match Meta webhook config
+# WHATSAPP_APP_SECRET=xxx                           # Optional: enables HMAC guard (see bot.module.ts)
 
 # Frontend
 CORS_ORIGINS=http://localhost:5173   # Comma-separated allowed origins

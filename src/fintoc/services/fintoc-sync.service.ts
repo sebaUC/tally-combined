@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { FintocApiClient } from './fintoc-api.client';
 import { FintocCryptoService } from './fintoc-crypto.service';
+import { fromFintocMinorUnits } from './fintoc-money';
 import { FintocMovement } from '../contracts/fintoc-api.types';
 import { normalizeTransactionFields } from '../../bot/v3/functions/shared/transaction-normalizer';
 
@@ -51,6 +52,18 @@ export class FintocSyncService {
     const results: SyncResult[] = [];
 
     await this.crypto.useToken(linkId, async (linkToken) => {
+      // Re-consultar cuentas a Fintoc para balances frescos
+      const freshAccounts = await this.api.listAccounts(linkToken);
+      const balanceByFintocId = new Map(
+        freshAccounts.map((a) => [
+          a.id,
+          {
+            current: a.balance.current ?? 0,
+            currency: a.currency,
+          },
+        ]),
+      );
+
       for (const account of accounts) {
         const since = await this.findLastSyncCursor(account.id);
         const movements = await this.fetchMovements({
@@ -59,7 +72,10 @@ export class FintocSyncService {
           since,
         });
         const inserted = await this.persistMovements(account, movements);
-        await this.touchAccountSynced(account.id);
+
+        // Balance autoritativo desde Fintoc
+        const fresh = balanceByFintocId.get(account.fintoc_account_id);
+        await this.touchAccountSynced(account.id, fresh);
 
         this.logger.log(
           `[fintoc] sync account=${account.id} fetched=${movements.length} inserted=${inserted} since=${since ?? 'none'}`,
@@ -118,19 +134,17 @@ export class FintocSyncService {
     since?: string;
   }): Promise<FintocMovement[]> {
     const all: FintocMovement[] = [];
-    let startingAfter: string | undefined;
     // Paginar hasta agotar (protegido por límite de 20 páginas × 300 = 6000)
-    for (let i = 0; i < 20; i++) {
+    for (let page = 1; page <= 20; page++) {
       const batch = await this.api.listMovements({
         linkToken: params.linkToken,
         accountId: params.fintocAccountId,
         since: params.since,
-        limit: 300,
-        startingAfter,
+        perPage: 300,
+        page,
       });
       all.push(...batch);
       if (batch.length < 300) break;
-      startingAfter = batch[batch.length - 1].id;
     }
     return all;
   }
@@ -164,7 +178,8 @@ export class FintocSyncService {
     account: FintocAccountRow,
     movement: FintocMovement,
   ): Record<string, unknown> {
-    const amountInUnits = Math.abs(movement.amount) / 100;
+    const signed = fromFintocMinorUnits(movement.amount, movement.currency);
+    const amountInUnits = Math.abs(signed);
     const isExpense = movement.amount < 0;
 
     const normalized = normalizeTransactionFields({
@@ -209,11 +224,20 @@ export class FintocSyncService {
     };
   }
 
-  private async touchAccountSynced(accountId: string): Promise<void> {
-    await this.supabase
-      .from('accounts')
-      .update({ last_synced_at: new Date().toISOString() })
-      .eq('id', accountId);
+  private async touchAccountSynced(
+    accountId: string,
+    freshBalance?: { current: number; currency: string },
+  ): Promise<void> {
+    const payload: Record<string, unknown> = {
+      last_synced_at: new Date().toISOString(),
+    };
+    if (freshBalance) {
+      payload.current_balance = fromFintocMinorUnits(
+        freshBalance.current,
+        freshBalance.currency,
+      );
+    }
+    await this.supabase.from('accounts').update(payload).eq('id', accountId);
   }
 
   private async touchLinkWebhook(linkId: string): Promise<void> {
