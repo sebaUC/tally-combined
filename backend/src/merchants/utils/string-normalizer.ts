@@ -1,6 +1,5 @@
 /**
  * Utilities for cleaning raw bank strings before merchant lookup.
- * Rescued from backend/src/bot/v3/functions/shared/transaction-normalizer.ts.
  */
 
 const TRANSFER_PATTERNS: RegExp[] = [

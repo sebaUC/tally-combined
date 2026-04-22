@@ -6,6 +6,7 @@ import { TelegramWebhookGuard } from './guards/telegram-webhook.guard';
 import { WhatsappWebhookGuard } from './guards/whatsapp-webhook.guard';
 import { CommonModule } from '../common/common.module';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { MerchantsModule } from '../merchants/merchants.module';
 import { BotChannelService } from './delegates/bot-channel.service';
 import { UserContextService } from './services/user-context.service';
 import { MetricsService } from './services/metrics.service';
@@ -16,7 +17,7 @@ import { BotV3Service } from './v3/bot-v3.service';
 import { ConversationV3Service } from './v3/conversation-v3.service';
 
 @Module({
-  imports: [CommonModule, SupabaseModule],
+  imports: [CommonModule, SupabaseModule, MerchantsModule],
   controllers: [BotController],
   providers: [
     BotChannelService,

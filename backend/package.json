@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:merchants": "npx tsx scripts/seed/merchants_seed.ts"
+    "seed:merchants": "npx tsx scripts/seed/merchants_seed.ts",
+    "backfill:merchants": "npx tsx scripts/backfill/backfill-merchants.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

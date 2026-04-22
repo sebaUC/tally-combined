@@ -1,7 +1,7 @@
 /**
  * Semilla inicial del catálogo de merchants chilenos.
  *
- * Son 68 comercios migrados desde MERCHANT_CATALOG (transaction-normalizer.ts).
+ * Son 68 comercios migrados del catálogo chileno base.
  * Cubren el ~60-70% del volumen de transacciones de un chileno promedio.
  *
  * Reglas:

@@ -1,11 +1,15 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { pickCategoryEmoji } from './emoji-mapper.js';
-import { getChileTimestamp, normalizeTransactionFields } from './shared';
+import { getChileTimestamp } from './shared';
+import type { FunctionRouterDeps } from '../function-deps.js';
 
 /**
  * register_expense — Inserts an expense transaction.
  * Pure function: receives args, executes DB ops, returns result.
  * Returns reactive context for Gemini to comment on.
+ *
+ * `deps` carries the merchant resolver. If absent (e.g. old test harness),
+ * merchant_id/resolver_source stay null and the flow still works.
  */
 export async function registerExpense(
   supabase: SupabaseClient,
@@ -17,6 +21,7 @@ export async function registerExpense(
     posted_at?: string;
     description?: string;
   },
+  deps: FunctionRouterDeps = {},
 ): Promise<Record<string, any>> {
   const { amount, description } = args;
 
@@ -29,19 +34,30 @@ export async function registerExpense(
     };
   }
 
-  // Normalize: derive raw_description, merchant_name, name, inferred category
   const userCategoryInput = args.category?.trim() || null;
-  const normalized = normalizeTransactionFields({
-    description,
-    userCategory: userCategoryInput,
-    explicitName: args.name,
-    fallbackName: 'Gasto',
-  });
+  const rawDescription = description?.trim() || null;
+  const explicitName = args.name?.trim() || null;
 
-  // If user didn't give a category but we inferred one from merchant, use it
+  // Merchant resolver: match description (or name if no description) through
+  // the 4-layer cascade (catalog → trgm → embedding → llm). Best-effort —
+  // failures are swallowed and we fall back to explicit/raw values.
+  const textToResolve = rawDescription || explicitName || '';
+  const resolved = textToResolve && deps.merchantResolver
+    ? await deps.merchantResolver
+        .resolve({ rawDescription: textToResolve })
+        .catch(() => null)
+    : null;
+
+  // Category priority: user explicit > resolver default > fallback
   const category =
-    userCategoryInput || normalized.inferred_category || 'Sin categoría';
-  const name = normalized.name;
+    userCategoryInput || resolved?.defaultCategory || 'Sin categoría';
+
+  // Name priority: user explicit > resolver canonical > raw > fallback
+  const name =
+    explicitName || resolved?.name || rawDescription || 'Gasto';
+
+  // auto_categorized: true only when user didn't specify and resolver filled in
+  const autoCategorized = !userCategoryInput && !!resolved?.defaultCategory;
 
   // Default date+time in Chile timezone with offset (so Supabase stores correctly)
   const postedAt = args.posted_at || getChileTimestamp();
@@ -111,10 +127,12 @@ export async function registerExpense(
       source: 'chat_intent',
       status: 'posted',
       type: 'expense',
-      name: name ?? null,
-      raw_description: normalized.raw_description,
-      merchant_name: normalized.merchant_name,
-      auto_categorized: normalized.auto_categorized,
+      name,
+      raw_description: rawDescription,
+      merchant_id: resolved?.merchantId ?? null,
+      merchant_name: resolved?.name ?? null,
+      resolver_source: resolved?.source ?? null,
+      auto_categorized: autoCategorized,
     })
     .select('id')
     .single();
@@ -129,10 +147,20 @@ export async function registerExpense(
     p_delta: -Math.abs(amount),
   });
 
+  // 5. Persist per-user merchant→category preference so future transactions
+  //    from the same merchant auto-pick this user's chosen category.
+  if (resolved?.merchantId && deps.merchantPrefs) {
+    await deps.merchantPrefs
+      .upsert(userId, resolved.merchantId, matched.id)
+      .catch(() => {
+        /* non-fatal */
+      });
+  }
+
   // Check if category was just auto-created (not in original list)
   const wasAutoCreated = !(categories || []).some((c) => c.id === matched.id);
 
-  // 5. Compute reactive context (parallel queries)
+  // 6. Compute reactive context (parallel queries)
   const context = await computePostExpenseContext(
     supabase,
     userId,
@@ -143,7 +171,7 @@ export async function registerExpense(
     account.id,
   );
 
-  // 6. Detect ant expense (gasto hormiga)
+  // 7. Detect ant expense (gasto hormiga)
   const antExpense = isAntExpense(amount, category, name);
   if (antExpense) {
     context.antExpense = true;

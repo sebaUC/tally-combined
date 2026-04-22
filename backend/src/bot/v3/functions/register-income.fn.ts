@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { getChileTimestamp, normalizeTransactionFields } from './shared';
+import { getChileTimestamp } from './shared';
+import type { FunctionRouterDeps } from '../function-deps.js';
 
 export async function registerIncome(
   supabase: SupabaseClient,
@@ -12,6 +13,7 @@ export async function registerIncome(
     recurring?: boolean;
     period?: string;
   },
+  deps: FunctionRouterDeps = {},
 ): Promise<Record<string, any>> {
   const { amount, description } = args;
 
@@ -26,14 +28,17 @@ export async function registerIncome(
 
   const source = args.source || 'Ingreso';
   const postedAt = args.posted_at || getChileTimestamp();
+  const rawDescription = description?.trim() || null;
 
-  // Normalize: raw_description, merchant (usually null for income), name
-  const normalized = normalizeTransactionFields({
-    description,
-    userCategory: source, // for income, the "source" plays the role of category
-    explicitName: source, // income name defaults to source (e.g., "Salario", "Freelance")
-    fallbackName: 'Ingreso',
-  });
+  // Income rarely has a merchant, but we still run the resolver to keep the
+  // pipeline uniform and to surface patterns like "Apple" giving a refund.
+  // Best-effort — failures don't block the insert.
+  const textToResolve = rawDescription || source;
+  const resolved = textToResolve && deps.merchantResolver
+    ? await deps.merchantResolver
+        .resolve({ rawDescription: textToResolve })
+        .catch(() => null)
+    : null;
 
   // Get default account
   const { data: account } = await supabase
@@ -105,11 +110,13 @@ export async function registerIncome(
       source: 'chat_intent',
       status: 'posted',
       type: 'income',
-      name: normalized.name,
+      name: source,
       description: description ?? null,
       income_expectation_id: incomeExpId,
-      raw_description: normalized.raw_description,
-      merchant_name: normalized.merchant_name,
+      raw_description: rawDescription,
+      merchant_id: resolved?.merchantId ?? null,
+      merchant_name: resolved?.name ?? null,
+      resolver_source: resolved?.source ?? null,
       auto_categorized: false,
     })
     .select('id')

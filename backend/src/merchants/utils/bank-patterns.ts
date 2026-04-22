@@ -2,9 +2,6 @@
  * Regex patterns that extract merchant names from raw bank descriptions.
  * Ordered from most specific to most generic. Applied as fallback parsing
  * before similarity matching.
- *
- * Rescued from backend/src/bot/v3/functions/shared/transaction-normalizer.ts
- * (GENERIC_MERCHANT_PATTERNS, Apr 2026).
  */
 export const BANK_PATTERNS: RegExp[] = [
   // "Pago Recurrente Vd APPLE.COM/BILL" / "Pago Vd NETFLIX.COM"

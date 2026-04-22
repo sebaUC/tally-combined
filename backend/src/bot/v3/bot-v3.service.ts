@@ -9,6 +9,8 @@ import { ConversationV3Service } from './conversation-v3.service.js';
 import { RedisService } from '../../redis/index.js';
 import { ResponseBuilderService } from '../services/response-builder.service.js';
 import { MetricsService } from '../services/metrics.service.js';
+import { MerchantResolverService } from '../../merchants/services/merchant-resolver.service.js';
+import { MerchantPreferencesService } from '../../merchants/services/merchant-preferences.service.js';
 import { BotReply } from '../actions/action-block.js';
 
 const PROMPT_PATH = path.join(__dirname, 'prompts', 'gus_system.txt');
@@ -48,6 +50,8 @@ export class BotV3Service {
     private readonly conversation: ConversationV3Service,
     private readonly responseBuilder: ResponseBuilderService,
     private readonly metrics: MetricsService,
+    private readonly merchantResolver: MerchantResolverService,
+    private readonly merchantPrefs: MerchantPreferencesService,
     @Inject('USER_CONTEXT_SERVICE') private readonly userContext: any,
     @Inject('MESSAGE_LOG_SERVICE') private readonly messageLog: any,
   ) {
@@ -223,7 +227,10 @@ export class BotV3Service {
     history.push({ role: 'user', parts: userParts });
 
     // 7. Create function executor
-    const executeFn = createFunctionRouter(this.supabase, userId);
+    const executeFn = createFunctionRouter(this.supabase, userId, {
+      merchantResolver: this.merchantResolver,
+      merchantPrefs: this.merchantPrefs,
+    });
 
     // 8. Call Gemini
     let result: GeminiResult;
