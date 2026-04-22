@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { FintocModule } from './fintoc/fintoc.module';
 import { MerchantsModule } from './merchants/merchants.module';
+import { NudgeModule } from './nudge/nudge.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MerchantsModule } from './merchants/merchants.module';
     CategoriesModule,
     FintocModule,
     MerchantsModule,
+    NudgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

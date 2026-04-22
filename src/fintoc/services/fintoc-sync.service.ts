@@ -9,6 +9,7 @@ import { MerchantResolverService } from '../../merchants/services/merchant-resol
 import { MerchantPreferencesService } from '../../merchants/services/merchant-preferences.service';
 import { ResolverOutput } from '../../merchants/contracts/resolver.types';
 import { pickCategoryEmoji } from '../../bot/v3/functions/emoji-mapper';
+import { FintocSyncDebugTrigger } from '../../nudge/triggers/fintoc-sync-debug.trigger';
 
 interface FintocAccountRow {
   id: string;
@@ -56,6 +57,7 @@ export class FintocSyncService {
     private readonly audit: FintocAuditService,
     private readonly merchantResolver: MerchantResolverService,
     private readonly merchantPrefs: MerchantPreferencesService,
+    private readonly syncDebug: FintocSyncDebugTrigger,
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
   ) {}
 
@@ -170,6 +172,22 @@ export class FintocSyncService {
           duration_ms: Date.now() - t0,
         },
       });
+
+      // Fire-and-forget: push a debug summary to the user's Telegram if
+      // anything new was imported. Never blocks the sync or throws.
+      if (userId && totalInserted > 0) {
+        void this.syncDebug
+          .fire({
+            linkId,
+            userId,
+            totalInserted,
+            syncStartedAt: new Date(t0),
+          })
+          .catch(() => {
+            /* trigger swallows its own errors */
+          });
+      }
+
       return results;
     } catch (err) {
       this.audit.log({

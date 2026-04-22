@@ -21,7 +21,10 @@ export type FintocAuditAction =
   | 'sync_failed'
   // Merchant resolver observability — one per resolve() call
   | 'resolver_layer_hit'
-  | 'resolver_merchant_created';
+  | 'resolver_merchant_created'
+  // Nudge — server-initiated outbound messages (post-sync debug, etc)
+  | 'nudge_sent'
+  | 'nudge_skipped';
 
 export type FintocAuditActor = 'user' | 'system' | 'webhook' | 'admin';
 

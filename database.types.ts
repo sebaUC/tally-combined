@@ -103,6 +103,7 @@ export type Database = {
           created_at: string
           error: string | null
           id: string
+          nudge_trigger: string | null
           phase_a_debug: Json | null
           phase_b_debug: Json | null
           tool_name: string | null
@@ -115,6 +116,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          nudge_trigger?: string | null
           phase_a_debug?: Json | null
           phase_b_debug?: Json | null
           tool_name?: string | null
@@ -127,6 +129,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          nudge_trigger?: string | null
           phase_a_debug?: Json | null
           phase_b_debug?: Json | null
           tool_name?: string | null

@@ -43,6 +43,7 @@ import { ConversationV3Service } from './v3/conversation-v3.service';
     MetricsService,
     MessageLogService,
     ResponseBuilderService,
+    TelegramAdapter,
   ],
 })
 export class BotModule {}
