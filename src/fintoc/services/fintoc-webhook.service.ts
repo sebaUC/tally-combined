@@ -91,6 +91,11 @@ export class FintocWebhookService {
   private async dispatch(event: FintocWebhookEvent): Promise<boolean> {
     if (!isHandledEvent(event.type)) {
       this.logger.log(`Ignoring unhandled event type: ${event.type}`);
+      this.audit.log({
+        actorType: 'webhook',
+        action: 'webhook_event_ignored',
+        detail: { event_id: event.id, event_type: event.type },
+      });
       return false;
     }
 

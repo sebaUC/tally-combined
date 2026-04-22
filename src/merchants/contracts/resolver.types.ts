@@ -17,6 +17,12 @@ export interface ResolverOutput {
   defaultCategory: string | null;
   source: ResolverSource;
   latencyMs: number;
+  /**
+   * True only when this resolve() call inserted a new merchants_global row
+   * (i.e. Layer 1d — LLM). Downstream callers use this to emit the
+   * `resolver_merchant_created` audit entry. Defaults to undefined/false.
+   */
+  created?: boolean;
 }
 
 export interface LayerResolver {

@@ -117,6 +117,7 @@ export class LlmResolver implements LayerResolver {
             logoUrl: existing.data.logo_url,
             defaultCategory: existing.data.default_category,
             source: 'llm',
+            created: false,
           };
         }
       }
@@ -130,6 +131,7 @@ export class LlmResolver implements LayerResolver {
       logoUrl: data.logo_url,
       defaultCategory: data.default_category,
       source: 'llm',
+      created: true,
     };
   }
 

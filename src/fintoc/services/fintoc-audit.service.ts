@@ -10,9 +10,18 @@ export type FintocAuditAction =
   | 'webhook_received'
   | 'webhook_processed'
   | 'webhook_invalid_signature'
+  | 'webhook_event_ignored'
   | 'link_revoked'
   | 'link_status_changed'
-  | 'admin_manual_sync';
+  | 'admin_manual_sync'
+  // Sync lifecycle — emitted from FintocSyncService per link/account
+  | 'sync_started'
+  | 'sync_account_done'
+  | 'sync_completed'
+  | 'sync_failed'
+  // Merchant resolver observability — one per resolve() call
+  | 'resolver_layer_hit'
+  | 'resolver_merchant_created';
 
 export type FintocAuditActor = 'user' | 'system' | 'webhook' | 'admin';
 

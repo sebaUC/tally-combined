@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { FintocApiClient } from './fintoc-api.client';
+import { FintocAuditService } from './fintoc-audit.service';
 import { FintocCryptoService } from './fintoc-crypto.service';
 import { fromFintocMinorUnits } from './fintoc-money';
 import { FintocMovement } from '../contracts/fintoc-api.types';
@@ -52,6 +53,7 @@ export class FintocSyncService {
   constructor(
     private readonly api: FintocApiClient,
     private readonly crypto: FintocCryptoService,
+    private readonly audit: FintocAuditService,
     private readonly merchantResolver: MerchantResolverService,
     private readonly merchantPrefs: MerchantPreferencesService,
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
@@ -61,58 +63,128 @@ export class FintocSyncService {
    * Sincroniza todas las cuentas de un link.
    */
   async syncLink(linkId: string): Promise<SyncResult[]> {
+    const t0 = Date.now();
     this.logger.log(`[fintoc] sync start link=${linkId}`);
     const accounts = await this.findAccountsForLink(linkId);
+    const userId = accounts[0]?.user_id ?? null;
+
+    this.audit.log({
+      linkId,
+      userId,
+      actorType: 'system',
+      action: 'sync_started',
+      detail: { accounts_count: accounts.length },
+    });
+
     if (accounts.length === 0) {
       this.logger.warn(`[fintoc] sync skipped link=${linkId} reason=no_accounts`);
+      this.audit.log({
+        linkId,
+        actorType: 'system',
+        action: 'sync_completed',
+        detail: {
+          accounts: 0,
+          total_inserted: 0,
+          duration_ms: Date.now() - t0,
+          reason: 'no_accounts',
+        },
+      });
       return [];
     }
 
     const results: SyncResult[] = [];
 
-    await this.crypto.useToken(linkId, async (linkToken) => {
-      // Re-consultar cuentas a Fintoc para balances frescos
-      const freshAccounts = await this.api.listAccounts(linkToken);
-      const balanceByFintocId = new Map(
-        freshAccounts.map((a) => [
-          a.id,
-          {
-            current: a.balance.current ?? 0,
-            currency: a.currency,
-          },
-        ]),
-      );
-
-      for (const account of accounts) {
-        const since = await this.findLastSyncCursor(account.id);
-        const movements = await this.fetchMovements({
-          linkToken,
-          fintocAccountId: account.fintoc_account_id,
-          since,
-        });
-        const inserted = await this.persistMovements(account, movements);
-
-        // Balance autoritativo desde Fintoc
-        const fresh = balanceByFintocId.get(account.fintoc_account_id);
-        await this.touchAccountSynced(account.id, fresh);
-
-        this.logger.log(
-          `[fintoc] sync account=${account.id} fetched=${movements.length} inserted=${inserted} since=${since ?? 'none'}`,
+    try {
+      await this.crypto.useToken(linkId, async (linkToken) => {
+        // Re-consultar cuentas a Fintoc para balances frescos
+        const freshAccounts = await this.api.listAccounts(linkToken);
+        const balanceByFintocId = new Map(
+          freshAccounts.map((a) => [
+            a.id,
+            {
+              current: a.balance.current ?? 0,
+              currency: a.currency,
+            },
+          ]),
         );
 
-        results.push({
-          accountId: account.id,
-          movementsFetched: movements.length,
-          transactionsInserted: inserted,
-        });
-      }
-    });
+        for (const account of accounts) {
+          const accT0 = Date.now();
+          const since = await this.findLastSyncCursor(account.id);
+          const movements = await this.fetchMovements({
+            linkToken,
+            fintocAccountId: account.fintoc_account_id,
+            since,
+          });
+          const duplicated = movements.filter(
+            (m) => m.status === 'duplicated',
+          ).length;
+          const inserted = await this.persistMovements(account, movements);
 
-    await this.touchLinkWebhook(linkId);
-    this.logger.log(
-      `[fintoc] sync done link=${linkId} accounts=${results.length}`,
-    );
-    return results;
+          // Balance autoritativo desde Fintoc
+          const fresh = balanceByFintocId.get(account.fintoc_account_id);
+          await this.touchAccountSynced(account.id, fresh);
+
+          this.logger.log(
+            `[fintoc] sync account=${account.id} fetched=${movements.length} inserted=${inserted} since=${since ?? 'none'}`,
+          );
+
+          this.audit.log({
+            linkId,
+            userId: account.user_id,
+            actorType: 'system',
+            action: 'sync_account_done',
+            detail: {
+              account_id: account.id,
+              fetched: movements.length,
+              inserted,
+              skipped_duplicated: duplicated,
+              duration_ms: Date.now() - accT0,
+            },
+          });
+
+          results.push({
+            accountId: account.id,
+            movementsFetched: movements.length,
+            transactionsInserted: inserted,
+          });
+        }
+      });
+
+      await this.touchLinkWebhook(linkId);
+      const totalInserted = results.reduce(
+        (acc, r) => acc + r.transactionsInserted,
+        0,
+      );
+      this.logger.log(
+        `[fintoc] sync done link=${linkId} accounts=${results.length}`,
+      );
+      this.audit.log({
+        linkId,
+        userId,
+        actorType: 'system',
+        action: 'sync_completed',
+        detail: {
+          accounts: results.length,
+          total_inserted: totalInserted,
+          duration_ms: Date.now() - t0,
+        },
+      });
+      return results;
+    } catch (err) {
+      this.audit.log({
+        linkId,
+        userId,
+        actorType: 'system',
+        action: 'sync_failed',
+        detail: {
+          stage: 'syncLink',
+          error_message: err instanceof Error ? err.message : String(err),
+          duration_ms: Date.now() - t0,
+        },
+      });
+      throw err;
+    }
   }
 
   // ── helpers ──────────────────────────────────────────────────
@@ -190,7 +262,12 @@ export class FintocSyncService {
       const chunk = filtered.slice(i, i + RESOLVE_BATCH_SIZE);
       const resolved = await Promise.all(
         chunk.map((m) =>
-          this.safeResolve(m.description ?? '', m.amount < 0),
+          this.safeResolve(
+            m.description ?? '',
+            m.amount < 0,
+            account.user_id,
+            account.fintoc_link_id,
+          ),
         ),
       );
 
@@ -230,19 +307,66 @@ export class FintocSyncService {
   /**
    * Wrapper around MerchantResolverService.resolve that never throws.
    * Falls back to a minimal "none" result on unexpected failure.
+   * Emits one `resolver_layer_hit` audit entry per call (fire-and-forget)
+   * plus `resolver_merchant_created` when Layer 1d inserts a new merchant.
    */
   private async safeResolve(
     rawDescription: string,
     isExpense: boolean,
+    userId: string,
+    linkId: string,
   ): Promise<ResolverOutput> {
+    const preview = rawDescription.trim().slice(0, 40);
     try {
-      return await this.merchantResolver.resolve({ rawDescription });
+      const result = await this.merchantResolver.resolve({ rawDescription });
+
+      this.audit.log({
+        userId,
+        linkId,
+        actorType: 'system',
+        action: 'resolver_layer_hit',
+        detail: {
+          source: result.source,
+          latency_ms: result.latencyMs,
+          merchant_id: result.merchantId,
+          raw_preview: preview,
+        },
+      });
+
+      if (result.created && result.merchantId) {
+        this.audit.log({
+          userId,
+          linkId,
+          actorType: 'system',
+          action: 'resolver_merchant_created',
+          detail: {
+            merchant_id: result.merchantId,
+            merchant_name: result.name,
+            default_category: result.defaultCategory,
+            raw_preview: preview,
+          },
+        });
+      }
+
+      return result;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.warn(
-        `[fintoc] resolver error raw="${rawDescription.slice(0, 60)}": ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `[fintoc] resolver error raw="${preview}": ${errorMessage}`,
       );
+      this.audit.log({
+        userId,
+        linkId,
+        actorType: 'system',
+        action: 'resolver_layer_hit',
+        detail: {
+          source: 'none',
+          latency_ms: 0,
+          merchant_id: null,
+          raw_preview: preview,
+          error_message: errorMessage,
+        },
+      });
       return {
         merchantId: null,
         name: rawDescription.trim().slice(0, 40) || (isExpense ? 'Gasto' : 'Ingreso'),

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { FintocController } from './fintoc.controller';
+import { FintocAdminController } from './fintoc-admin.controller';
 import { FintocWebhookController } from './fintoc-webhook.controller';
 import { FintocApiClient } from './services/fintoc-api.client';
 import { FintocCryptoService } from './services/fintoc-crypto.service';
@@ -7,8 +8,10 @@ import { FintocLinkService } from './services/fintoc-link.service';
 import { FintocSyncService } from './services/fintoc-sync.service';
 import { FintocWebhookService } from './services/fintoc-webhook.service';
 import { FintocAuditService } from './services/fintoc-audit.service';
+import { FintocAdminService } from './services/fintoc-admin.service';
 import { FintocWebhookGuard } from './guards/fintoc-webhook.guard';
 import { AdminGuard } from '../admin/guards/admin.guard';
+import { JwtGuard } from '../auth/middleware/jwt.guard';
 import { MfaRequiredGuard } from '../auth/middleware/mfa.guard';
 import { MerchantsModule } from '../merchants/merchants.module';
 
@@ -24,7 +27,11 @@ import { MerchantsModule } from '../merchants/merchants.module';
  */
 @Module({
   imports: [MerchantsModule],
-  controllers: [FintocController, FintocWebhookController],
+  controllers: [
+    FintocController,
+    FintocAdminController,
+    FintocWebhookController,
+  ],
   providers: [
     FintocApiClient,
     FintocCryptoService,
@@ -32,7 +39,9 @@ import { MerchantsModule } from '../merchants/merchants.module';
     FintocSyncService,
     FintocWebhookService,
     FintocAuditService,
+    FintocAdminService,
     FintocWebhookGuard,
+    JwtGuard,
     AdminGuard,
     MfaRequiredGuard,
   ],
