@@ -10,7 +10,9 @@ import {
 import { isTransferDescription } from '../utils/string-normalizer';
 import { EmbeddingResolver } from './embedding.resolver';
 
-const LLM_MODEL = 'gemini-2.5-flash';
+// Use gemini-1.5-flash for the resolver: separate quota bucket from the main
+// bot (gemini-2.5-flash) and 1500 req/day free tier vs 20 for 2.5-flash.
+const LLM_MODEL = 'gemini-1.5-flash';
 
 const CATEGORIES = [
   'Alimentación',
@@ -102,15 +104,36 @@ export class LlmResolver implements LayerResolver {
       .single();
 
     if (error) {
-      // Race: another request just inserted this merchant. Fetch instead.
+      // Name collision: merchant already exists (unique index on LOWER(name)).
+      // Fetch the existing row and accumulate our alias so future syncs hit
+      // Layer 1a (exact catalog match) instead of falling through to LLM again.
       if (error.code === '23505') {
         const existing = await this.supabase
           .from('merchants_global')
-          .select('id, name, logo_url, default_category')
+          .select('id, name, logo_url, default_category, aliases')
           .ilike('name', parsed.name)
           .limit(1)
           .maybeSingle();
+
         if (existing.data) {
+          // Append alias if not already stored. Fire-and-forget — non-critical.
+          if (parsed.alias_observed) {
+            const current = (existing.data.aliases as string[]) ?? [];
+            if (!current.includes(parsed.alias_observed)) {
+              void this.supabase
+                .from('merchants_global')
+                .update({ aliases: [...current, parsed.alias_observed] })
+                .eq('id', existing.data.id)
+                .then(({ error: updErr }) => {
+                  if (updErr) {
+                    this.log.warn(`[llm] alias append failed id=${existing.data!.id}: ${updErr.message}`);
+                  } else {
+                    this.log.debug(`[llm] alias appended merchant="${existing.data!.name}" alias="${parsed.alias_observed}"`);
+                  }
+                });
+            }
+          }
+
           return {
             merchantId: existing.data.id,
             name: existing.data.name,
@@ -146,19 +169,53 @@ export class LlmResolver implements LayerResolver {
       },
     });
 
-    const prompt = `Eres un parser de transacciones bancarias chilenas.
-Dado el siguiente string de una transacción, identifica el comercio (merchant).
+    const prompt = `Eres un experto en transacciones bancarias chilenas. Identifica el COMERCIO (merchant) en la descripción que genera el banco.
+
+CONTEXTO:
+- Los bancos truncan las descripciones a ~20-30 caracteres en MAYÚSCULAS, incluyen ruido (fechas, sucursales, prefijos del banco).
+- Debes inferir el nombre canónico aunque esté truncado, mal escrito, o con sufijo de sucursal.
+- La SUCURSAL o EDIFICIO (Las Condes, Titanium, Apoquindo, Kennedy, etc.) NO forma parte del nombre del comercio.
+
+FORMATOS TÍPICOS POR BANCO:
+- BICE / Itaú: "Cargo por compra en NOMBRE SUCURSAL el..."
+- BancoEstado: "COMPRA NAC 05/04 NOMBRE SUCURSAL"
+- Santander: "Pago Vd NOMBRE.COM"
+
+MERCHANTS CHILENOS COMUNES Y SUS TRUNCACIONES BANCARIAS:
+- "WORK CAFE TITANIU", "WORK CAFE APOQUIN", "WORK CAFE KENNEDY" → Work Cafe Santander (son sucursales del coworking de Santander)
+- "BROWNIE REP", "BROWNIE REPUB"   → Brownie Republic
+- "MCDONALDS", "MC DONALDS"        → McDonald's
+- "STARBUCKS", "STARBCK"           → Starbucks
+- "UBER EATS", "UBEREATS"          → Uber Eats
+- "RAPPI", "RAPPI CHILE"           → Rappi
+- "CORNERSHOP"                     → Cornershop
+- "COPEC", "COPEC S.A."            → Copec
+- "NETFLIX.COM", "NETFLIX"         → Netflix
+- "SPOTIFY"                        → Spotify
+- "AMZN", "AMAZON"                 → Amazon
+- "MERCADOPAGO*", "MERPAGO*"       → Mercado Pago
+- "HOMECENTER", "SODIMAC HOME"     → Sodimac Homecenter
+- "PREUNIC", "FARMACIAS PR"        → PreUnic
+- "SALCOBRAND"                     → Salcobrand
+- "CRUZ VERDE"                     → Cruz Verde
+- "FARMACIAS A"                    → Farmacias Ahumada
+- "SM MARKET", "SMU"               → SM Market
+- "CAFETERIA TAKE", "CAFE TAKE GO" → Take Go
+
+REGLAS:
+1. Elimina el prefijo bancario ("Cargo por compra en", "COMPRA NAC 05/04 ", etc.) y la sucursal/ciudad del nombre.
+2. Si el nombre está truncado, completa el nombre comercial correcto (ej: "TITANIU" → el edificio Titanium de Santiago → sucursal de Work Cafe Santander).
+3. alias_observed = el fragmento que identifica al comercio TAL COMO APARECE en el input (MAYÚSCULAS, sin fechas, sin montos). Debe ser el string exacto del banco, no la versión corregida.
+4. Retorna null si es: transferencia entre personas, retiro ATM, cargo bancario sin comercio, pago de dividendo, o string genérico sin comercio identificable (ej: "Comercio Nac.").
 
 INPUT: "${raw.replace(/"/g, '\\"')}"
 
-Responde SOLO un JSON con esta forma:
+Responde SOLO un JSON (sin markdown, sin bloques de código):
 {
-  "name": "Nombre canónico del merchant (Title Case, sin sufijos .com/.cl, sin sucursal, sin dígitos)",
+  "name": "Nombre canónico en Title Case",
   "default_category": "Una de: ${CATEGORIES.join(', ')}",
-  "alias_observed": "El string identificador del input en MAYÚSCULAS, sin fechas ni montos ni dígitos de transacción"
-}
-
-Si el string es una transferencia entre personas, retiro de efectivo, o no representa un comercio identificable, responde: null`;
+  "alias_observed": "FRAGMENTO EXACTO DEL INPUT QUE IDENTIFICA AL COMERCIO"
+}`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();

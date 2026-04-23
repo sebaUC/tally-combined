@@ -39,7 +39,7 @@ export function createFunctionRouter(
         return queryTransactions(supabase, userId, args as any);
 
       case 'edit_transaction':
-        return editTransaction(supabase, userId, args as any);
+        return editTransaction(supabase, userId, args as any, deps);
 
       case 'delete_transaction':
         return deleteTransaction(supabase, userId, args as any);

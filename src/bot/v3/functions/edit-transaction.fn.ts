@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { resolveTransaction } from './shared';
+import type { FunctionRouterDeps } from '../function-deps.js';
 
 export async function editTransaction(
   supabase: SupabaseClient,
@@ -15,6 +16,7 @@ export async function editTransaction(
     new_description?: string;
     new_posted_at?: string;
   },
+  deps: FunctionRouterDeps = {},
 ): Promise<Record<string, any>> {
   const { new_amount, new_category, new_name, new_description, new_posted_at } =
     args;
@@ -119,7 +121,15 @@ export async function editTransaction(
 
   if (error) return { ok: false, error: 'DB_ERROR', message: error.message };
 
-  // 5. Adjust account balance if amount changed
+  // 5. Persist updated merchant→category preference so future syncs
+  //    auto-assign the user's chosen category for this merchant.
+  if (updates.category_id && tx.merchant_id && deps.merchantPrefs) {
+    deps.merchantPrefs
+      .upsert(userId, tx.merchant_id, updates.category_id)
+      .catch(() => { /* non-fatal */ });
+  }
+
+  // 6. Adjust account balance if amount changed
   if (new_amount !== undefined && tx.account_id) {
     const oldAmount =
       tx.type === 'income' ? Math.abs(tx.amount) : -Math.abs(tx.amount);

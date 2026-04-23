@@ -14,10 +14,9 @@ import {
 } from '../utils/string-normalizer';
 
 const DEFAULT_THRESHOLD = 0.85;
-// The legacy JS SDK still supports embedContent, but the model id must be the
-// Gemini model code, not the old shorthand. `gemini-embedding-001` returns a
-// 768-dim vector, which matches our current pgvector schema.
-const EMBEDDING_MODEL = 'gemini-embedding-001';
+// `text-embedding-004` always returns 768 dimensions, matching our pgvector(768) schema.
+// `gemini-embedding-001` defaults to 3072 dims and was causing insert failures.
+const EMBEDDING_MODEL = 'text-embedding-004';
 
 /**
  * Layer 1c — pgvector cosine similarity over merchants_global.embedding.

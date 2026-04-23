@@ -29,6 +29,13 @@ interface SyncResult {
 // Layer 1d (LLM) is hit while not hammering Gemini.
 const RESOLVE_BATCH_SIZE = 10;
 
+// How far back to look even when there are recent transactions. Banks post
+// movements with a delay (often 24-48h), and Chile's UTC offset (UTC-3/4)
+// means a 9 PM transaction lands on the next UTC day, advancing the cursor
+// past same-day transactions. The upsert is idempotent on external_id so
+// re-fetching is safe.
+const CURSOR_LOOKBACK_DAYS = 3;
+
 /**
  * Sincroniza movimientos desde Fintoc hacia `transactions`.
  * Llamada por el webhook handler (account.refresh_intent.succeeded) y
@@ -173,11 +180,11 @@ export class FintocSyncService {
         },
       });
 
-      // Fire-and-forget: push a debug/heartbeat summary to the user's
-      // Telegram on EVERY sync — including "nothing new" webhooks. This
-      // doubles as a liveness signal while the proactive pipeline matures.
-      // Never blocks the sync or throws.
-      if (userId) {
+      // Fire-and-forget: notify only when there are new transactions.
+      // Fintoc fires multiple webhooks per refresh (distinct event IDs that
+      // each pass dedup), so sending on every webhook produces contradictory
+      // "todo al día" then "1 movimiento nuevo" sequences 2 min apart.
+      if (userId && totalInserted > 0) {
         void this.syncDebug
           .fire({
             linkId,
@@ -236,7 +243,24 @@ export class FintocSyncService {
       .limit(1)
       .maybeSingle();
 
-    return data?.posted_at ?? undefined;
+    if (!data?.posted_at) return undefined;
+
+    // Clamp the cursor back CURSOR_LOOKBACK_DAYS from the latest post date.
+    // This handles: (a) banks that post transactions 24-48h late, (b) the
+    // UTC midnight boundary where a 9 PM Chile tx gets post_date = next UTC
+    // day, which would otherwise skip same-day transactions on the next sync.
+    const latest = new Date(data.posted_at);
+    latest.setUTCDate(latest.getUTCDate() - CURSOR_LOOKBACK_DAYS);
+    latest.setUTCHours(0, 0, 0, 0);
+    const clamped = latest.toISOString();
+
+    if (clamped !== data.posted_at) {
+      this.logger.debug(
+        `[fintoc] cursor clamped account=${accountId} latest=${data.posted_at} since=${clamped}`,
+      );
+    }
+
+    return clamped;
   }
 
   private async fetchMovements(params: {
@@ -261,6 +285,24 @@ export class FintocSyncService {
   }
 
   /**
+   * Returns only movements whose external_id is not yet in the transactions
+   * table. One DB round-trip regardless of how many movements are fetched.
+   */
+  private async filterKnownMovements(
+    movements: FintocMovement[],
+  ): Promise<FintocMovement[]> {
+    const ids = movements.map((m) => m.id);
+    const { data } = await this.supabase
+      .from('transactions')
+      .select('external_id')
+      .in('external_id', ids);
+    const existing = new Set(
+      (data ?? []).map((r: { external_id: string }) => r.external_id),
+    );
+    return movements.filter((m) => !existing.has(m.id));
+  }
+
+  /**
    * Resolves merchants + categories in parallel batches, builds rows, and
    * upserts with onConflict on external_id.
    */
@@ -273,13 +315,20 @@ export class FintocSyncService {
     const filtered = movements.filter((m) => m.status !== 'duplicated');
     if (filtered.length === 0) return 0;
 
+    // Skip movements already in the DB. With CURSOR_LOOKBACK_DAYS the same
+    // movements are re-fetched on every webhook; without this check the
+    // resolver (including LLM) would run on all of them even though nothing
+    // new will be inserted.
+    const toProcess = await this.filterKnownMovements(filtered);
+    if (toProcess.length === 0) return 0;
+
     // Pre-load the user's categories once, cache by lowercase name for fast lookup.
     const categoryCache = await this.loadUserCategoryCache(account.user_id);
 
     const rows: Record<string, unknown>[] = [];
 
-    for (let i = 0; i < filtered.length; i += RESOLVE_BATCH_SIZE) {
-      const chunk = filtered.slice(i, i + RESOLVE_BATCH_SIZE);
+    for (let i = 0; i < toProcess.length; i += RESOLVE_BATCH_SIZE) {
+      const chunk = toProcess.slice(i, i + RESOLVE_BATCH_SIZE);
       const resolved = await Promise.all(
         chunk.map((m) =>
           this.safeResolve(

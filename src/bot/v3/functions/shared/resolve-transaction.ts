@@ -8,7 +8,7 @@ interface ResolveArgs {
 }
 
 const TX_SELECT =
-  'id, amount, type, name, description, posted_at, account_id, category_id, categories:category_id(name)';
+  'id, amount, type, name, description, posted_at, account_id, category_id, merchant_id, categories:category_id(name)';
 
 /**
  * Resolve a transaction by ID or hints (amount, category, name).
