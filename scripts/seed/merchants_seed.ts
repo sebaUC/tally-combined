@@ -4,7 +4,7 @@
  * Inserta 68 comercios chilenos comunes (CATALOG_CL) con:
  *   - name, default_category, aliases
  *   - logo_url vía Clearbit público (si hay website)
- *   - embedding 768-dim generado con Gemini text-embedding-004
+ *   - embedding 768-dim generado con Gemini
  *   - verified = true
  *
  * Idempotente: skip si ya existe un merchant con el mismo name (LOWER).

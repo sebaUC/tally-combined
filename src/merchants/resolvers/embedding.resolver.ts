@@ -14,10 +14,10 @@ import {
 } from '../utils/string-normalizer';
 
 const DEFAULT_THRESHOLD = 0.85;
-// embedding-001 is the 768-dim Gemini embedding model exposed on v1beta
-// (matches our vector(768) schema). Same quality tier as text-embedding-004
-// which lives on v1 and is not reachable from @google/generative-ai@0.24.
-const EMBEDDING_MODEL = 'embedding-001';
+// The legacy JS SDK still supports embedContent, but the model id must be the
+// Gemini model code, not the old shorthand. `gemini-embedding-001` returns a
+// 768-dim vector, which matches our current pgvector schema.
+const EMBEDDING_MODEL = 'gemini-embedding-001';
 
 /**
  * Layer 1c — pgvector cosine similarity over merchants_global.embedding.
@@ -95,7 +95,7 @@ export class EmbeddingResolver implements LayerResolver {
   }
 
   /**
-   * Generate a 768-dim embedding via Gemini's text-embedding-004.
+   * Generate a 768-dim embedding via Gemini.
    * Exposed for reuse by LlmResolver when seeding new merchants.
    */
   async embed(text: string): Promise<number[]> {

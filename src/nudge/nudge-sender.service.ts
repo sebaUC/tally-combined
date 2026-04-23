@@ -127,7 +127,7 @@ export class NudgeSenderService {
   ): Promise<ResolvedChannel | null> {
     const { data, error } = await this.supabase
       .from('channel_accounts')
-      .select('channel, external_id')
+      .select('channel, external_user_id')
       .eq('user_id', userId);
 
     if (error) {
@@ -137,17 +137,17 @@ export class NudgeSenderService {
 
     const accounts = (data ?? []) as Array<{
       channel: string;
-      external_id: string;
+      external_user_id: string;
     }>;
     if (accounts.length === 0) return null;
 
     const telegram = accounts.find((a) => a.channel === 'telegram');
     if (telegram) {
-      return { channelType: 'telegram', externalId: telegram.external_id };
+      return { channelType: 'telegram', externalId: telegram.external_user_id };
     }
     const whatsapp = accounts.find((a) => a.channel === 'whatsapp');
     if (whatsapp) {
-      return { channelType: 'whatsapp', externalId: whatsapp.external_id };
+      return { channelType: 'whatsapp', externalId: whatsapp.external_user_id };
     }
     return null;
   }
