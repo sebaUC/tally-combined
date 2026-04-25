@@ -180,11 +180,11 @@ export class FintocSyncService {
         },
       });
 
-      // Fire-and-forget: notify only when there are new transactions.
-      // Fintoc fires multiple webhooks per refresh (distinct event IDs that
-      // each pass dedup), so sending on every webhook produces contradictory
-      // "todo al día" then "1 movimiento nuevo" sequences 2 min apart.
-      if (userId && totalInserted > 0) {
+      // Fire-and-forget: heartbeat on EVERY sync (with or without new tx) so
+      // the user has visibility on the full pipeline. The duplicate-webhook
+      // problem (Fintoc fires multiple events per refresh) is now handled by
+      // a per-link Redis lock at the webhook level — see Fix 2.
+      if (userId) {
         void this.syncDebug
           .fire({
             linkId,
