@@ -10,9 +10,9 @@ import {
 import { isTransferDescription } from '../utils/string-normalizer';
 import { EmbeddingResolver } from './embedding.resolver';
 
-// Use gemini-1.5-flash for the resolver: separate quota bucket from the main
-// bot (gemini-2.5-flash) and 1500 req/day free tier vs 20 for 2.5-flash.
-const LLM_MODEL = 'gemini-1.5-flash';
+// gemini-1.5-flash was retired from v1beta; use 2.5-flash (the same model the
+// main bot uses successfully). The free-tier quota is shared across the key.
+const LLM_MODEL = 'gemini-2.5-flash';
 
 const CATEGORIES = [
   'Alimentación',

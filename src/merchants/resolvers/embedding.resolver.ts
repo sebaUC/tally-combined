@@ -14,9 +14,10 @@ import {
 } from '../utils/string-normalizer';
 
 const DEFAULT_THRESHOLD = 0.85;
-// `text-embedding-004` always returns 768 dimensions, matching our pgvector(768) schema.
-// `gemini-embedding-001` defaults to 3072 dims and was causing insert failures.
-const EMBEDDING_MODEL = 'text-embedding-004';
+// `gemini-embedding-001` returns 3072 dims by default; we force 768 via
+// `outputDimensionality` to match the pgvector(768) schema in merchants_global.
+const EMBEDDING_MODEL = 'gemini-embedding-001';
+const EMBEDDING_DIMS = 768;
 
 /**
  * Layer 1c — pgvector cosine similarity over merchants_global.embedding.
@@ -99,7 +100,10 @@ export class EmbeddingResolver implements LayerResolver {
    */
   async embed(text: string): Promise<number[]> {
     const model = this.genAI.getGenerativeModel({ model: EMBEDDING_MODEL });
-    const result = await model.embedContent(text);
+    const result = await model.embedContent({
+      content: { role: 'user', parts: [{ text }] },
+      outputDimensionality: EMBEDDING_DIMS,
+    } as any);
     return result.embedding.values;
   }
 }
