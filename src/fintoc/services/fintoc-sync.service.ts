@@ -575,11 +575,20 @@ export class FintocSyncService {
       auto_categorized: !!categoryId,
       metadata: {
         fintoc: {
+          // Campos planos para queries rápidas sin tener que cavar en el JSON.
           type: movement.type,
           reference_id: movement.reference_id ?? null,
           sender_account: movement.sender_account ?? null,
           recipient_account: movement.recipient_account ?? null,
           comment: movement.comment ?? null,
+          // Snapshot completo del FintocMovement tal como nos llegó. Sirve
+          // para forensics: distinguir bugs nuestros (parsing, normalización,
+          // resolver) vs comportamientos raros de Fintoc (post_date futuro,
+          // status flips, descripciones inconsistentes). NUNCA modificar.
+          raw_movement: movement,
+          // Timestamp de cuándo lo trajimos del API. Permite ver desfase
+          // entre post_date del banco y nuestro fetch (sync frequency).
+          fetched_at: new Date().toISOString(),
         },
       },
     };

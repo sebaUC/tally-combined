@@ -63,9 +63,14 @@ export class FintocWebhookService {
       actorType: 'webhook',
       action: 'webhook_received',
       detail: {
+        // Campos planos para filtrar/contar sin desempacar el JSON.
         event_id: event.id,
         event_type: event.type,
         mode: event.mode,
+        // Payload completo del webhook (incluye event.data, created_at, etc).
+        // Permite reproducir lo que Fintoc nos mandó cuando algo se ve raro
+        // sin tener que mirar logs efímeros de Render.
+        raw_event: event,
       },
     });
 
@@ -133,9 +138,14 @@ export class FintocWebhookService {
     // event IDs that bypass the per-event dedup). Without this, we run
     // syncLink in parallel for the same link → duplicate API calls,
     // duplicate nudge messages, race on transactions UPSERT.
-    // 30s TTL covers a typical sync (1-3s) with margin.
+    //
+    // TTL 180s: en producción observamos 2 webhooks por refresh separados
+    // 90-115 s (account.refresh_intent.succeeded × 2). Un TTL de 30 s
+    // expiraba antes del segundo y dejaba pasar el sync duplicado.
+    // 180 s cubre el patrón con margen y sigue siendo seguro porque los
+    // refresh reales vienen cada 3 h.
     const lockKey = `fintoc:sync:${linkId}`;
-    const gotLock = await this.redis.acquireLock(lockKey, 30_000);
+    const gotLock = await this.redis.acquireLock(lockKey, 180_000);
     if (!gotLock) {
       this.logger.log(
         `[fintoc] sync skipped link=${linkId} event=${event.id} — already in progress`,
