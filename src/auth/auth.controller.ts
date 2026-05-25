@@ -41,7 +41,10 @@ const REFRESH_COOKIE = 'refresh_token';
 const baseCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: 'lax',
+  // Cross-origin (Vercel frontend → Render backend) requires SameSite=None.
+  // SameSite=None mandates Secure=true, así que en dev usamos lax para que
+  // funcione localhost sin HTTPS.
+  sameSite: isProduction ? 'none' : 'lax',
   path: '/',
 };
 
