@@ -5,7 +5,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { TelegramAdapter } from '../bot/adapters/telegram.adapter';
 import { BotReply } from '../bot/actions/action-block';
 import type { DomainMessage } from '../bot/contracts';
-import { FintocAuditService } from '../fintoc/services/fintoc-audit.service';
 import type {
   NudgeSendParams,
   NudgeSendResult,
@@ -34,7 +33,6 @@ export class NudgeSenderService {
 
   constructor(
     private readonly telegram: TelegramAdapter,
-    private readonly audit: FintocAuditService,
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
     @Optional() private readonly config?: ConfigService,
   ) {
@@ -81,20 +79,6 @@ export class NudgeSenderService {
 
     await this.logDelivered(params, channel);
 
-    this.audit.log({
-      userId: params.userId,
-      linkId: params.linkId ?? null,
-      actorType: 'system',
-      action: 'nudge_sent',
-      detail: {
-        trigger: params.trigger,
-        severity: params.severity ?? 'low',
-        channel: channel.channelType,
-        bypass_gates: !!params.bypassGates,
-        reply_count: params.replies.length,
-      },
-    });
-
     return { sent: true };
   }
 
@@ -103,19 +87,8 @@ export class NudgeSenderService {
   private skip(
     params: NudgeSendParams,
     reason: NudgeSkipReason,
-    extraDetail?: Record<string, unknown>,
+    _extraDetail?: Record<string, unknown>,
   ): NudgeSendResult {
-    this.audit.log({
-      userId: params.userId,
-      linkId: params.linkId ?? null,
-      actorType: 'system',
-      action: 'nudge_skipped',
-      detail: {
-        trigger: params.trigger,
-        reason,
-        ...(extraDetail ?? {}),
-      },
-    });
     return { sent: false, reason };
   }
 

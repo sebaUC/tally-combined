@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisService, RedisKeys, RedisTTL } from '../../redis';
-import { MinimalUserContext } from './user-context.service';
 
 /**
  * User engagement metrics stored in Redis.
@@ -11,14 +10,6 @@ export interface UserMetrics {
   weekTxCount: number;
 }
 
-/**
- * Mood hint values:
- * -1 = Suggest negative mood (e.g., over budget)
- *  0 = Neutral
- * +1 = Suggest positive mood (e.g., good streak, under budget)
- */
-export type MoodHint = -1 | 0 | 1;
-
 const DEFAULT_METRICS: UserMetrics = {
   txStreakDays: 0,
   lastTxIso: null,
@@ -26,10 +17,7 @@ const DEFAULT_METRICS: UserMetrics = {
 };
 
 /**
- * Metrics service for tracking user engagement.
- *
- * Tracks transaction streaks and weekly activity.
- * Calculates mood hint for AI-Service based on metrics.
+ * Metrics service for tracking user engagement (streaks, weekly activity).
  */
 @Injectable()
 export class MetricsService {
@@ -171,43 +159,6 @@ export class MetricsService {
     } catch (err) {
       this.log.warn(`[recordTransaction] Error for user ${userId}`, err);
     }
-  }
-
-  /**
-   * Calculates mood hint based on user context and metrics.
-   * Returns -1, 0, or +1 for AI-Service to compute final mood.
-   */
-  calculateMoodHint(
-    context: MinimalUserContext,
-    metrics: UserMetrics,
-  ): MoodHint {
-    // Calculate budget percentage if available
-    const budgetPercent =
-      context.activeBudget?.amount && context.activeBudget.spent != null
-        ? context.activeBudget.spent / context.activeBudget.amount
-        : null;
-
-    // Negative: Over 90% of budget spent
-    if (budgetPercent !== null && budgetPercent > 0.9) {
-      return -1;
-    }
-
-    // Positive: 7+ day streak
-    if (metrics.txStreakDays >= 7) {
-      return 1;
-    }
-
-    // Positive: Under 25% of budget spent
-    if (budgetPercent !== null && budgetPercent < 0.25) {
-      return 1;
-    }
-
-    // Positive: High weekly activity (10+ transactions)
-    if (metrics.weekTxCount >= 10) {
-      return 1;
-    }
-
-    return 0;
   }
 
   /**

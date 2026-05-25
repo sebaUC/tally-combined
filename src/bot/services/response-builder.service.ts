@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BotButton, BotReply } from '../actions/action-block';
-import { pickCategoryEmoji } from '../v3/functions/emoji-mapper';
+import { pickCategoryEmoji } from '../functions/emoji-mapper';
 
 @Injectable()
 export class ResponseBuilderService {

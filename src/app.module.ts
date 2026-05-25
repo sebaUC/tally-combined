@@ -10,9 +10,9 @@ import { UsersModule } from './user/user.module';
 import { BotModule } from './bot/bot.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
-import { FintocModule } from './fintoc/fintoc.module';
 import { MerchantsModule } from './merchants/merchants.module';
 import { NudgeModule } from './nudge/nudge.module';
+import { InsightsModule } from './insights/insights.module';
 
 @Module({
   imports: [
@@ -24,9 +24,9 @@ import { NudgeModule } from './nudge/nudge.module';
     BotModule,
     AdminModule,
     CategoriesModule,
-    FintocModule,
     MerchantsModule,
     NudgeModule,
+    InsightsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

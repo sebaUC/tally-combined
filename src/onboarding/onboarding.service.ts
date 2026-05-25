@@ -7,6 +7,7 @@ import {
 import { SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import { DataParserService } from '../common/utils/data-parser.service';
+import { InsightsEngineService } from '../insights/engine/insights-engine.service';
 import { OnboardingDto, OnboardingAnswers } from './dto/onboarding.dto';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class OnboardingService {
   constructor(
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
     private readonly parser: DataParserService,
+    private readonly insightsEngine: InsightsEngineService,
   ) {}
 
   async processOnboarding(userId: string, dto: OnboardingDto) {
@@ -25,7 +27,6 @@ export class OnboardingService {
     this.logger.debug(`[onboarding] Payload completo ${JSON.stringify(dto)}`);
 
     await this.upsertUserPrefs(userId, answers, now);
-    await this.upsertPersonalitySnapshot(userId, answers, now);
     await this.syncSpendingExpectations(userId, answers, now);
     await this.syncIncomeExpectations(userId, answers, now);
     const accountIds = await this.syncAccounts(userId, answers, now);
@@ -33,6 +34,17 @@ export class OnboardingService {
     await this.syncCategories(userId, answers, now);
     await this.syncGoals(userId, answers, now);
     await this.markOnboardingCompleted(userId, now);
+
+    // Seed inicial de user_insights — sin txs reales, pero con categorías y
+    // budgets ya declarados. Maturity arranca en 'empty'. Fire-and-forget:
+    // si falla, no rompe el onboarding (las txs futuras crearán la fila).
+    this.insightsEngine
+      .recomputeForUser(userId, 'onboarding_proxy')
+      .catch(err =>
+        this.logger.warn(
+          `[onboarding] Insights seed falló para ${userId}: ${err.message}`,
+        ),
+      );
 
     this.logger.log(
       `[onboarding] Datos completos almacenados para usuario ${userId}`,
@@ -62,8 +74,9 @@ export class OnboardingService {
   ) {
     const level = answers.notifications ?? 'none';
     const unifiedBalance = answers.unifiedBalance ?? true;
+    const botTone = answers.personality?.tone ?? 'friendly';
     this.logger.log(
-      `[onboarding] Actualizando user_prefs para ${userId} unifiedBalance=${unifiedBalance}`,
+      `[onboarding] Actualizando user_prefs para ${userId} unifiedBalance=${unifiedBalance} bot_tone=${botTone}`,
     );
 
     const { error } = await this.supabase.from('user_prefs').upsert(
@@ -71,6 +84,7 @@ export class OnboardingService {
         id: userId,
         unified_balance: unifiedBalance,
         notification_level: level,
+        bot_tone: botTone,
         updated_at: now,
       },
       { onConflict: 'id' },
@@ -82,41 +96,6 @@ export class OnboardingService {
       );
       throw new InternalServerErrorException(
         'No se pudieron guardar las preferencias del usuario.',
-      );
-    }
-  }
-
-  private async upsertPersonalitySnapshot(
-    userId: string,
-    answers: OnboardingAnswers,
-    now: string,
-  ) {
-    if (!answers.personality) {
-      this.logger.warn(
-        `[onboarding] personality no presente, se omite snapshot para ${userId}`,
-      );
-      return;
-    }
-
-    const payload = {
-      user_id: userId,
-      tone: answers.personality.tone,
-      intensity: answers.personality.intensity,
-      mood: 'normal',
-      updated_at: now,
-      mood_updated_at: now,
-    };
-
-    const { error } = await this.supabase
-      .from('personality_snapshot')
-      .upsert(payload, { onConflict: 'user_id' });
-
-    if (error) {
-      this.logger.error(
-        `[onboarding] No se pudo actualizar personality_snapshot: ${error.message}`,
-      );
-      throw new InternalServerErrorException(
-        'No se pudo guardar el perfil del bot.',
       );
     }
   }

@@ -26,14 +26,17 @@ export class UsersService {
     userId: string,
     patch: Partial<{
       tone: string;
-      intensity: number;
-      mood: string;
     }>,
   ) {
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (patch.tone !== undefined) updatePayload.bot_tone = patch.tone;
+
     const { data, error } = await this.supabase
-      .from('personality_snapshot')
-      .update({ ...patch, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
+      .from('user_prefs')
+      .update(updatePayload)
+      .eq('id', userId)
       .select()
       .single();
 
@@ -220,18 +223,12 @@ export class UsersService {
   async getContext(userId: string) {
     const [
       { data: profile, error: profileError },
-      { data: personality, error: personalityError },
       { data: goals, error: goalsError },
       { data: prefs, error: prefsError },
       { data: spending, error: spendingError },
       authResult,
     ] = await Promise.all([
       this.supabase.from('users').select('*').eq('id', userId).single(),
-      this.supabase
-        .from('personality_snapshot')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle(),
       this.supabase.from('goals').select('*').eq('user_id', userId),
       this.supabase
         .from('user_prefs')
@@ -250,7 +247,6 @@ export class UsersService {
     ]);
 
     if (profileError) throw new Error(profileError.message);
-    if (personalityError) throw new Error(personalityError.message);
     if (goalsError) throw new Error(goalsError.message);
     if (prefsError) throw new Error(prefsError.message);
     if (spendingError) throw new Error(spendingError.message);
@@ -264,6 +260,11 @@ export class UsersService {
       nickname: profile?.nickname || metadata.nickname || null,
       age: metadata.age || null,
     };
+
+    // Personality derivada de user_prefs.bot_tone (post-refactor PR1)
+    const personality = prefs?.bot_tone
+      ? { tone: prefs.bot_tone }
+      : null;
 
     return {
       profile: mergedProfile,

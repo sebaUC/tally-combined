@@ -7,17 +7,18 @@ import { WhatsappWebhookGuard } from './guards/whatsapp-webhook.guard';
 import { CommonModule } from '../common/common.module';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { MerchantsModule } from '../merchants/merchants.module';
+import { InsightsModule } from '../insights/insights.module';
 import { BotChannelService } from './delegates/bot-channel.service';
 import { UserContextService } from './services/user-context.service';
 import { MetricsService } from './services/metrics.service';
 import { MessageLogService } from './services/message-log.service';
 import { ResponseBuilderService } from './services/response-builder.service';
 import { CallbackHandlerService } from './services/callback-handler.service';
-import { BotV3Service } from './v3/bot-v3.service';
-import { ConversationV3Service } from './v3/conversation-v3.service';
+import { BotService } from './bot.service';
+import { ConversationService } from './conversation.service';
 
 @Module({
-  imports: [CommonModule, SupabaseModule, MerchantsModule],
+  imports: [CommonModule, SupabaseModule, MerchantsModule, InsightsModule],
   controllers: [BotController],
   providers: [
     BotChannelService,
@@ -28,8 +29,8 @@ import { ConversationV3Service } from './v3/conversation-v3.service';
     MessageLogService,
     ResponseBuilderService,
     CallbackHandlerService,
-    ConversationV3Service,
-    BotV3Service,
+    ConversationService,
+    BotService,
     TelegramWebhookGuard,
     // WhatsappWebhookGuard — disabled until WHATSAPP_APP_SECRET is set.
     // The guard fails fast at boot if the env var is missing, so keep it
@@ -38,7 +39,7 @@ import { ConversationV3Service } from './v3/conversation-v3.service';
     { provide: 'MESSAGE_LOG_SERVICE', useExisting: MessageLogService },
   ],
   exports: [
-    BotV3Service,
+    BotService,
     UserContextService,
     MetricsService,
     MessageLogService,

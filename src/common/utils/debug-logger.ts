@@ -185,16 +185,6 @@ class DebugLogger {
     this.log('info', '📤', 'SEND', message, data, cid);
   }
 
-  /** Phase A started/completed */
-  phaseA(message: string, data?: Record<string, unknown>, cid?: string) {
-    this.log('info', '🔄', 'PHASE-A', message, data, cid);
-  }
-
-  /** Phase B started/completed */
-  phaseB(message: string, data?: Record<string, unknown>, cid?: string) {
-    this.log('info', '🔄', 'PHASE-B', message, data, cid);
-  }
-
   /** Tool execution */
   tool(message: string, data?: Record<string, unknown>, cid?: string) {
     this.log('info', '🔧', 'TOOL', message, data, cid);
@@ -291,7 +281,6 @@ export function createDebugLogger(context: string): DebugLogger {
  */
 export const debugLog = {
   bot: createDebugLogger('bot'),
-  orchestrator: createDebugLogger('orchestrator'),
   redis: createDebugLogger('redis'),
   tools: createDebugLogger('tools'),
   auth: createDebugLogger('auth'),

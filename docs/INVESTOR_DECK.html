@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>TallyFinance — Investor Brief</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary: #0364c6;
+    --dark: #023a7e;
+    --navy: #01306c;
+    --accent: #3B82F6;
+    --tint: #DBEAFE;
+    --surface: #F5F8FF;
+    --border: #BFDBFE;
+    --text: #1e293b;
+    --mid: #475569;
+    --light: #64748b;
+    --muted: #94a3b8;
+    --green: #059669;
+    --green-bg: #ecfdf5;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+  }
+
+  @page { size: A4; margin: 18mm 20mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text);
+    background: white;
+    line-height: 1.6;
+    font-size: 10.5px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 92vh;
+    text-align: center;
+  }
+  .cover-logo img { height: 56px; margin-bottom: 6px; filter: brightness(0) saturate(100%) invert(18%) sepia(95%) saturate(2000%) hue-rotate(205deg); }
+  .cover-sub { font-size: 10px; font-weight: 500; color: var(--light); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 56px; }
+  .cover h1 { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.25; max-width: 440px; margin-bottom: 10px; }
+  .cover .desc { font-size: 11px; color: var(--light); max-width: 380px; margin-bottom: 44px; }
+  .cover-meta { font-size: 8.5px; color: var(--muted); line-height: 2; }
+  .cover-meta strong { color: var(--mid); }
+  .cover-badge { display: inline-block; background: var(--red-bg); color: var(--red); font-size: 8px; font-weight: 600; padding: 3px 12px; border-radius: 20px; margin-top: 16px; border: 1px solid #fecaca; }
+
+  /* ── PAGE ── */
+  .page { padding: 0 48px; page-break-after: always; }
+  .page:last-of-type { page-break-after: auto; }
+  .ph { padding-top: 36px; padding-bottom: 24px; border-bottom: 2.5px solid var(--navy); margin-bottom: 24px; }
+  .pn { font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .pt { font-size: 22px; font-weight: 900; color: var(--navy); line-height: 1.2; }
+  .pl { font-size: 11px; color: var(--light); margin-top: 4px; }
+
+  /* ── TYPO ── */
+  h2 { font-size: 14px; font-weight: 800; color: var(--dark); margin: 24px 0 8px; }
+  h3 { font-size: 12px; font-weight: 700; color: var(--dark); margin: 18px 0 6px; }
+  p { margin-bottom: 8px; color: var(--mid); font-size: 10.5px; }
+  strong { color: var(--text); }
+  hr { border: none; height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ── METRICS ── */
+  .metrics { display: flex; gap: 16px; margin: 14px 0 20px; }
+  .metric { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; page-break-inside: avoid; }
+  .mv { font-size: 28px; font-weight: 900; color: var(--navy); line-height: 1; }
+  .mv.green { color: var(--green); }
+  .mv.red { color: var(--red); }
+  .ml { font-size: 8px; font-weight: 600; color: var(--light); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+
+  /* ── CALLOUT ── */
+  .co { border-radius: 8px; padding: 12px 16px; margin: 10px 0; page-break-inside: avoid; }
+  .co-b { background: var(--surface); border-left: 3px solid var(--primary); }
+  .co-g { background: var(--green-bg); border-left: 3px solid var(--green); }
+  .co-a { background: var(--amber-bg); border-left: 3px solid var(--amber); }
+  .co-r { background: var(--red-bg); border-left: 3px solid var(--red); }
+  .co h4 { font-size: 10.5px; font-weight: 700; margin-bottom: 3px; }
+  .co-b h4 { color: var(--primary); }
+  .co-g h4 { color: var(--green); }
+  .co-a h4 { color: var(--amber); }
+  .co-r h4 { color: var(--red); }
+  .co p { margin: 0; font-size: 10px; }
+
+  /* ── HIGHLIGHT ── */
+  .hl { background: linear-gradient(135deg, var(--surface), #eef4ff); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin: 12px 0; page-break-inside: avoid; }
+  .hl p { font-size: 13px; font-weight: 600; color: var(--dark); font-style: italic; margin: 0; line-height: 1.5; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9.5px; page-break-inside: avoid; }
+  th { background: var(--navy); color: white; font-weight: 700; text-align: left; padding: 8px 10px; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  th:first-child { border-radius: 6px 0 0 0; } th:last-child { border-radius: 0 6px 0 0; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; color: var(--mid); }
+  .n { font-weight: 700; color: var(--navy); }
+  .yes { color: var(--green); font-weight: 700; font-size: 14px; text-align: center; }
+  .no { color: var(--red); font-weight: 700; font-size: 14px; text-align: center; }
+
+  /* ── LISTS ── */
+  ul { padding-left: 0; list-style: none; margin-bottom: 8px; }
+  li { position: relative; padding-left: 14px; margin-bottom: 5px; font-size: 10.5px; color: var(--mid); }
+  li::before { content: ''; position: absolute; left: 0; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
+
+  /* ── PILLAR ── */
+  .pill { border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin: 8px 0; position: relative; overflow: hidden; page-break-inside: avoid; }
+  .pill::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .pill-1::before { background: var(--primary); } .pill-2::before { background: var(--green); } .pill-3::before { background: var(--accent); }
+  .pill-label { font-size: 8px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+  .pill h3 { margin-top: 0; }
+  .pill-tag { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-top: 6px; }
+  .tag-b { background: var(--tint); color: var(--primary); }
+  .tag-g { background: var(--green-bg); color: var(--green); }
+
+  /* ── LOOP ── */
+  .loop { background: var(--navy); border-radius: 12px; padding: 20px; margin: 14px 0; page-break-inside: avoid; }
+  .loop-t { text-align: center; font-size: 11px; font-weight: 800; color: white; margin-bottom: 12px; }
+  .loop-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .loop-s { background: white; border-radius: 10px; padding: 10px; font-size: 9px; font-weight: 600; color: var(--navy); text-align: center; width: 105px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .loop-e { font-size: 20px; display: block; margin-bottom: 2px; }
+  .loop-s small { font-size: 7.5px; color: var(--light); font-weight: 400; }
+  .loop-a { display: flex; align-items: center; color: rgba(255,255,255,0.4); font-size: 16px; }
+  .loop-n { text-align: center; font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 10px; font-style: italic; }
+
+  /* ── TWO COL ── */
+  .two { display: flex; gap: 16px; margin: 10px 0; page-break-inside: avoid; }
+  .two > div { flex: 1; }
+
+  /* ── TIMELINE ── */
+  .tl { border-left: 3px solid var(--primary); padding-left: 16px; margin: 12px 0; }
+  .tl-item { margin-bottom: 14px; page-break-inside: avoid; }
+  .tl-date { font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .tl-title { font-size: 11px; font-weight: 700; color: var(--navy); margin: 2px 0; }
+  .tl-desc { font-size: 10px; color: var(--mid); }
+
+  /* ── FOOTER ── */
+  .foot { text-align: center; padding: 30px 0 40px; font-size: 9px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══════════ COVER ══════════ -->
+<div class="cover">
+  <div class="cover-logo"><img src="../frontend_TallyFinance/public/biglogowhite.png" alt="TallyFinance"></div>
+  <div class="cover-sub">Finance</div>
+  <h1>Investor Brief</h1>
+  <p class="desc">Asistente financiero con IA que conecta automaticamente con bancos chilenos, detecta gastos hormiga, y pone el ahorro en piloto automatico.</p>
+  <div class="cover-meta">
+    <strong>Preparado por:</strong> Sebastian Derpsch, CTO &amp; Co-founder<br>
+    <strong>Fecha:</strong> Abril 2026<br>
+    <strong>Contacto:</strong> seba@tallyfinance.cl<br>
+  </div>
+  <div class="cover-badge">CONFIDENCIAL</div>
+</div>
+
+<!-- ══════════ 01 — RESUMEN ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 01</div><div class="pt">Resumen Ejecutivo</div></div>
+
+  <div class="hl">
+    <p>"Gus es tu companero financiero con personalidad. Se conecta a tu banco, detecta en que se te va la plata, corta el gasto hormiga, y pone tus ahorros a trabajar &mdash; todo en automatico, sin que tengas que abrir otra app."</p>
+  </div>
+
+  <h2>El problema</h2>
+  <p>El 68% de los jovenes chilenos entre 18 y 30 anos declara no tener control sobre sus gastos. Las apps de finanzas personales existen, pero tienen tasas de abandono superiores al 85% en el primer mes. Son aburridas, requieren input manual constante, y no generan habito.</p>
+
+  <h2>La oportunidad</h2>
+
+  <div class="metrics">
+    <div class="metric"><div class="mv">19M</div><div class="ml">Poblacion Chile</div></div>
+    <div class="metric"><div class="mv">5.2M</div><div class="ml">Jovenes 18-30</div></div>
+    <div class="metric"><div class="mv">0</div><div class="ml">Competidores con IA + banco automatico</div></div>
+    <div class="metric"><div class="mv">Jul 2027</div><div class="ml">Open Banking obligatorio</div></div>
+  </div>
+
+  <p>Fintonic, la unica app similar, <strong>cerro en Chile en marzo 2023</strong>. Los sustitutos actuales (Kuanto, Piggi, Fincrick) son primitivos: sin IA, sin conexion bancaria real, sin personalidad. El mercado esta vacio.</p>
+
+  <h2>Referencia internacional</h2>
+
+  <div class="metrics">
+    <div class="metric"><div class="mv">$350M</div><div class="ml">ARR de Cleo (EEUU)</div></div>
+    <div class="metric"><div class="mv">7M+</div><div class="ml">Usuarios Cleo</div></div>
+    <div class="metric"><div class="mv">50%</div><div class="ml">Conversion free → paid</div></div>
+    <div class="metric"><div class="mv">$11</div><div class="ml">CAC promedio Cleo</div></div>
+  </div>
+
+  <p><strong>Cleo</strong> (meetcleo.com) demuestra que el modelo asistente financiero conversacional + conexion bancaria funciona a escala masiva. No opera en Latam ni en espanol. TallyFinance es Cleo adaptado al mercado chileno, con ahorro gamificado inspirado en Qapital y personalidad local.</p>
+</div>
+
+<!-- ══════════ 02 — PRODUCTO ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 02</div><div class="pt">El Producto</div><div class="pl">Que es TallyFinance y como funciona.</div></div>
+
+  <h2>Gus: tu companero financiero</h2>
+  <p>Gus no es un chatbot generico. Es un personaje con identidad chilena, tono personalizable (amigable, estricto, roaster, motivacional), que entiende "lucas", chilenismos, y te habla como un amigo que sabe de plata. Vive en la app, la web, Telegram y WhatsApp.</p>
+
+  <h2>Los 3 pilares</h2>
+
+  <div class="pill pill-1">
+    <div class="pill-label">Pilar 01 — Ref: Cleo ($350M ARR)</div>
+    <h3>Tracking Automatico</h3>
+    <p>Conexion bancaria directa via Fintoc (9 bancos chilenos). Gus ve todas las transacciones, las categoriza con ML (identificando comercios, suscripciones y patrones), y envia alertas cuando te acercas a limites de presupuesto. Cero registro manual.</p>
+    <span class="pill-tag tag-b">Integrado con Fintoc</span>
+  </div>
+
+  <div class="pill pill-2">
+    <div class="pill-label">Pilar 02 — Ref: Qapital (rules engine)</div>
+    <h3>Ahorro Gamificado</h3>
+    <p>Motor de reglas automaticas: redondeo de compras, "guilty pleasure" (gastas en X → ahorras Y), challenge de 52 semanas, ahorro por porcentaje del sueldo. Metas visuales con barras de progreso. Todo configurable via chat con Gus.</p>
+    <span class="pill-tag tag-b">Sobre data real del banco</span>
+  </div>
+
+  <div class="pill pill-3">
+    <div class="pill-label">Pilar 03 — Diferenciador propio</div>
+    <h3>Coaching con Personalidad</h3>
+    <p>Roast mode (Gus te destruye por tus malos habitos), toast mode (te felicita por ahorrar), resumenes semanales, deteccion de suscripciones olvidadas. Cuatro tonos de personalidad. Contenido compartible y viral.</p>
+    <span class="pill-tag tag-g">Ya funciona</span>
+  </div>
+
+  <h2>Loop de valor</h2>
+
+  <div class="loop">
+    <div class="loop-t">Experiencia automatica del usuario</div>
+    <div class="loop-row">
+      <div class="loop-s"><span class="loop-e">&#x1F3E6;</span>Conecta banco<br><small>via Fintoc</small></div>
+      <div class="loop-a">&rarr;</div>
+      <div class="loop-s"><span class="loop-e">&#x1F4B3;</span>Transacciones<br><small>llegan solas</small></div>
+      <div class="loop-a">&rarr;</div>
+      <div class="loop-s"><span class="loop-e">&#x1F916;</span>ML categoriza<br><small>merchant + tipo</small></div>
+      <div class="loop-a">&rarr;</div>
+      <div class="loop-s"><span class="loop-e">&#x1F50D;</span>Detecta patrones<br><small>gastos hormiga</small></div>
+      <div class="loop-a">&rarr;</div>
+      <div class="loop-s"><span class="loop-e">&#x1F3AF;</span>Activa reglas<br><small>ahorro automatico</small></div>
+      <div class="loop-a">&rarr;</div>
+      <div class="loop-s"><span class="loop-e">&#x1F4AC;</span>Gus te avisa<br><small>roasts + alertas</small></div>
+    </div>
+    <div class="loop-n">Se repite diariamente sin intervencion del usuario.</div>
+  </div>
+</div>
+
+<!-- ══════════ 03 — MODELO DE NEGOCIO ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 03</div><div class="pt">Modelo de Negocio</div><div class="pl">Freemium + Premium + Interchange futuro.</div></div>
+
+  <h2>Planes</h2>
+
+  <table>
+    <thead><tr><th>Feature</th><th style="width:80px">Free</th><th style="width:120px">Premium $4.990/mes</th></tr></thead>
+    <tbody>
+      <tr><td>Chat con Gus (consultas, coaching, roasts)</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Presupuestos y metas de ahorro</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Roast mode / Toast mode</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Dashboard web</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Resumenes semanales</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Conexion bancaria automatica (9 bancos)</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>ML: deteccion de comercios y suscripciones</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Rules engine de ahorro</strong> (redondeo, guilty pleasure, 52-week)</td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Alertas inteligentes y deteccion de sobregiro</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>"Me alcanza para X?" con saldo real</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Logica:</strong> El plan gratuito funciona completo via chat. El premium desbloquea la automatizacion total via banco. Es el mismo salto que llevo a Cleo a 50% de conversion free-to-paid.</p>
+
+  <h2>Fuentes de ingreso</h2>
+
+  <table>
+    <thead><tr><th>Fuente</th><th>Ingreso / usuario / mes</th><th>Timeline</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Suscripcion premium</strong></td><td class="n">$4.990 CLP (~$5 USD)</td><td>Ahora</td></tr>
+      <tr><td>Interchange tarjeta prepago (Pomelo)</td><td class="n">$2.000 - $4.000 CLP</td><td>2027</td></tr>
+      <tr><td><strong>Total potencial</strong></td><td class="n"><strong>$5.000 - $9.000 CLP/usuario/mes</strong></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Proyeccion de usuarios</h2>
+
+  <table>
+    <thead><tr><th>Periodo</th><th>Usuarios totales</th><th>Premium (est. 30%)</th><th>MRR estimado</th></tr></thead>
+    <tbody>
+      <tr><td>Mes 6</td><td class="n">1.000</td><td class="n">300</td><td class="n">$1.5M CLP</td></tr>
+      <tr><td>Mes 12</td><td class="n">5.000</td><td class="n">1.500</td><td class="n">$7.5M CLP</td></tr>
+      <tr><td>Mes 18</td><td class="n">15.000</td><td class="n">4.500</td><td class="n">$22.5M CLP</td></tr>
+      <tr><td>Mes 24</td><td class="n">40.000</td><td class="n">12.000</td><td class="n">$60M CLP</td></tr>
+    </tbody>
+  </table>
+
+  <p>Supuestos: conversion free-to-paid de 30% (conservador vs 50% de Cleo). Sin incluir interchange de tarjeta prepago.</p>
+</div>
+
+<!-- ══════════ 04 — OPEN BANKING ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 04</div><div class="pt">Open Banking en Chile</div><div class="pl">El catalizador regulatorio que define el timing.</div></div>
+
+  <h2>El Sistema de Finanzas Abiertas (SFA)</h2>
+  <p>La <strong>Ley 21.521 (Ley Fintech)</strong> y la <strong>NCG N.514 de la CMF</strong> obligan a todos los bancos, cooperativas, aseguradoras y AFP a abrir sus datos via APIs estandarizadas. Esto crea un mercado completamente nuevo de servicios financieros basados en datos.</p>
+
+  <div class="metrics">
+    <div class="metric"><div class="mv">Jul 2027</div><div class="ml">Entrada en vigencia SFA</div></div>
+    <div class="metric"><div class="mv">24 meses</div><div class="ml">Historial transaccional obligatorio</div></div>
+    <div class="metric"><div class="mv">5 min</div><div class="ml">Latencia maxima de datos</div></div>
+    <div class="metric"><div class="mv">~2029</div><div class="ml">Implementacion total (seguros, AFP)</div></div>
+  </div>
+
+  <h2>Por que importa para TallyFinance</h2>
+
+  <div class="co co-g">
+    <h4>Hoy: Conexion via Fintoc (pre-Open Banking)</h4>
+    <p>Ya operamos con 9 bancos chilenos via Fintoc. Vemos transacciones de cuentas corrientes y vista (debito, PAC, TEF). Esto cubre la mayoria del gasto del segmento universitario (CuentaRUT + debito).</p>
+  </div>
+
+  <div class="co co-b">
+    <h4>2027+: APIs oficiales del SFA</h4>
+    <p>Cuando el SFA entre en vigencia, accederemos a TODAS las transacciones (incluyendo tarjetas de credito), de TODOS los bancos, via APIs estandarizadas con OAuth 2.0. La cobertura pasa de 70% a 100%.</p>
+  </div>
+
+  <h2>Ventaja de timing</h2>
+  <p><strong>Estamos construyendo la infraestructura ANTES de que Open Banking sea obligatorio.</strong> Cuando las APIs oficiales se abran, ya tendremos producto validado, usuarios activos, ML entrenado, y marca posicionada. Los competidores que empiecen en 2027 llegaran 18+ meses tarde.</p>
+
+  <hr>
+
+  <h2>Limitaciones actuales (pre-SFA) y mitigacion</h2>
+
+  <table>
+    <thead><tr><th>Limitacion</th><th>Impacto</th><th>Mitigacion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Tarjetas de credito no visibles</strong></td>
+        <td>No vemos compras con TC, solo el pago mensual consolidado</td>
+        <td>El target (universitarios) usa primariamente debito/CuentaRUT. TC se resuelve con SFA en 2027</td>
+      </tr>
+      <tr>
+        <td><strong>Descriptions sin estructura</strong></td>
+        <td>El banco devuelve texto libre ("COMPRA NAC 05/04 LIDER") sin campo merchant</td>
+        <td>ML parser que convierte description en categoria + comercio. Copilot Money hace exactamente esto</td>
+      </tr>
+      <tr>
+        <td><strong>8 bancos + SII (no fintechs)</strong></td>
+        <td>No cubre MACH, Tenpo, Banco Falabella</td>
+        <td>Los 8 bancos principales cubren 90%+ del mercado. SFA agregara el resto</td>
+      </tr>
+      <tr>
+        <td><strong>Costo de Fintoc (6.5 UF minimo/mes)</strong></td>
+        <td>~$250K CLP fijo antes de tener usuarios</td>
+        <td>Negociando piloto sin minimo. Breakeven con ~50 usuarios premium</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════ 05 — COMPETENCIA ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 05</div><div class="pt">Ventaja Competitiva</div><div class="pl">Nadie en Chile combina estas 3 cosas.</div></div>
+
+  <h2>Panorama competitivo en Chile</h2>
+
+  <table>
+    <thead><tr><th>App</th><th>Precio</th><th>Banco automatico</th><th>IA / Chat</th><th>Ahorro gamificado</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>TallyFinance</strong></td>
+        <td class="n">$4.990/mes</td>
+        <td class="yes">&#10003; 9 bancos</td>
+        <td class="yes">&#10003; Gus (Gemini)</td>
+        <td class="yes">&#10003; Rules engine</td>
+      </tr>
+      <tr><td>Kuanto</td><td class="n">$4.990/mes</td><td>Email forwarding (3)</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+      <tr><td>Piggi</td><td class="n">Gratis</td><td>Upload manual</td><td class="no">&#10007;</td><td class="no">&#10007;</td></tr>
+      <tr><td>Fincrick</td><td class="n">$2.500/mes</td><td class="no">&#10007;</td><td class="no">&#10007;</td><td>Basica</td></tr>
+      <tr><td>Fintonic</td><td>&mdash;</td><td colspan="3" style="color:var(--muted);font-style:italic">Cerro en Chile, marzo 2023</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Moat (fosos competitivos)</h2>
+
+  <div class="two">
+    <div>
+      <h3>1. Gus como activo de marca</h3>
+      <p>Personalidad irrecplicable. Cleo invierte en 15 comediantes para mantener su tono. Gus es el equivalente chileno: entiende lucas, chilenismos, y genera contenido compartible (roasts). <strong>La personalidad es el producto, no una feature.</strong></p>
+
+      <h3>2. Data advantage compuesto</h3>
+      <p>Cada transaccion que procesamos entrena el ML de categorizacion. Mas usuarios → mejor parser → mejor experiencia → mas usuarios. Este ciclo es dificil de replicar para un competidor que empiece despues.</p>
+    </div>
+    <div>
+      <h3>3. First-mover en Open Banking</h3>
+      <p>Cuando el SFA sea obligatorio (2027), seremos la unica app con producto validado, ML entrenado, y usuarios activos. Los bancos tendran features basicas de PFM en sus apps, pero sin personalidad ni ahorro gamificado.</p>
+
+      <h3>4. Costo de cambio</h3>
+      <p>Historial de transacciones categorizadas, metas en progreso, reglas de ahorro configuradas, personalidad calibrada. Todo genera lock-in organico sin contratos.</p>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Comparacion con Cleo (referencia global)</h2>
+
+  <table>
+    <thead><tr><th>Dimension</th><th>Cleo (EEUU)</th><th>TallyFinance (Chile)</th></tr></thead>
+    <tbody>
+      <tr><td>Modelo</td><td>Chat IA + conexion bancaria</td><td>Chat IA + conexion bancaria + ahorro gamificado</td></tr>
+      <tr><td>Canal</td><td>App propia (iOS only)</td><td>App + web + Telegram + WhatsApp</td></tr>
+      <tr><td>Personalidad</td><td>"Big Sis Energy" (ingles)</td><td>Gus (chileno, 4 tonos)</td></tr>
+      <tr><td>Ahorro</td><td>Basico (autosave)</td><td>Rules engine completo (Qapital-style)</td></tr>
+      <tr><td>Mercado</td><td>EEUU solamente</td><td>Chile (expansion Latam)</td></tr>
+      <tr><td>Revenue</td><td>$350M ARR</td><td>Pre-revenue</td></tr>
+      <tr><td>Idioma</td><td>Solo ingles</td><td>Espanol chileno nativo</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════ 06 — TECNOLOGIA ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 06</div><div class="pt">Tecnologia</div><div class="pl">Stack, arquitectura, y estado actual.</div></div>
+
+  <h2>Arquitectura</h2>
+
+  <table>
+    <thead><tr><th>Componente</th><th>Tecnologia</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Backend</strong></td><td>NestJS 11 / TypeScript 5.7</td><td class="yes">&#10003; Produccion</td></tr>
+      <tr><td><strong>IA / LLM</strong></td><td>Gemini (function calling) + OpenAI</td><td class="yes">&#10003; Produccion</td></tr>
+      <tr><td><strong>Frontend</strong></td><td>React 19 / Vite 7 / Tailwind</td><td class="yes">&#10003; Produccion</td></tr>
+      <tr><td><strong>Base de datos</strong></td><td>Supabase (PostgreSQL)</td><td class="yes">&#10003; Produccion</td></tr>
+      <tr><td><strong>Cache</strong></td><td>Redis (Upstash)</td><td class="yes">&#10003; Produccion</td></tr>
+      <tr><td><strong>Conexion bancaria</strong></td><td>Fintoc API (9 bancos Chile)</td><td>Sandbox validado</td></tr>
+      <tr><td><strong>Hosting</strong></td><td>Render (backend) + Vercel (frontend)</td><td class="yes">&#10003; Produccion</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Orquestacion IA (Two-Phase)</h2>
+  <p>El sistema usa un patron de doble fase para maximizar precision y personalidad:</p>
+
+  <div class="two">
+    <div class="co co-b">
+      <h4>Fase A — Entender</h4>
+      <p>Analiza el mensaje del usuario, identifica intencion, y decide que herramienta ejecutar (registrar gasto, consultar balance, etc.). Modelo con temp=0.3 para precision.</p>
+    </div>
+    <div class="co co-b">
+      <h4>Fase B — Responder</h4>
+      <p>Toma el resultado de la herramienta + contexto del usuario (mood, estilo, historial) y genera la respuesta con la personalidad de Gus. Temp=0.7 para creatividad.</p>
+    </div>
+  </div>
+
+  <h2>ML para categorizacion de transacciones</h2>
+  <p>Fintoc devuelve transacciones con un campo <code>description</code> de texto libre del banco (ej: "COMPRA NAC 05/04 LIDER"). Construimos un parser ML que convierte esto en:</p>
+
+  <table>
+    <thead><tr><th>Input (description del banco)</th><th>Output: Merchant</th><th>Output: Categoria</th></tr></thead>
+    <tbody>
+      <tr><td>"COMPRA NAC 05/04 LIDER"</td><td>Lider</td><td>Supermercado</td></tr>
+      <tr><td>"CARGO AUTOMATICO SPOTIFY"</td><td>Spotify</td><td>Suscripcion</td></tr>
+      <tr><td>"COMPRA INT UBER EATS"</td><td>Uber Eats</td><td>Delivery</td></tr>
+      <tr><td>"PAC ENTEL"</td><td>Entel</td><td>Telefonia</td></tr>
+    </tbody>
+  </table>
+
+  <p>Referencia: Copilot Money ($4.1M ARR) logra 93% de precision en categorizacion automatica con ML per-user. Es un problema resuelto en la industria.</p>
+
+  <h2>Datos de la API Fintoc (validado en sandbox)</h2>
+
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Que nos da</th></tr></thead>
+    <tbody>
+      <tr><td><code>amount</code></td><td>integer</td><td>Monto en centavos (+ ingreso, - egreso)</td></tr>
+      <tr><td><code>description</code></td><td>string</td><td>Texto del banco → parseamos con ML</td></tr>
+      <tr><td><code>type</code></td><td>string</td><td>"transfer", "check", "other" (compras = other)</td></tr>
+      <tr><td><code>post_date</code></td><td>ISO 8601</td><td>Fecha contable</td></tr>
+      <tr><td><code>sender_account</code></td><td>object</td><td>Nombre + RUT + banco (solo transfers)</td></tr>
+      <tr><td><code>status</code></td><td>string</td><td>confirmed, processing, reversed</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Validacion sandbox:</strong> 57% de movimientos tipo "other" (compras), 43% tipo "transfer". Confirma que las compras con debito SI aparecen y son la mayoria.</p>
+</div>
+
+<!-- ══════════ 07 — ROADMAP ══════════ -->
+<div class="page">
+  <div class="ph"><div class="pn">Seccion 07</div><div class="pt">Roadmap</div><div class="pl">Del MVP actual a Open Banking.</div></div>
+
+  <div class="tl">
+    <div class="tl-item">
+      <div class="tl-date">Q2 2026 — Ahora</div>
+      <div class="tl-title">MVP con Gus + Fintoc</div>
+      <div class="tl-desc">Integracion Fintoc en produccion. ML parser de descriptions. Categorización automatica. Lanzamiento de features premium (conexion bancaria, alertas, "me alcanza para X?").</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Q3 2026</div>
+      <div class="tl-title">Ahorro gamificado</div>
+      <div class="tl-desc">Rules engine completo: redondeo, guilty pleasure, 52-week challenge, payday rule. Metas visuales con progreso. Roast mode basado en datos reales del banco.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Q4 2026</div>
+      <div class="tl-title">Crecimiento + App nativa</div>
+      <div class="tl-desc">Landing page optimizada con chat en vivo de Gus. Campana TikTok (modelo Cleo). App nativa iOS/Android con notificaciones push. Meta: 5.000 usuarios.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Q1 2027</div>
+      <div class="tl-title">Tarjeta prepago (Pomelo)</div>
+      <div class="tl-desc">Tarjeta prepago TallyFinance via BIN sponsorship con Pomelo. Captura 100% de transacciones con tarjeta propia. Revenue adicional via interchange (0.80%).</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Q3 2027</div>
+      <div class="tl-title">Open Banking (SFA)</div>
+      <div class="tl-desc">Migracion a APIs oficiales del SFA. Cobertura 100% de transacciones (incluyendo tarjetas de credito). Registro como PSBI ante la CMF. Acceso a seguros e inversiones.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2028</div>
+      <div class="tl-title">Expansion Latam</div>
+      <div class="tl-desc">Replicar modelo en mercados con Open Banking avanzado: Colombia, Mexico, Brasil. Fintoc ya opera en Mexico. Gus se adapta al espanol local de cada mercado.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Uso de fondos (si aplica)</h2>
+
+  <div class="metrics">
+    <div class="metric"><div class="mv">40%</div><div class="ml">Producto (ML, Fintoc, features)</div></div>
+    <div class="metric"><div class="mv">30%</div><div class="ml">Crecimiento (marketing, TikTok)</div></div>
+    <div class="metric"><div class="mv">20%</div><div class="ml">Equipo (2-3 hires clave)</div></div>
+    <div class="metric"><div class="mv">10%</div><div class="ml">Infra + legal + compliance</div></div>
+  </div>
+
+  <h2>Metricas objetivo a 12 meses</h2>
+
+  <div class="metrics">
+    <div class="metric"><div class="mv">5.000</div><div class="ml">Usuarios activos</div></div>
+    <div class="metric"><div class="mv">1.500</div><div class="ml">Suscriptores premium</div></div>
+    <div class="metric"><div class="mv">$7.5M</div><div class="ml">MRR mensual (CLP)</div></div>
+    <div class="metric"><div class="mv">93%+</div><div class="ml">Precision ML categorizacion</div></div>
+  </div>
+
+  <div class="foot">
+    <p>TallyFinance SPA &mdash; Documento confidencial para inversores</p>
+    <p>Abril 2026 &mdash; seba@tallyfinance.cl</p>
+  </div>
+</div>
+
+</body>
+</html>

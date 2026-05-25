@@ -149,7 +149,7 @@ export class AdminMessagesService {
   async getUserProfile(userId: string): Promise<{
     email: string | null;
     full_name: string | null;
-    personality: { tone: string; intensity: number } | null;
+    personality: { tone: string } | null;
     spending_expectations: Array<{
       period: string;
       active: boolean;
@@ -174,12 +174,12 @@ export class AdminMessagesService {
       // Ignore errors
     }
 
-    // Get personality
-    const { data: personality } = await this.supabase
-      .from('personality_snapshot')
-      .select('tone, intensity')
-      .eq('user_id', userId)
-      .single();
+    // Get tone from user_prefs
+    const { data: prefs } = await this.supabase
+      .from('user_prefs')
+      .select('bot_tone')
+      .eq('id', userId)
+      .maybeSingle();
 
     // Get spending expectations
     const { data: spending } = await this.supabase
@@ -198,9 +198,7 @@ export class AdminMessagesService {
     return {
       email,
       full_name: fullName,
-      personality: personality
-        ? { tone: personality.tone, intensity: personality.intensity }
-        : null,
+      personality: prefs?.bot_tone ? { tone: prefs.bot_tone } : null,
       spending_expectations: spending || [],
       goals: goals || [],
     };

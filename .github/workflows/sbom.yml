@@ -1,0 +1,59 @@
+name: SBOM
+
+on:
+  schedule:
+    # Sundays at 08:00 UTC — weekly snapshot.
+    - cron: '0 8 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: CycloneDX SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compute snapshot date
+        id: date
+        run: echo "stamp=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Backend — install + SBOM
+        working-directory: backend
+        run: |
+          npm ci --ignore-scripts
+          npx --yes @cyclonedx/cyclonedx-npm@latest \
+            --omit=dev \
+            --spec-version=1.6 \
+            --output-format=JSON \
+            --output-file=../docs/SBOM/backend-${{ steps.date.outputs.stamp }}.cdx.json
+          # Also refresh the "latest" pointer file for easy consumption.
+          cp ../docs/SBOM/backend-${{ steps.date.outputs.stamp }}.cdx.json \
+             ../docs/SBOM/backend-latest.cdx.json
+
+      - name: Frontend — install + SBOM
+        working-directory: frontend_TallyFinance
+        run: |
+          npm ci --ignore-scripts
+          npx --yes @cyclonedx/cyclonedx-npm@latest \
+            --omit=dev \
+            --spec-version=1.6 \
+            --output-format=JSON \
+            --output-file=../docs/SBOM/frontend-${{ steps.date.outputs.stamp }}.cdx.json
+          cp ../docs/SBOM/frontend-${{ steps.date.outputs.stamp }}.cdx.json \
+             ../docs/SBOM/frontend-latest.cdx.json
+
+      - name: Commit if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: 'docs/SBOM/*.cdx.json'
+          commit_message: 'chore(sbom): weekly snapshot ${{ steps.date.outputs.stamp }}'
+          commit_user_name: tallyfinance-bot
+          commit_user_email: bot@tallyfinance.cl

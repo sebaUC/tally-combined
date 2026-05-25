@@ -91,12 +91,12 @@ export class AuthController implements OnModuleInit {
   private assertStrongPassword(
     pw: string | undefined,
   ): asserts pw is string {
-    // Min 12 chars + at least one lowercase, uppercase, digit, and symbol.
+    // Min 8 chars + at least one lowercase, uppercase, digit, and symbol.
     const STRONG_PW_REGEX =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pw || !STRONG_PW_REGEX.test(pw)) {
       throw new BadRequestException(
-        'La contraseña debe tener al menos 12 caracteres e incluir mayúscula, minúscula, número y símbolo.',
+        'La contraseña debe tener al menos 8 caracteres e incluir mayúscula, minúscula, número y símbolo.',
       );
     }
   }
