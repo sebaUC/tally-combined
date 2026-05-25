@@ -230,7 +230,9 @@ export class AuthService {
         'accounts',
         'spending_expectations',
         'income_expectations',
-        'personality_snapshot',
+        'user_commitments',
+        'user_insights',
+        'user_insights_history',
         'user_emotional_log',
       ];
       for (const table of tables) {

@@ -1,0 +1,4485 @@
+════════════════════════════════════════════════════════════
+  PERSONALITY BATTERY
+════════════════════════════════════════════════════════════
+  Run timestamp: 2026-05-19 11:20:59
+  Base URL:      http://localhost:3001
+  User ID:       8677d11d-3d5f-45af-a3ec-d86f8f926c40
+  Cases:         30 por tono
+  Tonos:         neutral friendly strict toxic (4 total)
+  Total runs:    120
+  Log file:      /Users/sebaderpsch/TallyFinance/backend/scripts/personality/out/battery-20260519-112059.txt
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+  TONO: neutral
+════════════════════════════════════════════════════════════
+  ✓ bot_tone actualizado a 'neutral'
+  ✓ Conversación + ctx reseteados
+
+────────────────────────────────────────────────────────────
+  [1/120] expense_trivial_below_p50  (neutral)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto chico, debería caer ≤ p50. Respuesta corta esperada (acknowledge + emoji).
+  Esperado:   register_expense
+
+  > USER:
+    gasté 2 lucas en agua
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.577, alto $29.760, atípico $46.669
+    
+    Mes actual: $272.224 en 19 días
+      Pace: $14.328/día → proyectado $444.155 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $5.096/$10.000 (51%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=276 · archetype=whale
+    tx_amount: p50=$4577  p90=$29760.000000000004  p95=$46669.19999999997
+
+  ── FUNCTIONS CALLED (1) ──
+    ▸ register_expense({"category":"Agua","amount":2000})
+        result.ok=true · data.keys=[amount,antExpense,category,description,icon,id,name,posted_at]
+
+  ── REPLY ──
+    He registrado tu gasto de $2.000 en la categoría Hogar. Tu saldo actual es de $1.483.
+
+  ── TOKENS ──
+    input=3585  output=53  total=3638
+
+────────────────────────────────────────────────────────────
+  [2/120] expense_ant_pattern  (neutral)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto hormiga en categoría típica. Debería detectar el patrón si ant_expense_count es alto.
+  Esperado:   register_expense
+
+  > USER:
+    un café 1500
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [3/120] expense_standard  (neutral)
+  Categoría:  register_expense / magnitud_estandar
+  Descripción: Gasto cerca de p50-p75 del user. Comentario estándar con un ángulo del tono.
+  Esperado:   register_expense
+
+  > USER:
+    almuerzo 8 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [4/120] expense_notable  (neutral)
+  Categoría:  register_expense / magnitud_notable
+  Descripción: Gasto entre p75-p90 del user. Respuesta más larga, con dato real del context.
+  Esperado:   register_expense
+
+  > USER:
+    compré ropa por 35 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [5/120] expense_atypical  (neutral)
+  Categoría:  register_expense / magnitud_atipica
+  Descripción: Gasto sobre p90 del user. Respuesta plena, tono a potencia, comparación con patrón.
+  Esperado:   register_expense
+
+  > USER:
+    100 lucas en vacaciones
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [6/120] expense_extreme  (neutral)
+  Categoría:  register_expense / magnitud_extrema
+  Descripción: Gasto muy sobre p95 — categoría inusual (Tech). Atípico extremo.
+  Esperado:   register_expense
+
+  > USER:
+    compré un notebook nuevo, 800 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [7/120] expense_no_amount  (neutral)
+  Categoría:  register_expense / edge_case
+  Descripción: Sin monto explícito. El bot debe PEDIR el monto, no inventarlo.
+  Esperado:   __no_function__
+
+  > USER:
+    gasté plata en uber
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [8/120] income_salary  (neutral)
+  Categoría:  register_income / ingreso_regular
+  Descripción: Ingreso mensual típico (sueldo).
+  Esperado:   register_income
+
+  > USER:
+    me llegó el sueldo, 850 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [9/120] income_recurring  (neutral)
+  Categoría:  register_income / ingreso_recurrente
+  Descripción: Ingreso recurrente — debe crear o linkear income_expectation.
+  Esperado:   register_income
+
+  > USER:
+    facturé 200 mil del cliente del mes, es recurrente
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [10/120] income_oneoff  (neutral)
+  Categoría:  register_income / ingreso_extra
+  Descripción: Ingreso atípico no recurrente (venta puntual).
+  Esperado:   register_income
+
+  > USER:
+    vendí mi bici en 250 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [11/120] delete_last  (neutral)
+  Categoría:  delete_transaction / resolucion_contextual
+  Descripción: Resuelve contextualmente la última transacción.
+  Esperado:   delete_transaction
+
+  > USER:
+    elimina el último gasto
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [12/120] delete_by_hint  (neutral)
+  Categoría:  delete_transaction / resolucion_por_hint
+  Descripción: Resuelve por hint de categoría.
+  Esperado:   delete_transaction
+
+  > USER:
+    borra el gasto de ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [13/120] edit_amount  (neutral)
+  Categoría:  edit_transaction / edicion_monto
+  Descripción: Edita el monto de la última transacción.
+  Esperado:   edit_transaction
+
+  > USER:
+    el café no era 1500, fue 2000
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [14/120] category_list  (neutral)
+  Categoría:  manage_category / list
+  Descripción: Lista las categorías del user.
+  Esperado:   manage_category
+
+  > USER:
+    muéstrame mis categorías
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [15/120] category_create  (neutral)
+  Categoría:  manage_category / create
+  Descripción: Crea una categoría nueva.
+  Esperado:   manage_category
+
+  > USER:
+    agrega una categoría llamada Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [16/120] category_rename  (neutral)
+  Categoría:  manage_category / rename
+  Descripción: Renombra una categoría existente. Asume que 'Ocio' o 'Entretenimiento' existe — si no, esperar NOT_FOUND y respuesta del tono.
+  Esperado:   manage_category
+
+  > USER:
+    renombra Ocio a Entretenimiento
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [17/120] category_delete  (neutral)
+  Categoría:  manage_category / delete
+  Descripción: Elimina una categoría. Si tiene tx, el bot debe pedir confirmación (HAS_TRANSACTIONS).
+  Esperado:   manage_category
+
+  > USER:
+    elimina la categoría Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [18/120] query_list_week  (neutral)
+  Categoría:  query_transactions / list_periodo
+  Descripción: Lista de gastos de la semana.
+  Esperado:   query_transactions
+
+  > USER:
+    muéstrame mis gastos de la semana
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [19/120] query_sum_category  (neutral)
+  Categoría:  query_transactions / sum_filtrado
+  Descripción: Suma con filtro por categoría.
+  Esperado:   query_transactions
+
+  > USER:
+    cuánto gasté en transporte este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [20/120] query_count  (neutral)
+  Categoría:  query_transactions / count
+  Descripción: Conteo de transacciones del mes.
+  Esperado:   query_transactions
+
+  > USER:
+    cuántos gastos llevo este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [21/120] balance_simple  (neutral)
+  Categoría:  get_balance / balance_basico
+  Descripción: Consulta de balance directo.
+  Esperado:   get_balance
+
+  > USER:
+    cuánto tengo
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [22/120] balance_breakdown  (neutral)
+  Categoría:  get_balance / balance_desglosado
+  Descripción: Balance con desglose por categoría — include_breakdown=true.
+  Esperado:   get_balance
+
+  > USER:
+    muéstrame el desglose del mes por categoría
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [23/120] set_balance_direct  (neutral)
+  Categoría:  set_balance / ajuste_directo
+  Descripción: Override de balance — NO crea transacción.
+  Esperado:   set_balance
+
+  > USER:
+    tengo 500 mil en la cuenta
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [24/120] identity  (neutral)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de identidad — debe responder en personaje, no como FAQ.
+  Esperado:   get_app_info
+
+  > USER:
+    quién eres
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [25/120] capabilities  (neutral)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de capacidades — no debe listar funciones como menú.
+  Esperado:   get_app_info
+
+  > USER:
+    qué puedes hacer
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [26/120] greeting  (neutral)
+  Categoría:  conversacional / saludo
+  Descripción: Saludo seco — la respuesta debe estar en el tono, no genérica.
+  Esperado:   __no_function__
+
+  > USER:
+    hola
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [27/120] multi_two_expenses  (neutral)
+  Categoría:  multi_accion / dos_gastos
+  Descripción: Dos gastos en paralelo — debe llamar register_expense 2 veces.
+  Esperado:   register_expense, register_expense
+
+  > USER:
+    gasté 5 lucas en almuerzo y 3 mil en café
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [28/120] multi_delete_register  (neutral)
+  Categoría:  multi_accion / delete_plus_register
+  Descripción: Delete + register en un turno. El reorder del client manda delete primero.
+  Esperado:   delete_transaction, register_expense
+
+  > USER:
+    borra el último y registra 20 mil en ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [29/120] out_of_domain  (neutral)
+  Categoría:  edge_case / redirect
+  Descripción: Tema fuera del scope. Debe redirigir CON la voz del tono (no genérico).
+  Esperado:   __no_function__
+
+  > USER:
+    qué opinas de la política chilena?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [30/120] ambiguous_followup  (neutral)
+  Categoría:  edge_case / conversacional_ambiguo
+  Descripción: Follow-up vago. El bot debe usar la voz del tono y resolver con criterio.
+  Esperado:   __no_function__
+
+  > USER:
+    y eso?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+
+════════════════════════════════════════════════════════════
+  TONO: friendly
+════════════════════════════════════════════════════════════
+  ✓ bot_tone actualizado a 'friendly'
+  ✓ Conversación + ctx reseteados
+
+────────────────────────────────────────────────────────────
+  [1/120] expense_trivial_below_p50  (friendly)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto chico, debería caer ≤ p50. Respuesta corta esperada (acknowledge + emoji).
+  Esperado:   register_expense
+
+  > USER:
+    gasté 2 lucas en agua
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [2/120] expense_ant_pattern  (friendly)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto hormiga en categoría típica. Debería detectar el patrón si ant_expense_count es alto.
+  Esperado:   register_expense
+
+  > USER:
+    un café 1500
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [3/120] expense_standard  (friendly)
+  Categoría:  register_expense / magnitud_estandar
+  Descripción: Gasto cerca de p50-p75 del user. Comentario estándar con un ángulo del tono.
+  Esperado:   register_expense
+
+  > USER:
+    almuerzo 8 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [4/120] expense_notable  (friendly)
+  Categoría:  register_expense / magnitud_notable
+  Descripción: Gasto entre p75-p90 del user. Respuesta más larga, con dato real del context.
+  Esperado:   register_expense
+
+  > USER:
+    compré ropa por 35 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [5/120] expense_atypical  (friendly)
+  Categoría:  register_expense / magnitud_atipica
+  Descripción: Gasto sobre p90 del user. Respuesta plena, tono a potencia, comparación con patrón.
+  Esperado:   register_expense
+
+  > USER:
+    100 lucas en vacaciones
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [6/120] expense_extreme  (friendly)
+  Categoría:  register_expense / magnitud_extrema
+  Descripción: Gasto muy sobre p95 — categoría inusual (Tech). Atípico extremo.
+  Esperado:   register_expense
+
+  > USER:
+    compré un notebook nuevo, 800 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [7/120] expense_no_amount  (friendly)
+  Categoría:  register_expense / edge_case
+  Descripción: Sin monto explícito. El bot debe PEDIR el monto, no inventarlo.
+  Esperado:   __no_function__
+
+  > USER:
+    gasté plata en uber
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [8/120] income_salary  (friendly)
+  Categoría:  register_income / ingreso_regular
+  Descripción: Ingreso mensual típico (sueldo).
+  Esperado:   register_income
+
+  > USER:
+    me llegó el sueldo, 850 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [9/120] income_recurring  (friendly)
+  Categoría:  register_income / ingreso_recurrente
+  Descripción: Ingreso recurrente — debe crear o linkear income_expectation.
+  Esperado:   register_income
+
+  > USER:
+    facturé 200 mil del cliente del mes, es recurrente
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [10/120] income_oneoff  (friendly)
+  Categoría:  register_income / ingreso_extra
+  Descripción: Ingreso atípico no recurrente (venta puntual).
+  Esperado:   register_income
+
+  > USER:
+    vendí mi bici en 250 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [11/120] delete_last  (friendly)
+  Categoría:  delete_transaction / resolucion_contextual
+  Descripción: Resuelve contextualmente la última transacción.
+  Esperado:   delete_transaction
+
+  > USER:
+    elimina el último gasto
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [12/120] delete_by_hint  (friendly)
+  Categoría:  delete_transaction / resolucion_por_hint
+  Descripción: Resuelve por hint de categoría.
+  Esperado:   delete_transaction
+
+  > USER:
+    borra el gasto de ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [13/120] edit_amount  (friendly)
+  Categoría:  edit_transaction / edicion_monto
+  Descripción: Edita el monto de la última transacción.
+  Esperado:   edit_transaction
+
+  > USER:
+    el café no era 1500, fue 2000
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [14/120] category_list  (friendly)
+  Categoría:  manage_category / list
+  Descripción: Lista las categorías del user.
+  Esperado:   manage_category
+
+  > USER:
+    muéstrame mis categorías
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [15/120] category_create  (friendly)
+  Categoría:  manage_category / create
+  Descripción: Crea una categoría nueva.
+  Esperado:   manage_category
+
+  > USER:
+    agrega una categoría llamada Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [16/120] category_rename  (friendly)
+  Categoría:  manage_category / rename
+  Descripción: Renombra una categoría existente. Asume que 'Ocio' o 'Entretenimiento' existe — si no, esperar NOT_FOUND y respuesta del tono.
+  Esperado:   manage_category
+
+  > USER:
+    renombra Ocio a Entretenimiento
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [17/120] category_delete  (friendly)
+  Categoría:  manage_category / delete
+  Descripción: Elimina una categoría. Si tiene tx, el bot debe pedir confirmación (HAS_TRANSACTIONS).
+  Esperado:   manage_category
+
+  > USER:
+    elimina la categoría Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [18/120] query_list_week  (friendly)
+  Categoría:  query_transactions / list_periodo
+  Descripción: Lista de gastos de la semana.
+  Esperado:   query_transactions
+
+  > USER:
+    muéstrame mis gastos de la semana
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [19/120] query_sum_category  (friendly)
+  Categoría:  query_transactions / sum_filtrado
+  Descripción: Suma con filtro por categoría.
+  Esperado:   query_transactions
+
+  > USER:
+    cuánto gasté en transporte este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [20/120] query_count  (friendly)
+  Categoría:  query_transactions / count
+  Descripción: Conteo de transacciones del mes.
+  Esperado:   query_transactions
+
+  > USER:
+    cuántos gastos llevo este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [21/120] balance_simple  (friendly)
+  Categoría:  get_balance / balance_basico
+  Descripción: Consulta de balance directo.
+  Esperado:   get_balance
+
+  > USER:
+    cuánto tengo
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [22/120] balance_breakdown  (friendly)
+  Categoría:  get_balance / balance_desglosado
+  Descripción: Balance con desglose por categoría — include_breakdown=true.
+  Esperado:   get_balance
+
+  > USER:
+    muéstrame el desglose del mes por categoría
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [23/120] set_balance_direct  (friendly)
+  Categoría:  set_balance / ajuste_directo
+  Descripción: Override de balance — NO crea transacción.
+  Esperado:   set_balance
+
+  > USER:
+    tengo 500 mil en la cuenta
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [24/120] identity  (friendly)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de identidad — debe responder en personaje, no como FAQ.
+  Esperado:   get_app_info
+
+  > USER:
+    quién eres
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [25/120] capabilities  (friendly)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de capacidades — no debe listar funciones como menú.
+  Esperado:   get_app_info
+
+  > USER:
+    qué puedes hacer
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [26/120] greeting  (friendly)
+  Categoría:  conversacional / saludo
+  Descripción: Saludo seco — la respuesta debe estar en el tono, no genérica.
+  Esperado:   __no_function__
+
+  > USER:
+    hola
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [27/120] multi_two_expenses  (friendly)
+  Categoría:  multi_accion / dos_gastos
+  Descripción: Dos gastos en paralelo — debe llamar register_expense 2 veces.
+  Esperado:   register_expense, register_expense
+
+  > USER:
+    gasté 5 lucas en almuerzo y 3 mil en café
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [28/120] multi_delete_register  (friendly)
+  Categoría:  multi_accion / delete_plus_register
+  Descripción: Delete + register en un turno. El reorder del client manda delete primero.
+  Esperado:   delete_transaction, register_expense
+
+  > USER:
+    borra el último y registra 20 mil en ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [29/120] out_of_domain  (friendly)
+  Categoría:  edge_case / redirect
+  Descripción: Tema fuera del scope. Debe redirigir CON la voz del tono (no genérico).
+  Esperado:   __no_function__
+
+  > USER:
+    qué opinas de la política chilena?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [30/120] ambiguous_followup  (friendly)
+  Categoría:  edge_case / conversacional_ambiguo
+  Descripción: Follow-up vago. El bot debe usar la voz del tono y resolver con criterio.
+  Esperado:   __no_function__
+
+  > USER:
+    y eso?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+
+════════════════════════════════════════════════════════════
+  TONO: strict
+════════════════════════════════════════════════════════════
+  ✓ bot_tone actualizado a 'strict'
+  ✓ Conversación + ctx reseteados
+
+────────────────────────────────────────────────────────────
+  [1/120] expense_trivial_below_p50  (strict)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto chico, debería caer ≤ p50. Respuesta corta esperada (acknowledge + emoji).
+  Esperado:   register_expense
+
+  > USER:
+    gasté 2 lucas en agua
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [2/120] expense_ant_pattern  (strict)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto hormiga en categoría típica. Debería detectar el patrón si ant_expense_count es alto.
+  Esperado:   register_expense
+
+  > USER:
+    un café 1500
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [3/120] expense_standard  (strict)
+  Categoría:  register_expense / magnitud_estandar
+  Descripción: Gasto cerca de p50-p75 del user. Comentario estándar con un ángulo del tono.
+  Esperado:   register_expense
+
+  > USER:
+    almuerzo 8 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [4/120] expense_notable  (strict)
+  Categoría:  register_expense / magnitud_notable
+  Descripción: Gasto entre p75-p90 del user. Respuesta más larga, con dato real del context.
+  Esperado:   register_expense
+
+  > USER:
+    compré ropa por 35 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [5/120] expense_atypical  (strict)
+  Categoría:  register_expense / magnitud_atipica
+  Descripción: Gasto sobre p90 del user. Respuesta plena, tono a potencia, comparación con patrón.
+  Esperado:   register_expense
+
+  > USER:
+    100 lucas en vacaciones
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [6/120] expense_extreme  (strict)
+  Categoría:  register_expense / magnitud_extrema
+  Descripción: Gasto muy sobre p95 — categoría inusual (Tech). Atípico extremo.
+  Esperado:   register_expense
+
+  > USER:
+    compré un notebook nuevo, 800 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [7/120] expense_no_amount  (strict)
+  Categoría:  register_expense / edge_case
+  Descripción: Sin monto explícito. El bot debe PEDIR el monto, no inventarlo.
+  Esperado:   __no_function__
+
+  > USER:
+    gasté plata en uber
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [8/120] income_salary  (strict)
+  Categoría:  register_income / ingreso_regular
+  Descripción: Ingreso mensual típico (sueldo).
+  Esperado:   register_income
+
+  > USER:
+    me llegó el sueldo, 850 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [9/120] income_recurring  (strict)
+  Categoría:  register_income / ingreso_recurrente
+  Descripción: Ingreso recurrente — debe crear o linkear income_expectation.
+  Esperado:   register_income
+
+  > USER:
+    facturé 200 mil del cliente del mes, es recurrente
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [10/120] income_oneoff  (strict)
+  Categoría:  register_income / ingreso_extra
+  Descripción: Ingreso atípico no recurrente (venta puntual).
+  Esperado:   register_income
+
+  > USER:
+    vendí mi bici en 250 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [11/120] delete_last  (strict)
+  Categoría:  delete_transaction / resolucion_contextual
+  Descripción: Resuelve contextualmente la última transacción.
+  Esperado:   delete_transaction
+
+  > USER:
+    elimina el último gasto
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [12/120] delete_by_hint  (strict)
+  Categoría:  delete_transaction / resolucion_por_hint
+  Descripción: Resuelve por hint de categoría.
+  Esperado:   delete_transaction
+
+  > USER:
+    borra el gasto de ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [13/120] edit_amount  (strict)
+  Categoría:  edit_transaction / edicion_monto
+  Descripción: Edita el monto de la última transacción.
+  Esperado:   edit_transaction
+
+  > USER:
+    el café no era 1500, fue 2000
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [14/120] category_list  (strict)
+  Categoría:  manage_category / list
+  Descripción: Lista las categorías del user.
+  Esperado:   manage_category
+
+  > USER:
+    muéstrame mis categorías
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [15/120] category_create  (strict)
+  Categoría:  manage_category / create
+  Descripción: Crea una categoría nueva.
+  Esperado:   manage_category
+
+  > USER:
+    agrega una categoría llamada Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [16/120] category_rename  (strict)
+  Categoría:  manage_category / rename
+  Descripción: Renombra una categoría existente. Asume que 'Ocio' o 'Entretenimiento' existe — si no, esperar NOT_FOUND y respuesta del tono.
+  Esperado:   manage_category
+
+  > USER:
+    renombra Ocio a Entretenimiento
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [17/120] category_delete  (strict)
+  Categoría:  manage_category / delete
+  Descripción: Elimina una categoría. Si tiene tx, el bot debe pedir confirmación (HAS_TRANSACTIONS).
+  Esperado:   manage_category
+
+  > USER:
+    elimina la categoría Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [18/120] query_list_week  (strict)
+  Categoría:  query_transactions / list_periodo
+  Descripción: Lista de gastos de la semana.
+  Esperado:   query_transactions
+
+  > USER:
+    muéstrame mis gastos de la semana
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [19/120] query_sum_category  (strict)
+  Categoría:  query_transactions / sum_filtrado
+  Descripción: Suma con filtro por categoría.
+  Esperado:   query_transactions
+
+  > USER:
+    cuánto gasté en transporte este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [20/120] query_count  (strict)
+  Categoría:  query_transactions / count
+  Descripción: Conteo de transacciones del mes.
+  Esperado:   query_transactions
+
+  > USER:
+    cuántos gastos llevo este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [21/120] balance_simple  (strict)
+  Categoría:  get_balance / balance_basico
+  Descripción: Consulta de balance directo.
+  Esperado:   get_balance
+
+  > USER:
+    cuánto tengo
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [22/120] balance_breakdown  (strict)
+  Categoría:  get_balance / balance_desglosado
+  Descripción: Balance con desglose por categoría — include_breakdown=true.
+  Esperado:   get_balance
+
+  > USER:
+    muéstrame el desglose del mes por categoría
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [23/120] set_balance_direct  (strict)
+  Categoría:  set_balance / ajuste_directo
+  Descripción: Override de balance — NO crea transacción.
+  Esperado:   set_balance
+
+  > USER:
+    tengo 500 mil en la cuenta
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [24/120] identity  (strict)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de identidad — debe responder en personaje, no como FAQ.
+  Esperado:   get_app_info
+
+  > USER:
+    quién eres
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [25/120] capabilities  (strict)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de capacidades — no debe listar funciones como menú.
+  Esperado:   get_app_info
+
+  > USER:
+    qué puedes hacer
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [26/120] greeting  (strict)
+  Categoría:  conversacional / saludo
+  Descripción: Saludo seco — la respuesta debe estar en el tono, no genérica.
+  Esperado:   __no_function__
+
+  > USER:
+    hola
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [27/120] multi_two_expenses  (strict)
+  Categoría:  multi_accion / dos_gastos
+  Descripción: Dos gastos en paralelo — debe llamar register_expense 2 veces.
+  Esperado:   register_expense, register_expense
+
+  > USER:
+    gasté 5 lucas en almuerzo y 3 mil en café
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [28/120] multi_delete_register  (strict)
+  Categoría:  multi_accion / delete_plus_register
+  Descripción: Delete + register en un turno. El reorder del client manda delete primero.
+  Esperado:   delete_transaction, register_expense
+
+  > USER:
+    borra el último y registra 20 mil en ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [29/120] out_of_domain  (strict)
+  Categoría:  edge_case / redirect
+  Descripción: Tema fuera del scope. Debe redirigir CON la voz del tono (no genérico).
+  Esperado:   __no_function__
+
+  > USER:
+    qué opinas de la política chilena?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [30/120] ambiguous_followup  (strict)
+  Categoría:  edge_case / conversacional_ambiguo
+  Descripción: Follow-up vago. El bot debe usar la voz del tono y resolver con criterio.
+  Esperado:   __no_function__
+
+  > USER:
+    y eso?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+
+════════════════════════════════════════════════════════════
+  TONO: toxic
+════════════════════════════════════════════════════════════
+  ✓ bot_tone actualizado a 'toxic'
+  ✓ Conversación + ctx reseteados
+
+────────────────────────────────────────────────────────────
+  [1/120] expense_trivial_below_p50  (toxic)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto chico, debería caer ≤ p50. Respuesta corta esperada (acknowledge + emoji).
+  Esperado:   register_expense
+
+  > USER:
+    gasté 2 lucas en agua
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [2/120] expense_ant_pattern  (toxic)
+  Categoría:  register_expense / magnitud_trivial
+  Descripción: Gasto hormiga en categoría típica. Debería detectar el patrón si ant_expense_count es alto.
+  Esperado:   register_expense
+
+  > USER:
+    un café 1500
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [3/120] expense_standard  (toxic)
+  Categoría:  register_expense / magnitud_estandar
+  Descripción: Gasto cerca de p50-p75 del user. Comentario estándar con un ángulo del tono.
+  Esperado:   register_expense
+
+  > USER:
+    almuerzo 8 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [4/120] expense_notable  (toxic)
+  Categoría:  register_expense / magnitud_notable
+  Descripción: Gasto entre p75-p90 del user. Respuesta más larga, con dato real del context.
+  Esperado:   register_expense
+
+  > USER:
+    compré ropa por 35 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [5/120] expense_atypical  (toxic)
+  Categoría:  register_expense / magnitud_atipica
+  Descripción: Gasto sobre p90 del user. Respuesta plena, tono a potencia, comparación con patrón.
+  Esperado:   register_expense
+
+  > USER:
+    100 lucas en vacaciones
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [6/120] expense_extreme  (toxic)
+  Categoría:  register_expense / magnitud_extrema
+  Descripción: Gasto muy sobre p95 — categoría inusual (Tech). Atípico extremo.
+  Esperado:   register_expense
+
+  > USER:
+    compré un notebook nuevo, 800 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [7/120] expense_no_amount  (toxic)
+  Categoría:  register_expense / edge_case
+  Descripción: Sin monto explícito. El bot debe PEDIR el monto, no inventarlo.
+  Esperado:   __no_function__
+
+  > USER:
+    gasté plata en uber
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [8/120] income_salary  (toxic)
+  Categoría:  register_income / ingreso_regular
+  Descripción: Ingreso mensual típico (sueldo).
+  Esperado:   register_income
+
+  > USER:
+    me llegó el sueldo, 850 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [9/120] income_recurring  (toxic)
+  Categoría:  register_income / ingreso_recurrente
+  Descripción: Ingreso recurrente — debe crear o linkear income_expectation.
+  Esperado:   register_income
+
+  > USER:
+    facturé 200 mil del cliente del mes, es recurrente
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [10/120] income_oneoff  (toxic)
+  Categoría:  register_income / ingreso_extra
+  Descripción: Ingreso atípico no recurrente (venta puntual).
+  Esperado:   register_income
+
+  > USER:
+    vendí mi bici en 250 mil
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [11/120] delete_last  (toxic)
+  Categoría:  delete_transaction / resolucion_contextual
+  Descripción: Resuelve contextualmente la última transacción.
+  Esperado:   delete_transaction
+
+  > USER:
+    elimina el último gasto
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [12/120] delete_by_hint  (toxic)
+  Categoría:  delete_transaction / resolucion_por_hint
+  Descripción: Resuelve por hint de categoría.
+  Esperado:   delete_transaction
+
+  > USER:
+    borra el gasto de ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [13/120] edit_amount  (toxic)
+  Categoría:  edit_transaction / edicion_monto
+  Descripción: Edita el monto de la última transacción.
+  Esperado:   edit_transaction
+
+  > USER:
+    el café no era 1500, fue 2000
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [14/120] category_list  (toxic)
+  Categoría:  manage_category / list
+  Descripción: Lista las categorías del user.
+  Esperado:   manage_category
+
+  > USER:
+    muéstrame mis categorías
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [15/120] category_create  (toxic)
+  Categoría:  manage_category / create
+  Descripción: Crea una categoría nueva.
+  Esperado:   manage_category
+
+  > USER:
+    agrega una categoría llamada Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [16/120] category_rename  (toxic)
+  Categoría:  manage_category / rename
+  Descripción: Renombra una categoría existente. Asume que 'Ocio' o 'Entretenimiento' existe — si no, esperar NOT_FOUND y respuesta del tono.
+  Esperado:   manage_category
+
+  > USER:
+    renombra Ocio a Entretenimiento
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [17/120] category_delete  (toxic)
+  Categoría:  manage_category / delete
+  Descripción: Elimina una categoría. Si tiene tx, el bot debe pedir confirmación (HAS_TRANSACTIONS).
+  Esperado:   manage_category
+
+  > USER:
+    elimina la categoría Gimnasio
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [18/120] query_list_week  (toxic)
+  Categoría:  query_transactions / list_periodo
+  Descripción: Lista de gastos de la semana.
+  Esperado:   query_transactions
+
+  > USER:
+    muéstrame mis gastos de la semana
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [19/120] query_sum_category  (toxic)
+  Categoría:  query_transactions / sum_filtrado
+  Descripción: Suma con filtro por categoría.
+  Esperado:   query_transactions
+
+  > USER:
+    cuánto gasté en transporte este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [20/120] query_count  (toxic)
+  Categoría:  query_transactions / count
+  Descripción: Conteo de transacciones del mes.
+  Esperado:   query_transactions
+
+  > USER:
+    cuántos gastos llevo este mes
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [21/120] balance_simple  (toxic)
+  Categoría:  get_balance / balance_basico
+  Descripción: Consulta de balance directo.
+  Esperado:   get_balance
+
+  > USER:
+    cuánto tengo
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [22/120] balance_breakdown  (toxic)
+  Categoría:  get_balance / balance_desglosado
+  Descripción: Balance con desglose por categoría — include_breakdown=true.
+  Esperado:   get_balance
+
+  > USER:
+    muéstrame el desglose del mes por categoría
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [23/120] set_balance_direct  (toxic)
+  Categoría:  set_balance / ajuste_directo
+  Descripción: Override de balance — NO crea transacción.
+  Esperado:   set_balance
+
+  > USER:
+    tengo 500 mil en la cuenta
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [24/120] identity  (toxic)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de identidad — debe responder en personaje, no como FAQ.
+  Esperado:   get_app_info
+
+  > USER:
+    quién eres
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [25/120] capabilities  (toxic)
+  Categoría:  get_app_info / conversacional
+  Descripción: Pregunta de capacidades — no debe listar funciones como menú.
+  Esperado:   get_app_info
+
+  > USER:
+    qué puedes hacer
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [26/120] greeting  (toxic)
+  Categoría:  conversacional / saludo
+  Descripción: Saludo seco — la respuesta debe estar en el tono, no genérica.
+  Esperado:   __no_function__
+
+  > USER:
+    hola
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [27/120] multi_two_expenses  (toxic)
+  Categoría:  multi_accion / dos_gastos
+  Descripción: Dos gastos en paralelo — debe llamar register_expense 2 veces.
+  Esperado:   register_expense, register_expense
+
+  > USER:
+    gasté 5 lucas en almuerzo y 3 mil en café
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [28/120] multi_delete_register  (toxic)
+  Categoría:  multi_accion / delete_plus_register
+  Descripción: Delete + register en un turno. El reorder del client manda delete primero.
+  Esperado:   delete_transaction, register_expense
+
+  > USER:
+    borra el último y registra 20 mil en ropa
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [29/120] out_of_domain  (toxic)
+  Categoría:  edge_case / redirect
+  Descripción: Tema fuera del scope. Debe redirigir CON la voz del tono (no genérico).
+  Esperado:   __no_function__
+
+  > USER:
+    qué opinas de la política chilena?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+────────────────────────────────────────────────────────────
+  [30/120] ambiguous_followup  (toxic)
+  Categoría:  edge_case / conversacional_ambiguo
+  Descripción: Follow-up vago. El bot debe usar la voz del tono y resolver con criterio.
+  Esperado:   __no_function__
+
+  > USER:
+    y eso?
+
+  ── INSIGHTS BLOCK ──
+    Maturity: mature
+    Archetype: whale
+    
+    Escala diaria del user: típico $22.935, alto $104.494, atípico $208.909
+    Escala por tx: típico $4.571, alto $29.720, atípico $46.530
+    
+    Mes actual: $274.224 en 19 días
+      Pace: $14.433/día → proyectado $447.418 (-74% vs mes pasado)
+    
+    Top categorías: Transferencia 9% (up), Vestuario 4% (up), Supermercado 2% (up)
+    
+    Budgets activos:
+      daily: $7.096/$10.000 (71%)
+
+  ── INSIGHTS RAW (resumen) ──
+    maturity=mature · txs=277 · archetype=whale
+    tx_amount: p50=$4571  p90=$29720.000000000007  p95=$46530.399999999936
+
+  ── FUNCTIONS CALLED ──
+    (ninguna — respuesta conversacional)
+
+  ── REPLY ──
+    Tuve un problema procesando tu mensaje. Intenta de nuevo.
+
+  ── TOKENS ──
+    input=0  output=0  total=0
+
+
+════════════════════════════════════════════════════════════
+  ✓ Batería completa
+  Log: /Users/sebaderpsch/TallyFinance/backend/scripts/personality/out/battery-20260519-112059.txt
+════════════════════════════════════════════════════════════

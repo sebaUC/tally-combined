@@ -1,6 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RedisService, RedisKeys, RedisTTL } from '../../redis';
+import { InsightsReaderService } from '../../insights/io/insights-reader.service';
+import type { InsightResult } from '../../insights/contracts';
 
 export interface CategoryInfo {
   id: string;
@@ -24,8 +26,6 @@ export interface MinimalUserContext {
   displayName: string | null;
   personality: {
     tone: string | null;
-    intensity: number | null;
-    mood: string | null;
   } | null;
   prefs: {
     timezone: string | null;
@@ -47,6 +47,8 @@ export interface MinimalUserContext {
   categories?: CategoryInfo[];
   // User's accounts with balance
   accounts?: AccountInfo[];
+  // Layer-1 insights computed by InsightsEngine — null if empty/seeding
+  insights?: InsightResult | null;
 }
 
 @Injectable()
@@ -56,6 +58,7 @@ export class UserContextService {
   constructor(
     @Inject('SUPABASE') private readonly supabase: SupabaseClient,
     private readonly redis: RedisService,
+    private readonly insightsReader: InsightsReaderService,
   ) {}
 
   async getContext(userId: string): Promise<MinimalUserContext> {
@@ -104,12 +107,12 @@ export class UserContextService {
   private async fetchContext(userId: string): Promise<MinimalUserContext> {
     const [
       { data: profile, error: profileError },
-      { data: personality, error: personalityError },
       { data: prefs, error: prefsError },
       { data: spending, error: spendingError },
       { data: goals, error: goalsError },
       { data: categories, error: categoriesError },
       { data: accounts, error: accountsError },
+      insights,
     ] = await Promise.all([
       // users table has: full_name, nickname, timezone, locale
       this.supabase
@@ -117,15 +120,10 @@ export class UserContextService {
         .select('id, full_name, nickname, timezone, locale')
         .eq('id', userId)
         .single(),
-      this.supabase
-        .from('personality_snapshot')
-        .select('tone, intensity, mood')
-        .eq('user_id', userId)
-        .maybeSingle(),
-      // user_prefs has: notification_level, unified_balance
+      // user_prefs has: notification_level, unified_balance, bot_tone
       this.supabase
         .from('user_prefs')
-        .select('notification_level, unified_balance')
+        .select('notification_level, unified_balance, bot_tone')
         .eq('id', userId)
         .maybeSingle(),
       this.supabase
@@ -145,6 +143,11 @@ export class UserContextService {
         .from('accounts')
         .select('id, name, current_balance')
         .eq('user_id', userId),
+      // Layer-1 insights — reader has its own Redis cache (5min TTL)
+      this.insightsReader.get(userId).catch((err) => {
+        this.log.warn(`[fetchContext] Insights fetch failed: ${String(err)}`);
+        return null;
+      }),
     ]);
 
     if (profileError) {
@@ -152,11 +155,6 @@ export class UserContextService {
       throw new Error(`Failed to fetch user profile: ${profileError.message}`);
     }
 
-    if (personalityError) {
-      this.log.warn(
-        `[fetchContext] Personality error: ${personalityError.message}`,
-      );
-    }
     if (prefsError) {
       this.log.warn(`[fetchContext] Prefs error: ${prefsError.message}`);
     }
@@ -181,12 +179,8 @@ export class UserContextService {
     return {
       userId,
       displayName,
-      personality: personality
-        ? {
-            tone: personality.tone ?? null,
-            intensity: personality.intensity ?? null,
-            mood: personality.mood ?? null,
-          }
+      personality: prefs?.bot_tone
+        ? { tone: prefs.bot_tone }
         : null,
       prefs: {
         timezone: profile?.timezone ?? null,
@@ -225,6 +219,7 @@ export class UserContextService {
             currentBalance: Number(a.current_balance),
           }),
         ) ?? [],
+      insights: insights ?? null,
     };
   }
 }

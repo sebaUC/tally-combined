@@ -1,0 +1,116 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    # Every day at 08:00 UTC (05:00 America/Santiago year-round approx).
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: npm audit (runtime deps)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - { name: backend, path: backend }
+          - { name: frontend, path: frontend_TallyFinance }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.project.path }}/package-lock.json
+
+      - name: Install dependencies (production only)
+        working-directory: ${{ matrix.project.path }}
+        # Keep devDependencies out so audit reflects production risk.
+        run: npm ci --omit=dev
+
+      - name: Run npm audit
+        id: audit
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high --json > audit.json
+          EXIT=$?
+          set -e
+
+          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
+          HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
+
+          echo "critical=$CRITICAL" >> "$GITHUB_OUTPUT"
+          echo "high=$HIGH" >> "$GITHUB_OUTPUT"
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+
+          echo "## ${{ matrix.project.name }} production audit" >> "$GITHUB_STEP_SUMMARY"
+          echo "- critical: $CRITICAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- high: $HIGH" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build issue body
+        if: steps.audit.outputs.critical != '0' || steps.audit.outputs.high != '0'
+        id: body
+        working-directory: ${{ matrix.project.path }}
+        run: |
+          {
+            echo "body<<EOF"
+            echo "Automated scan found high/critical vulnerabilities in production dependencies."
+            echo ""
+            echo "- project: \`${{ matrix.project.name }}\`"
+            echo "- critical: ${{ steps.audit.outputs.critical }}"
+            echo "- high: ${{ steps.audit.outputs.high }}"
+            echo ""
+            echo "### Top findings"
+            echo ""
+            echo '```json'
+            jq '{metadata: .metadata.vulnerabilities, top: ([.vulnerabilities | to_entries[] | select(.value.severity=="critical" or .value.severity=="high") | {name: .key, severity: .value.severity, via: (.value.via | map(if type=="object" then .title else . end))}] | .[:10])}' audit.json
+            echo '```'
+            echo ""
+            echo "Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update issue
+        if: steps.audit.outputs.critical != '0' || steps.audit.outputs.high != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[sec] ${{ matrix.project.name }} has ${{ steps.audit.outputs.critical }} critical / ${{ steps.audit.outputs.high }} high vulns`;
+            const body = `${{ steps.body.outputs.body }}`;
+            const label = 'security';
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 100,
+            });
+
+            const match = existing.find((i) => i.title.startsWith(`[sec] ${{ matrix.project.name }} `));
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body,
+              });
+              core.info(`Updated existing issue #${match.number}`);
+            } else {
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+              core.info(`Created issue #${created.number}`);
+            }

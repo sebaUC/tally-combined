@@ -1,0 +1,122 @@
+name: Security Review
+
+on:
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: security-review-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  # ---------------------------------------------------------------
+  # 1. Claude Code semantic review — diff-aware, reasons about
+  #    business-logic flaws, auth issues, IDOR, prompt injection, etc.
+  #    Required secret: ANTHROPIC_API_KEY (repo secret).
+  # ---------------------------------------------------------------
+  claude-review:
+    name: Claude Code Security Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Claude Code security review
+        uses: anthropics/claude-code-security-review@main
+        with:
+          claude-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          comment-pr: true
+          run-every-commit: false
+          exclude-directories: |
+            node_modules
+            dist
+            build
+            coverage
+            frontend_TallyFinance/dist
+            docs/SBOM
+            .claude
+          # TallyFinance-specific noise suppression. Matches baseline
+          # decisions from docs/security/SECURITY_BASELINE_2026-04-20.md.
+          false-positive-filtering-instructions: |
+            The following are accepted design decisions — do NOT flag:
+
+            - SUPABASE_SERVICE_ROLE_KEY usage anywhere under backend/src/** is
+              expected. The backend is a trusted server-side context; it holds
+              the service-role key on purpose.
+            - AdminGuard with a hardcoded UUID whitelist
+              (backend/src/admin/guards/admin.guard.ts) is a known short-term
+              design; migration to a DB table is tracked as Phase 6 work.
+              Skip findings that only restate this.
+            - /telegram/webhook and /whatsapp/webhook are intentionally public
+              endpoints — Telegram and Meta call them. They now have signature
+              guards (TelegramWebhookGuard, WhatsappWebhookGuard). Do not
+              flag "unauthenticated endpoint" for these paths.
+            - The Fintoc webhook at /webhooks/fintoc is protected by
+              FintocWebhookGuard (HMAC + IP allowlist + timestamp). Do not
+              flag it as unauthenticated.
+            - bot_message_log stores user messages for admin/debug. Data
+              masking is scheduled for Phase 6 (A.8.11). Do not emit a finding
+              for every write that persists user text — raise it once.
+
+            The following are genuine findings — DO flag:
+
+            - Any endpoint missing JwtGuard when it should require auth.
+            - Any Supabase query that filters only by a client-provided ID
+              without an additional user_id = auth.uid() check.
+            - Any addition of dangerouslySetInnerHTML in the frontend.
+            - Any new eval, Function(), or exec() usage.
+            - Any new hardcoded secret, API key, or credential string.
+            - Any deserialization of user input without validation.
+            - Any weakening of the current rate limits or password policy.
+
+            Ignore files under test/** and *.spec.ts unless the finding
+            involves persisted data or is a supply-chain concern.
+
+  # ---------------------------------------------------------------
+  # 2. Semgrep — rule-based SAST, fast and reproducible.
+  #    Runs in parallel as a second opinion. Never blocks on findings
+  #    marked as WARNING — only blocks on ERROR severity.
+  # ---------------------------------------------------------------
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=p/owasp-top-ten \
+            --config=p/nodejsscan \
+            --config=p/typescript \
+            --config=p/react \
+            --config=p/secrets \
+            --error \
+            --severity=ERROR \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=build \
+            --exclude=coverage \
+            --exclude=frontend_TallyFinance/dist \
+            --exclude=docs/SBOM \
+            --sarif --output=semgrep.sarif \
+            .
+        continue-on-error: true
+
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+        continue-on-error: true

@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { BotV3Service } from './v3/bot-v3.service';
+import { BotService } from './bot.service';
 import { WhatsappAdapter } from './adapters/whatsapp.adapter';
 import { TelegramAdapter } from './adapters/telegram.adapter';
 import { CallbackHandlerService } from './services/callback-handler.service';
@@ -52,7 +52,7 @@ export class BotController implements OnModuleInit {
   private ipRateLimiter!: AsyncRateLimiter;
 
   constructor(
-    private readonly botV3: BotV3Service,
+    private readonly bot: BotService,
     private readonly wa: WhatsappAdapter,
     private readonly tg: TelegramAdapter,
     private readonly callbackHandler: CallbackHandlerService,
@@ -241,7 +241,7 @@ export class BotController implements OnModuleInit {
         return 'EVENT_RECEIVED';
       }
 
-      const result = await this.botV3.handle(
+      const result = await this.bot.handle(
         userId,
         domainMsg.text || '',
         'whatsapp',
@@ -349,13 +349,13 @@ export class BotController implements OnModuleInit {
 
       // Handle /reset command
       if (domainMsg.text?.trim() === '/reset') {
-        await this.botV3.reset(userId);
+        await this.bot.reset(userId);
         stopTyping();
         await this.tg.sendReply(domainMsg, 'Conversación reiniciada.', {});
         return 'OK';
       }
 
-      const result = await this.botV3.handle(
+      const result = await this.bot.handle(
         userId,
         domainMsg.text || '',
         'telegram',
@@ -399,7 +399,7 @@ export class BotController implements OnModuleInit {
     }
 
     try {
-      const result = await this.botV3.handle(
+      const result = await this.bot.handle(
         body.userId,
         body.message,
         body.channel ?? 'test',
@@ -428,7 +428,13 @@ export class BotController implements OnModuleInit {
 
   @Post('bot/test-v3')
   async testV3(
-    @Body() body: { message: string; userId: string; reset?: boolean },
+    @Body()
+    body: {
+      message: string;
+      userId: string;
+      reset?: boolean;
+      verbose?: boolean;
+    },
   ) {
     if (!body.message && !body.reset) {
       return { ok: false, error: 'Missing required fields: message, userId' };
@@ -438,12 +444,56 @@ export class BotController implements OnModuleInit {
     }
 
     if (body.reset) {
-      await this.botV3.reset(body.userId);
-      return { ok: true, message: 'Conversation reset' };
+      await this.bot.reset(body.userId);
+      // Invalidar ctx para que cambios de tono/insights entre batches
+      // surtan efecto inmediato (sin esperar TTL de 60s).
+      await this.userContext.invalidate(body.userId).catch(() => {});
+      return { ok: true, message: 'Conversation + context reset' };
     }
 
     try {
-      const result = await this.botV3.handle(body.userId, body.message, 'test');
+      // Capturar el contexto que va a ver el bot ANTES de llamarlo, así
+      // podemos devolver el bloque insights tal como lo ve el LLM.
+      // El ctx está cacheado (60s) — el segundo read no cuesta nada.
+      let debug: Record<string, unknown> | undefined;
+      if (body.verbose) {
+        try {
+          const ctx = await this.userContext.getContext(body.userId);
+          debug = {
+            tone: ctx.personality?.tone ?? null,
+            displayName: ctx.displayName,
+            categories: (ctx.categories || []).map((c: any) => c.name),
+            budgets:
+              ctx.activeBudgets?.map((b: any) => ({
+                period: b.period,
+                amount: b.amount,
+              })) || [],
+            accounts:
+              ctx.accounts?.map((a: any) => ({
+                name: a.name,
+                balance: a.currentBalance,
+              })) || [],
+            insightsBlock: BotService.buildInsightsBlock(ctx.insights ?? null),
+            insightsRaw: ctx.insights
+              ? {
+                  data_maturity: ctx.insights.data_maturity,
+                  has_sufficient_data: ctx.insights.has_sufficient_data,
+                  tx_count_at_compute: ctx.insights.tx_count_at_compute,
+                  spender_archetype: ctx.insights.spender_archetype,
+                  tx_amount_dist: ctx.insights.tx_amount_dist,
+                  daily_spend_dist: ctx.insights.daily_spend_dist,
+                  primary_category_id: ctx.insights.primary_category_id,
+                  category_concentration: ctx.insights.category_concentration,
+                  current_month: ctx.insights.current_month,
+                }
+              : null,
+          };
+        } catch (err) {
+          debug = { error: `ctx fetch failed: ${String(err)}` };
+        }
+      }
+
+      const result = await this.bot.handle(body.userId, body.message, 'test');
       return {
         ok: true,
         reply: result.reply,
@@ -453,6 +503,7 @@ export class BotController implements OnModuleInit {
           result: fc.result,
         })),
         tokensUsed: result.tokensUsed,
+        ...(debug ? { debug } : {}),
       };
     } catch (err) {
       return { ok: false, error: String(err) };

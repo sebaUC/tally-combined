@@ -1,0 +1,5 @@
+# SBOM snapshots live here. Generated weekly by .github/workflows/sbom.yml
+# using CycloneDX. Spec 1.6, JSON. Filename pattern:
+#   backend-YYYY-MM-DD.cdx.json
+#   frontend-YYYY-MM-DD.cdx.json
+# Plus pointers: backend-latest.cdx.json, frontend-latest.cdx.json.

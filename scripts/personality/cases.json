@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "description": "Batería de pruebas para validar voz + reactividad del bot. Cada caso se corre contra los 4 tonos (neutral, friendly, strict, toxic) para validar diferenciación. El campo 'expects' es referencial — el humano juzga, no hay assertion automática.",
+  "cases": [
+    {
+      "id": "expense_trivial_below_p50",
+      "category": "register_expense",
+      "subcategory": "magnitud_trivial",
+      "description": "Gasto chico, debería caer ≤ p50. Respuesta corta esperada (acknowledge + emoji).",
+      "message": "gasté 2 lucas en agua",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_ant_pattern",
+      "category": "register_expense",
+      "subcategory": "magnitud_trivial",
+      "description": "Gasto hormiga en categoría típica. Debería detectar el patrón si ant_expense_count es alto.",
+      "message": "un café 1500",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_standard",
+      "category": "register_expense",
+      "subcategory": "magnitud_estandar",
+      "description": "Gasto cerca de p50-p75 del user. Comentario estándar con un ángulo del tono.",
+      "message": "almuerzo 8 mil",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_notable",
+      "category": "register_expense",
+      "subcategory": "magnitud_notable",
+      "description": "Gasto entre p75-p90 del user. Respuesta más larga, con dato real del context.",
+      "message": "compré ropa por 35 mil",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_atypical",
+      "category": "register_expense",
+      "subcategory": "magnitud_atipica",
+      "description": "Gasto sobre p90 del user. Respuesta plena, tono a potencia, comparación con patrón.",
+      "message": "100 lucas en vacaciones",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_extreme",
+      "category": "register_expense",
+      "subcategory": "magnitud_extrema",
+      "description": "Gasto muy sobre p95 — categoría inusual (Tech). Atípico extremo.",
+      "message": "compré un notebook nuevo, 800 mil",
+      "expects": ["register_expense"]
+    },
+    {
+      "id": "expense_no_amount",
+      "category": "register_expense",
+      "subcategory": "edge_case",
+      "description": "Sin monto explícito. El bot debe PEDIR el monto, no inventarlo.",
+      "message": "gasté plata en uber",
+      "expects": ["__no_function__"]
+    },
+    {
+      "id": "income_salary",
+      "category": "register_income",
+      "subcategory": "ingreso_regular",
+      "description": "Ingreso mensual típico (sueldo).",
+      "message": "me llegó el sueldo, 850 mil",
+      "expects": ["register_income"]
+    },
+    {
+      "id": "income_recurring",
+      "category": "register_income",
+      "subcategory": "ingreso_recurrente",
+      "description": "Ingreso recurrente — debe crear o linkear income_expectation.",
+      "message": "facturé 200 mil del cliente del mes, es recurrente",
+      "expects": ["register_income"]
+    },
+    {
+      "id": "income_oneoff",
+      "category": "register_income",
+      "subcategory": "ingreso_extra",
+      "description": "Ingreso atípico no recurrente (venta puntual).",
+      "message": "vendí mi bici en 250 mil",
+      "expects": ["register_income"]
+    },
+    {
+      "id": "delete_last",
+      "category": "delete_transaction",
+      "subcategory": "resolucion_contextual",
+      "description": "Resuelve contextualmente la última transacción.",
+      "message": "elimina el último gasto",
+      "expects": ["delete_transaction"]
+    },
+    {
+      "id": "delete_by_hint",
+      "category": "delete_transaction",
+      "subcategory": "resolucion_por_hint",
+      "description": "Resuelve por hint de categoría.",
+      "message": "borra el gasto de ropa",
+      "expects": ["delete_transaction"]
+    },
+    {
+      "id": "edit_amount",
+      "category": "edit_transaction",
+      "subcategory": "edicion_monto",
+      "description": "Edita el monto de la última transacción.",
+      "message": "el café no era 1500, fue 2000",
+      "expects": ["edit_transaction"]
+    },
+    {
+      "id": "category_list",
+      "category": "manage_category",
+      "subcategory": "list",
+      "description": "Lista las categorías del user.",
+      "message": "muéstrame mis categorías",
+      "expects": ["manage_category"]
+    },
+    {
+      "id": "category_create",
+      "category": "manage_category",
+      "subcategory": "create",
+      "description": "Crea una categoría nueva.",
+      "message": "agrega una categoría llamada Gimnasio",
+      "expects": ["manage_category"]
+    },
+    {
+      "id": "category_rename",
+      "category": "manage_category",
+      "subcategory": "rename",
+      "description": "Renombra una categoría existente. Asume que 'Ocio' o 'Entretenimiento' existe — si no, esperar NOT_FOUND y respuesta del tono.",
+      "message": "renombra Ocio a Entretenimiento",
+      "expects": ["manage_category"]
+    },
+    {
+      "id": "category_delete",
+      "category": "manage_category",
+      "subcategory": "delete",
+      "description": "Elimina una categoría. Si tiene tx, el bot debe pedir confirmación (HAS_TRANSACTIONS).",
+      "message": "elimina la categoría Gimnasio",
+      "expects": ["manage_category"]
+    },
+    {
+      "id": "query_list_week",
+      "category": "query_transactions",
+      "subcategory": "list_periodo",
+      "description": "Lista de gastos de la semana.",
+      "message": "muéstrame mis gastos de la semana",
+      "expects": ["query_transactions"]
+    },
+    {
+      "id": "query_sum_category",
+      "category": "query_transactions",
+      "subcategory": "sum_filtrado",
+      "description": "Suma con filtro por categoría.",
+      "message": "cuánto gasté en transporte este mes",
+      "expects": ["query_transactions"]
+    },
+    {
+      "id": "query_count",
+      "category": "query_transactions",
+      "subcategory": "count",
+      "description": "Conteo de transacciones del mes.",
+      "message": "cuántos gastos llevo este mes",
+      "expects": ["query_transactions"]
+    },
+    {
+      "id": "balance_simple",
+      "category": "get_balance",
+      "subcategory": "balance_basico",
+      "description": "Consulta de balance directo.",
+      "message": "cuánto tengo",
+      "expects": ["get_balance"]
+    },
+    {
+      "id": "balance_breakdown",
+      "category": "get_balance",
+      "subcategory": "balance_desglosado",
+      "description": "Balance con desglose por categoría — include_breakdown=true.",
+      "message": "muéstrame el desglose del mes por categoría",
+      "expects": ["get_balance"]
+    },
+    {
+      "id": "set_balance_direct",
+      "category": "set_balance",
+      "subcategory": "ajuste_directo",
+      "description": "Override de balance — NO crea transacción.",
+      "message": "tengo 500 mil en la cuenta",
+      "expects": ["set_balance"]
+    },
+    {
+      "id": "identity",
+      "category": "get_app_info",
+      "subcategory": "conversacional",
+      "description": "Pregunta de identidad — debe responder en personaje, no como FAQ.",
+      "message": "quién eres",
+      "expects": ["get_app_info"]
+    },
+    {
+      "id": "capabilities",
+      "category": "get_app_info",
+      "subcategory": "conversacional",
+      "description": "Pregunta de capacidades — no debe listar funciones como menú.",
+      "message": "qué puedes hacer",
+      "expects": ["get_app_info"]
+    },
+    {
+      "id": "greeting",
+      "category": "conversacional",
+      "subcategory": "saludo",
+      "description": "Saludo seco — la respuesta debe estar en el tono, no genérica.",
+      "message": "hola",
+      "expects": ["__no_function__"]
+    },
+    {
+      "id": "multi_two_expenses",
+      "category": "multi_accion",
+      "subcategory": "dos_gastos",
+      "description": "Dos gastos en paralelo — debe llamar register_expense 2 veces.",
+      "message": "gasté 5 lucas en almuerzo y 3 mil en café",
+      "expects": ["register_expense", "register_expense"]
+    },
+    {
+      "id": "multi_delete_register",
+      "category": "multi_accion",
+      "subcategory": "delete_plus_register",
+      "description": "Delete + register en un turno. El reorder del client manda delete primero.",
+      "message": "borra el último y registra 20 mil en ropa",
+      "expects": ["delete_transaction", "register_expense"]
+    },
+    {
+      "id": "out_of_domain",
+      "category": "edge_case",
+      "subcategory": "redirect",
+      "description": "Tema fuera del scope. Debe redirigir CON la voz del tono (no genérico).",
+      "message": "qué opinas de la política chilena?",
+      "expects": ["__no_function__"]
+    },
+    {
+      "id": "ambiguous_followup",
+      "category": "edge_case",
+      "subcategory": "conversacional_ambiguo",
+      "description": "Follow-up vago. El bot debe usar la voz del tono y resolver con criterio.",
+      "message": "y eso?",
+      "expects": ["__no_function__"]
+    }
+  ]
+}

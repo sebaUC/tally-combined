@@ -9,12 +9,11 @@ import type { BotReply } from '../bot/actions/action-block';
  * PLAN_GUS_PROACTIVO, PLAN_USER_INSIGHTS).
  */
 export type NudgeTrigger =
-  | 'sync_debug'            // post-Fintoc-sync summary (current MVP)
   | 'nightly_summary'       // daily recap — PLAN_GUS_PROACTIVO F1
   | 'anomaly'               // outlier / budget breach — PLAN_GUS_PROACTIVO F2
   | 'category_assist'       // auto-categorization request — PLAN_GUS_PROACTIVO F3
   | 'subscription_detected' // recurring charge — PLAN_GUS_PROACTIVO F4
-  | 'welcome_report';       // first-time after Fintoc exchange — PLAN_USER_INSIGHTS F4
+  | 'welcome_report';       // first-time insights after onboarding — PLAN_USER_INSIGHTS F4
 
 export type NudgeSeverity = 'low' | 'medium' | 'high';
 
@@ -23,20 +22,14 @@ export interface NudgeSendParams {
   trigger: NudgeTrigger;
   replies: BotReply[];
   /**
-   * Used by future gate logic to decide defer vs skip. Today: recorded in
-   * audit log, no behavioral effect.
+   * Used by future gate logic to decide defer vs skip.
    */
   severity?: NudgeSeverity;
   /**
-   * MVP: when true, skip future gates (silence window, rate limit,
-   * notification_level). `sync_debug` uses this today so the debug stream
-   * is unconditional while we instrument the rest.
+   * When true, skip future gates (silence window, rate limit,
+   * notification_level). Reserved for high-priority triggers.
    */
   bypassGates?: boolean;
-  /**
-   * Optional link id — propagated into audit log detail for traceability.
-   */
-  linkId?: string | null;
 }
 
 export interface NudgeSendResult {

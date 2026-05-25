@@ -45,7 +45,6 @@ export class UsersController {
     @Body()
     body: {
       tone?: string;
-      intensity?: number;
       notification_level?: string;
       full_name?: string;
       nickname?: string;
@@ -64,16 +63,11 @@ export class UsersController {
       results.profile = await this.users.updateProfile(user.id, profilePatch);
     }
 
-    // Update personality_snapshot if tone or intensity provided
-    const personaPatch: Record<string, any> = {};
-    if (body.tone) personaPatch.tone = body.tone;
-    if (body.intensity !== undefined) personaPatch.intensity = body.intensity;
-
-    if (Object.keys(personaPatch).length > 0) {
-      results.personality = await this.users.updatePersona(
-        user.id,
-        personaPatch,
-      );
+    // Update tone (user_prefs.bot_tone) if provided
+    if (body.tone) {
+      results.personality = await this.users.updatePersona(user.id, {
+        tone: body.tone,
+      });
     }
 
     // Update user_prefs if notification_level provided

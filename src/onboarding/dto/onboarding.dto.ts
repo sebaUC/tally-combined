@@ -7,7 +7,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -27,12 +26,6 @@ export type BotTone = (typeof botTones)[number];
 class PersonalityDto {
   @IsEnum(botTones)
   tone: BotTone;
-
-  @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Max(1)
-  intensity: number;
 }
 
 class SubCategoryDto {

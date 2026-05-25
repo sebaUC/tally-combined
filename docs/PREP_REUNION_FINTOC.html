@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TallyFinance — Preparacion Reunion Fintoc</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary: #0364c6;
+    --dark: #023a7e;
+    --navy: #01306c;
+    --accent: #3B82F6;
+    --tint: #DBEAFE;
+    --surface: #F5F8FF;
+    --border: #BFDBFE;
+    --text: #1e293b;
+    --text-mid: #475569;
+    --text-light: #64748b;
+    --text-muted: #94a3b8;
+    --green: #059669;
+    --green-bg: #ecfdf5;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+  }
+
+  @page {
+    size: A4;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text);
+    background: white;
+    line-height: 1.65;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh;
+    text-align: center;
+  }
+  .cover-logo img {
+    height: 60px;
+    margin-bottom: 8px;
+  }
+  .cover-subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-light);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+  .cover h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    max-width: 460px;
+  }
+  .cover .cover-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    max-width: 400px;
+    margin-bottom: 50px;
+  }
+  .cover-meta {
+    font-size: 9px;
+    color: var(--text-muted);
+    line-height: 2;
+  }
+  .cover-meta strong { color: var(--text-mid); }
+  .cover-badge {
+    display: inline-block;
+    background: var(--red-bg);
+    color: var(--red);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-top: 20px;
+    border: 1px solid #fecaca;
+  }
+  .cover-refs {
+    margin-top: 50px;
+    text-align: center;
+  }
+  .cover-refs-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+  .cover-refs-logos {
+    display: flex;
+    gap: 36px;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.6;
+  }
+  .cover-refs-logos img {
+    height: 32px;
+    object-fit: contain;
+  }
+
+  /* ===== PAGE CONTENT ===== */
+  .page {
+    padding: 0 56px;
+    page-break-after: always;
+  }
+  .page:last-of-type {
+    page-break-after: auto;
+  }
+  .page-header {
+    padding-top: 40px;
+    padding-bottom: 32px;
+    border-bottom: 3px solid var(--navy);
+    margin-bottom: 32px;
+  }
+  .page-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--navy);
+    line-height: 1.2;
+  }
+  .page-lead {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 6px;
+  }
+
+  /* ===== TYPOGRAPHY ===== */
+  h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 32px 0 12px;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 24px 0 8px;
+  }
+  p {
+    margin-bottom: 12px;
+    color: var(--text-mid);
+    font-size: 13px;
+  }
+  strong { color: var(--text); }
+
+  /* ===== BIG NUMBER ===== */
+  .big-num {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .big-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 40px;
+    margin: 20px 0 28px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    page-break-inside: avoid;
+  }
+  .stat { flex: 1; }
+
+  /* ===== HIGHLIGHT BOX ===== */
+  .highlight {
+    background: linear-gradient(135deg, var(--surface) 0%, #eef4ff 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .highlight-quote {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ===== CALLOUT ===== */
+  .callout {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  .callout-blue {
+    background: var(--surface);
+    border-left: 4px solid var(--primary);
+  }
+  .callout-green {
+    background: var(--green-bg);
+    border-left: 4px solid var(--green);
+  }
+  .callout-amber {
+    background: var(--amber-bg);
+    border-left: 4px solid var(--amber);
+  }
+  .callout-red {
+    background: var(--red-bg);
+    border-left: 4px solid var(--red);
+  }
+  .callout h4 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .callout-blue h4 { color: var(--primary); }
+  .callout-green h4 { color: var(--green); }
+  .callout-amber h4 { color: var(--amber); }
+  .callout-red h4 { color: var(--red); }
+  .callout p { margin-bottom: 0; font-size: 13px; }
+
+  /* ===== LISTS ===== */
+  ul { padding-left: 0; list-style: none; margin-bottom: 12px; }
+  li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text-mid);
+  }
+  li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+  ol { padding-left: 20px; margin-bottom: 12px; }
+  ol li { padding-left: 4px; }
+  ol li::before { display: none; }
+
+  /* ===== TABLES ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12px;
+    page-break-inside: avoid;
+  }
+  th {
+    background: var(--navy);
+    color: white;
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  th:first-child { border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--text-mid);
+  }
+  tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+  tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+  tr:hover td { background: var(--surface); }
+  .n { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--navy); }
+  .yes { color: var(--green); font-weight: 700; font-size: 16px; text-align: center; }
+  .no { color: var(--red); font-weight: 700; font-size: 16px; text-align: center; }
+
+  /* ===== PILLAR BLOCKS ===== */
+  .pillar-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 12px 0;
+    position: relative;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .pillar-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .p1::before { background: var(--primary); }
+  .p2::before { background: var(--green); }
+  .p3::before { background: var(--accent); }
+  .pillar-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .pillar-block h3 { margin-top: 0; }
+  .pillar-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+  .tag-req { background: var(--tint); color: var(--primary); }
+  .tag-done { background: var(--green-bg); color: var(--green); }
+
+  /* ===== LOOP DIAGRAM ===== */
+  .loop-diagram {
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 28px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .loop-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .loop-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .loop-step {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--navy);
+    text-align: center;
+    flex: 0 0 auto;
+    width: 130px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .loop-step-emoji {
+    display: block;
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  .loop-step small {
+    font-size: 9px;
+    color: var(--text-light);
+    font-weight: 400;
+  }
+  .loop-note {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 14px;
+    font-style: italic;
+  }
+  .loop-arrow {
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 20px;
+    font-weight: 700;
+  }
+  /* VALUE PROP BOX */
+  .value-prop {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin: 16px 0;
+    color: white;
+    page-break-inside: avoid;
+  }
+  .value-prop h3 {
+    color: white;
+    font-size: 16px;
+    margin: 0 0 12px 0;
+  }
+  .value-prop-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .value-prop-item {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .value-prop-item .vp-emoji {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .value-prop-item .vp-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+  }
+  .value-prop-item .vp-desc {
+    font-size: 9px;
+    color: rgba(255,255,255,0.8);
+    margin: 0;
+  }
+
+  /* ===== MEETING SCRIPT ===== */
+  .block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 16px 0;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .block-header {
+    background: var(--navy);
+    color: white;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+  }
+  .block-body {
+    padding: 18px;
+  }
+  .say-box {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: var(--dark);
+    font-weight: 500;
+  }
+  .question-list li {
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .question-list li::before { background: var(--accent); }
+
+  /* ===== TWO COL ===== */
+  .two-col {
+    display: flex;
+    gap: 20px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .two-col > div { flex: 1; }
+
+  /* ===== SCENARIO BAR ===== */
+  .scenario-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin: 10px 0;
+    border: 1px solid #e2e8f0;
+    page-break-inside: avoid;
+  }
+  .scenario-bar.best { background: var(--green-bg); border-color: #a7f3d0; }
+  .scenario-bar.good { background: #f0fdf4; border-color: #bbf7d0; }
+  .scenario-bar.neutral { background: var(--amber-bg); border-color: #fde68a; }
+  .scenario-bar.backup { background: var(--red-bg); border-color: #fecaca; }
+  .scenario-letter {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    color: white;
+  }
+  .best .scenario-letter { background: var(--green); }
+  .good .scenario-letter { background: #22c55e; }
+  .neutral .scenario-letter { background: var(--amber); }
+  .backup .scenario-letter { background: var(--red); }
+  .scenario-text h4 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 1px; }
+  .scenario-text p { font-size: 12px; color: var(--text-mid); margin: 0; }
+
+  /* ===== HR ===== */
+  hr {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* ===== FOOTER ===== */
+  .doc-footer {
+    text-align: center;
+    padding: 40px 0 48px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER ==================== -->
+<div class="cover">
+  <div class="cover-logo"><img src="../frontend_TallyFinance/public/biglogowhite.png" alt="TallyFinance" style="filter: brightness(0) saturate(100%) invert(18%) sepia(95%) saturate(2000%) hue-rotate(205deg);"></div>
+  <div class="cover-subtitle">Finance</div>
+  <h1>Preparacion Reunion con Fintoc</h1>
+  <p class="cover-desc">Modelo de negocio, estrategia de negociacion, regulacion y guion completo para la alianza que habilita el tracking automatico de TallyFinance.</p>
+  <div class="cover-meta">
+    <strong>Preparado por:</strong> Sebastian Derpsch, CTO<br>
+    <strong>Fecha:</strong> Abril 2026<br>
+    <strong>Para:</strong> Reunion estrategica con Fintoc<br>
+  </div>
+  <div class="cover-badge">CONFIDENCIAL &mdash; EQUIPO FUNDADOR</div>
+  <div class="cover-refs">
+    <div class="cover-refs-label">Referencias de producto</div>
+    <div class="cover-refs-logos">
+      <img src="../frontend_TallyFinance/public/fintoc_logo.png" alt="Fintoc" style="height: 64px;">
+      <img src="../frontend_TallyFinance/public/unnamed.png" alt="Cleo" style="height: 36px; border-radius: 6px;">
+      <img src="../frontend_TallyFinance/public/qapital-logo-updated280.jpg" alt="Qapital">
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 1: MODELO ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 01</div>
+    <div class="page-title">El Modelo TallyFinance</div>
+    <div class="page-lead">Que estamos construyendo y como monetizamos.</div>
+  </div>
+
+  <div class="highlight">
+    <div class="highlight-quote">"El primer asistente financiero conversacional de Chile que combina tracking automatico, ahorro gamificado y coaching con IA &mdash; operando donde ya estas: Telegram y WhatsApp."</div>
+  </div>
+
+  <h2>Los 3 pilares del producto</h2>
+
+  <div class="pillar-block p1">
+    <div class="pillar-label">Pilar 01 &mdash; Ref: Cleo ($350M ARR, EEUU)</div>
+    <h3>Tracking Inteligente</h3>
+    <p>Conexion bancaria automatica via Fintoc. Gus ve todas las transacciones del usuario, las categoriza con IA, detecta suscripciones y patrones de gasto, y envia alertas cuando se acerca a los limites de presupuesto.</p>
+    <span class="pillar-tag tag-req">Requiere Fintoc</span>
+  </div>
+
+  <div class="pillar-block p2">
+    <div class="pillar-label">Pilar 02 &mdash; Ref: Qapital (rules engine, ahorro automatico)</div>
+    <h3>Ahorro Gamificado</h3>
+    <p>Motor de reglas automaticas configurables via chat: redondeo de compras, "guilty pleasure" (cada vez que gastas en X, ahorras Y), challenge de 52 semanas, ahorro por porcentaje del sueldo, retos semanales. Metas visuales con barra de progreso.</p>
+    <span class="pillar-tag tag-req">Requiere Fintoc</span>
+  </div>
+
+  <div class="pillar-block p3">
+    <div class="pillar-label">Pilar 03 &mdash; Diferenciador propio</div>
+    <h3>Coach Financiero con Personalidad</h3>
+    <p>Gus: IA conversacional con identidad chilena. Tono personalizable (serio, amigable, estricto, motivacional). Roasts financieros, toast mode, nudges proactivos, resumenes semanales. Entiende "lucas", chilenismos, CLP. Opera via Telegram y WhatsApp sin descargar nada.</p>
+    <span class="pillar-tag tag-done">Ya existe y funciona</span>
+  </div>
+
+  <h2>Loop de Valor</h2>
+  <p>Asi se ve la experiencia completa del usuario una vez conectado con Fintoc:</p>
+
+  <div class="loop-diagram">
+    <div class="loop-title">Loop de Valor &mdash; Experiencia del Usuario</div>
+    <div class="loop-steps">
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F3E6;</span>Conecta banco<br><small>via widget Fintoc</small></div>
+      <div class="loop-arrow">&rarr;</div>
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F4B3;</span>Transacciones<br><small>llegan automaticamente</small></div>
+      <div class="loop-arrow">&rarr;</div>
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F916;</span>IA categoriza<br><small>Gemini/OpenAI clasifica</small></div>
+      <div class="loop-arrow">&rarr;</div>
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F50D;</span>Detecta patrones<br><small>guilty pleasures, bills</small></div>
+      <div class="loop-arrow">&rarr;</div>
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F3AF;</span>Activa reglas<br><small>redondeo, challenges</small></div>
+      <div class="loop-arrow">&rarr;</div>
+      <div class="loop-step"><span class="loop-step-emoji">&#x1F4AC;</span>Gus te avisa<br><small>roasts, alertas, resumen</small></div>
+    </div>
+    <div class="loop-note">Este loop se repite diariamente sin intervencion del usuario. Automatico y continuo.</div>
+  </div>
+
+  <div class="value-prop">
+    <h3>Oferta de Valor: Por que el usuario paga</h3>
+    <div class="value-prop-grid">
+      <div class="value-prop-item">
+        <span class="vp-emoji">&#x1F4CA;</span>
+        <div class="vp-label">Tracking automatico</div>
+        <p class="vp-desc">9 bancos conectados, cero esfuerzo manual</p>
+      </div>
+      <div class="value-prop-item">
+        <span class="vp-emoji">&#x1F3AE;</span>
+        <div class="vp-label">Ahorro gamificado</div>
+        <p class="vp-desc">Redondeo, challenges, guilty pleasure rules</p>
+      </div>
+      <div class="value-prop-item">
+        <span class="vp-emoji">&#x1F525;</span>
+        <div class="vp-label">Roasts y coaching</div>
+        <p class="vp-desc">Gus te motiva con personalidad chilena</p>
+      </div>
+      <div class="value-prop-item">
+        <span class="vp-emoji">&#x1F4F1;</span>
+        <div class="vp-label">Sin descargar app</div>
+        <p class="vp-desc">Funciona en Telegram y WhatsApp</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Modelo Freemium / Premium</h2>
+
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Free</th><th>Premium (~$4.990/mes)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Chat con Gus (registro manual, consultas)</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Presupuestos y metas de ahorro</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Roast mode / Toast mode</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Dashboard web basico</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td>Resumenes semanales</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Conexion bancaria automatica (Fintoc)</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Categorizacion automatica por IA</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Alertas de sobregiro y facturas</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Rules engine de ahorro</strong> (redondeo, guilty pleasure, 52-week, payday)</td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Savings challenges gamificados</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>"Me alcanza para X?"</strong> con saldo real</td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+      <tr><td><strong>Reportes mensuales avanzados</strong></td><td class="no">&#10007;</td><td class="yes">&#10003;</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Logica:</strong> El plan gratuito funciona completo via chat (registro manual). El premium desbloquea la magia: automatizacion total via conexion bancaria. Es el mismo salto que hizo Cleo con 50% de conversion free-to-paid.</p>
+
+  <h2>Fuentes de ingreso proyectadas</h2>
+
+  <table>
+    <thead><tr><th>Fuente</th><th>Ingreso estimado / usuario / mes</th><th>Depende de</th></tr></thead>
+    <tbody>
+      <tr><td>Suscripcion premium</td><td class="n">$4.990 CLP (~$5 USD)</td><td>Usuarios pagados</td></tr>
+      <tr><td>Interchange tarjeta prepago (futuro, Pomelo)</td><td class="n">$2.000 - $4.000 CLP</td><td>0.80% del gasto mensual</td></tr>
+      <tr><td><strong>Total potencial</strong></td><td class="n"><strong>$5.000 - $9.000 CLP/usuario/mes</strong></td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== PAGE 2: FINTOC ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 02</div>
+    <div class="page-title">Que necesitamos de Fintoc</div>
+    <div class="page-lead">Solo lectura de datos bancarios. Nada mas.</div>
+  </div>
+
+  <h2>Producto requerido</h2>
+
+  <div class="callout callout-blue">
+    <h4>Movements API (read-only)</h4>
+    <p>Leer transacciones y saldos de las cuentas del usuario. Es lo unico critico. No necesitamos pagos, debito directo ni conciliacion bancaria.</p>
+  </div>
+
+  <p>Adicionalmente necesitamos el <strong>widget de conexion</strong> para que el usuario vincule su banco de forma segura, y idealmente <strong>webhooks</strong> para recibir notificaciones de nuevas transacciones en vez de hacer polling.</p>
+
+  <h2>Cobertura de Fintoc en Chile</h2>
+
+  <table>
+    <thead><tr><th>Banco</th><th>Historial</th><th>Personas</th><th>Empresas</th><th>Monedas</th></tr></thead>
+    <tbody>
+      <tr><td>Banco de Chile</td><td class="n">24 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP, USD</td></tr>
+      <tr><td>Santander</td><td class="n">24 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP, USD</td></tr>
+      <tr><td>Itau</td><td class="n">24/12 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP, USD</td></tr>
+      <tr><td>BICE</td><td class="n">12 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP, USD</td></tr>
+      <tr><td>Scotiabank</td><td class="n">12 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP</td></tr>
+      <tr><td>BCI</td><td class="n">12/6/3 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP, USD</td></tr>
+      <tr><td>BancoEstado</td><td class="n">12 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>CLP</td></tr>
+      <tr><td>Security</td><td class="n">12 meses</td><td class="no">&#10007;</td><td class="yes">&#10003;</td><td>CLP</td></tr>
+      <tr><td>SII (fiscal)</td><td class="n">12 meses</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>Facturas</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Preguntas tecnicas para la reunion</h2>
+
+  <ol>
+    <li>Cada cuanto se actualizan los movimientos? Se puede forzar un refresh on-demand?</li>
+    <li>Tienen webhooks para nuevas transacciones o es solo polling?</li>
+    <li>El widget de conexion funciona embebido en WebView (para flujo Telegram/WhatsApp)?</li>
+    <li>Que datos exactos devuelve cada transaccion? (merchant name, monto, fecha, tipo, categoria del banco?)</li>
+    <li>Hay rate limits? Cuales son?</li>
+    <li>Cuanto historial se obtiene en la primera conexion?</li>
+    <li>Como se maneja la reconexion cuando el token o la sesion expira?</li>
+    <li>Cuantas cuentas puede conectar un mismo usuario?</li>
+  </ol>
+
+  <hr>
+
+  <h2>El problema de costos</h2>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="big-num">6.5 UF</div>
+      <div class="big-label">Minimo mensual Fintoc (~$250K CLP)</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">$4.990</div>
+      <div class="big-label">Precio premium TallyFinance / mes</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">50</div>
+      <div class="big-label">Usuarios para cubrir el minimo</div>
+    </div>
+  </div>
+
+  <p><strong>El minimo mensual de 6.5 UF es el mayor riesgo en etapa temprana.</strong> Con pocos usuarios premium, el costo de Fintoc se come todo el margen. Necesitamos negociar un modelo que escale con nosotros.</p>
+
+  <table>
+    <thead><tr><th>Escenario</th><th>Usuarios premium</th><th>Ingreso mensual</th><th>Costo Fintoc (est.)</th><th>Margen</th></tr></thead>
+    <tbody>
+      <tr><td>Lanzamiento</td><td class="n">50</td><td class="n">$250K</td><td class="n">$250K</td><td class="n" style="color:var(--red)">$0</td></tr>
+      <tr><td>6 meses</td><td class="n">200</td><td class="n">$1M</td><td class="n">~$400K</td><td class="n" style="color:var(--green)">~$600K</td></tr>
+      <tr><td>12 meses</td><td class="n">500</td><td class="n">$2.5M</td><td class="n">~$700K</td><td class="n" style="color:var(--green)">~$1.8M</td></tr>
+      <tr><td>18 meses</td><td class="n">1.000</td><td class="n">$5M</td><td class="n">Escala variable</td><td class="n" style="color:var(--green)">~$3M+</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== PAGE 3: NEGOCIACION ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 03</div>
+    <div class="page-title">Estrategia de Negociacion</div>
+    <div class="page-lead">Que pedirle a Fintoc, con que argumentos, y que no decir.</div>
+  </div>
+
+  <h2>Nuestras propuestas (en orden de prioridad)</h2>
+
+  <div class="callout callout-green">
+    <h4>1. Piloto sin minimo mensual &mdash; PRIORIDAD MAXIMA</h4>
+    <p>"3-6 meses con hasta 200 cuentas conectadas, solo pago por uso. A cambio, somos su primer caso PFM/B2C en Chile y ofrecemos co-marketing."</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>2. Pricing diferenciado para solo lectura</h4>
+    <p>"No usamos pagos, debito directo ni conciliacion. Solo Movements read-only. El costo deberia ser significativamente menor que el stack completo."</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>3. Programa startup / early-stage</h4>
+    <p>"Fintoc es YC alumni, entienden las startups. Tienen algun programa de creditos, descuento, o pricing escalonado para empresas en etapa temprana?"</p>
+  </div>
+
+  <div class="callout callout-amber">
+    <h4>4. Revenue share como alternativa</h4>
+    <p>"En vez de fee fijo, cobrar un porcentaje de nuestro ingreso premium. Asi alineamos incentivos: si crecemos, ambos ganan."</p>
+  </div>
+
+  <hr>
+
+  <h2>Nuestras palancas &mdash; Por que a Fintoc le conviene</h2>
+
+  <h3>Somos su primer caso PFM consumer-facing</h3>
+  <p>Los clientes de Fintoc son ERPs, pagos comerciales y conciliacion corporativa. No tienen ningun caso B2C de finanzas personales. TallyFinance abre una vertical completamente nueva para ellos &mdash; y eso tiene valor de marketing enorme cuando Open Banking llegue.</p>
+
+  <h3>Open Banking viene en julio 2027</h3>
+  <p>Cuando el SFA entre en vigencia, la vertical PFM va a explotar. Fintoc necesita casos de uso reales operando <strong>antes</strong> para posicionarse como el agregador de referencia frente a la competencia. Nosotros les damos eso gratis.</p>
+
+  <h3>6.4 millones de chilenos ya usaron Fintoc... para pagos</h3>
+  <p>Nosotros abrimos la dimension de datos y analisis financiero personal &mdash; una vertical que Fintoc todavia no monetiza en B2C. Cada usuario premium de TallyFinance es una cuenta conectada recurrente.</p>
+
+  <h3>Co-marketing tangible</h3>
+  <p>"TallyFinance powered by Fintoc" visible en la app, en el dashboard, y en materiales de prensa. Estamos dispuestos a ser un caso de estudio publico.</p>
+
+  <hr>
+
+  <h2>Que decir y que NO decir</h2>
+
+  <div class="two-col">
+    <div>
+      <div class="callout callout-green" style="min-height: 200px;">
+        <h4>DECIR</h4>
+        <ul>
+          <li>"Estamos en fase de crecimiento acelerado"</li>
+          <li>"Necesitamos un modelo que escale con nosotros"</li>
+          <li>"Somos su primer caso PFM consumer-facing en Chile"</li>
+          <li>"Buscamos un partnership, no solo ser clientes"</li>
+          <li>"Conocemos la regulacion SFA y queremos estar listos"</li>
+          <li>"Esta categoria tiene un caso de $350M ARR en EEUU"</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="callout callout-red" style="min-height: 200px;">
+        <h4>NO DECIR</h4>
+        <ul>
+          <li>"Estamos evaluando Prometeo" (solo si necesitas leverage al final)</li>
+          <li>"No tenemos muchos usuarios todavia"</li>
+          <li>"El minimo de 6.5 UF es muy caro" (reformular como "necesitamos escalar juntos")</li>
+          <li>"No entendemos la regulacion" (demostrar que investigaste)</li>
+          <li>"Queremos replicar Cleo" (presentar como vision propia)</li>
+          <li>"Somos un side project" (transmitir seriedad y compromiso)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: REGULACION ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 04</div>
+    <div class="page-title">Regulacion CMF y Compliance</div>
+    <div class="page-lead">Que sabemos, que nos falta, y que preguntar.</div>
+  </div>
+
+  <h2>Situacion actual</h2>
+
+  <p>La <strong>Ley 21.521 (Ley Fintech)</strong> creo el Sistema de Finanzas Abiertas (SFA). La CMF publico la <strong>NCG N.514</strong> en julio 2024 con la normativa tecnica. En noviembre 2025, la CMF postergo la entrada en vigencia 12 meses.</p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="big-num">Jul 2027</div>
+      <div class="big-label">Entrada en vigencia del SFA</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">PSBI</div>
+      <div class="big-label">Tipo de registro que necesitaremos</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">~Oct 2026</div>
+      <div class="big-label">Sandbox CMF disponible</div>
+    </div>
+  </div>
+
+  <h2>Nuestra estrategia regulatoria por fase</h2>
+
+  <div class="callout callout-green">
+    <h4>Hoy (2026): Fintoc es nuestro escudo regulatorio</h4>
+    <p>Fintoc maneja la conexion bancaria, credenciales y seguridad. TallyFinance consume datos via API sin acceder directamente a los bancos. <strong>No necesitamos registro CMF propio en esta etapa.</strong> La responsabilidad de compliance recae en Fintoc como intermediario.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>Pre-SFA (2026-2027): Prepararnos</h4>
+    <p>Monitorear normativa CMF. Probar en sandbox cuando este disponible (~Oct 2026). Preparar documentacion para registro como PSBI: ciberseguridad, gobierno corporativo, oficial de cumplimiento.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>Post-SFA (2027+): Evaluar ruta directa</h4>
+    <p>Registrarse como PSBI ante la CMF. Evaluar si seguir con Fintoc como aggregator (1 API vs N bancos) o conectar directo a las APIs oficiales del SFA. Fintoc probablemente migre de scraping a APIs oficiales &mdash; seguir con ellos puede ser la ruta mas simple.</p>
+  </div>
+
+  <hr>
+
+  <h2>Lo que debemos preguntar a Fintoc sobre regulacion</h2>
+
+  <p>Estas preguntas son criticas. Demuestran que conocemos el tema y nos dan claridad legal:</p>
+
+  <div class="callout callout-amber">
+    <h4>Sobre responsabilidad y compliance</h4>
+    <ul>
+      <li><strong>Necesitamos algun registro o licencia CMF</strong> para consumir su API de datos?</li>
+      <li><strong>Que responsabilidad legal asume Fintoc</strong> vs. que asumimos nosotros ante un incidente de seguridad o filtracion de datos del usuario?</li>
+      <li><strong>Nos pueden compartir un template de Terminos y Condiciones</strong> que cubra el uso de datos bancarios por parte de TallyFinance?</li>
+      <li><strong>Como manejan el consentimiento del usuario?</strong> El widget de Fintoc genera un consentimiento valido ante la CMF? Que firma o acepta el usuario?</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-amber">
+    <h4>Sobre el futuro regulatorio (SFA)</h4>
+    <ul>
+      <li><strong>Como se posicionan frente al SFA</strong> que entra en julio 2027?</li>
+      <li><strong>Planean migrar de screen scraping a las APIs oficiales del SFA?</strong> En que timeline?</li>
+      <li><strong>Si nosotros nos registramos como PSBI,</strong> como cambia la relacion tecnica y contractual con Fintoc?</li>
+      <li><strong>Los datos del SFA tendran latencia maxima de 5 minutos</strong> &mdash; su API actual cumple eso?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== PAGE 5: COMPETENCIA ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 05</div>
+    <div class="page-title">Ventaja Competitiva</div>
+    <div class="page-lead">Por que TallyFinance gana en Chile.</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>App</th><th>Precio</th><th>Conexion bancaria</th><th>IA / Chat</th><th>Ahorro gamificado</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>TallyFinance</strong></td>
+        <td class="n">~$4.990/mes</td>
+        <td class="yes">9 bancos (Fintoc)</td>
+        <td class="yes">Gus (Gemini/OpenAI)</td>
+        <td class="yes">Rules engine completo</td>
+      </tr>
+      <tr>
+        <td>Kuanto</td>
+        <td class="n">$4.990/mes</td>
+        <td>Email forwarding (3 bancos)</td>
+        <td class="no">&#10007;</td>
+        <td class="no">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Piggi</td>
+        <td class="n">Gratis</td>
+        <td>Upload manual cartola</td>
+        <td class="no">&#10007;</td>
+        <td class="no">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Fincrick</td>
+        <td class="n">$2.500/mes</td>
+        <td class="no">&#10007;</td>
+        <td class="no">&#10007;</td>
+        <td>Basica</td>
+      </tr>
+      <tr>
+        <td>Fintonic</td>
+        <td>&mdash;</td>
+        <td colspan="3" style="color:var(--text-muted); font-style:italic">Cerro en Chile, marzo 2023. Dejo un vacio que nadie lleno.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-green" style="margin-top: 20px;">
+    <h4>Nadie en Chile combina estas 3 cosas</h4>
+    <p><strong>Chat IA conversacional con personalidad + conexion bancaria automatica a 9 bancos + ahorro gamificado con rules engine.</strong> Somos los primeros en intentarlo. El cierre de Fintonic confirma que hay demanda insatisfecha.</p>
+  </div>
+
+  <h2>Referencia internacional</h2>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="big-num">$350M</div>
+      <div class="big-label">ARR de Cleo (EEUU, 2026)</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">7M+</div>
+      <div class="big-label">Usuarios de Cleo</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">50%</div>
+      <div class="big-label">Conversion free-to-paid</div>
+    </div>
+    <div class="stat">
+      <div class="big-num">$11</div>
+      <div class="big-label">CAC de Cleo</div>
+    </div>
+  </div>
+
+  <p>Cleo demuestra que el modelo <strong>asistente financiero conversacional + conexion bancaria</strong> funciona a escala. TallyFinance lo adapta al mercado chileno con ventajas unicas: canal nativo (Telegram/WhatsApp), personalidad local, y ahorro gamificado (que Cleo no tiene con la profundidad de Qapital).</p>
+
+  <h2>Nuestras ventajas sobre Cleo</h2>
+  <ul>
+    <li><strong>Canal nativo:</strong> Telegram/WhatsApp. Sin descargar app. Menor friccion de adopcion.</li>
+    <li><strong>Mercado sin competencia:</strong> Cleo no opera en Chile ni Latam. No hay equivalente.</li>
+    <li><strong>Lenguaje local:</strong> Gus entiende "lucas", chilenismos, CLP. Cleo solo habla ingles.</li>
+    <li><strong>Ahorro gamificado:</strong> Rules engine tipo Qapital que Cleo no ofrece con esa profundidad.</li>
+  </ul>
+</div>
+
+<!-- ==================== PAGE 6: REUNION ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 06</div>
+    <div class="page-title">Guion de la Reunion</div>
+    <div class="page-lead">60 minutos, 6 bloques. Script, preguntas, propuestas y escenarios de salida.</div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 1 &mdash; Contexto y Vision</span><span>10 min</span></div>
+    <div class="block-body">
+      <div class="say-box">"Estamos construyendo el primer asistente financiero conversacional de Chile. Operamos via Telegram y WhatsApp con un personaje llamado Gus que registra gastos, maneja presupuestos y metas. Hoy el registro es manual. Queremos dar el salto a tracking automatico conectando cuentas bancarias, y para eso necesitamos a Fintoc."</div>
+      <ul>
+        <li>Mostrar <strong>demo en vivo</strong> de Gus en Telegram (conversacion real)</li>
+        <li>Mencionar que esta categoria tiene un caso de <strong>$350M ARR en EEUU</strong> (Cleo)</li>
+        <li>En Chile <strong>no existe nada parecido</strong> &mdash; Fintonic cerro, los sustitutos son primitivos</li>
+        <li>Ya tenemos producto funcionando: backend NestJS, IA con Gemini, frontend React</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 2 &mdash; Necesidad Tecnica</span><span>10 min</span></div>
+    <div class="block-body">
+      <div class="say-box">"Solo necesitamos Movements API. Read-only. No necesitamos pagos, debito directo ni conciliacion. Queremos entender como funciona el widget, la frecuencia de actualizacion, y si tienen webhooks."</div>
+      <p>Hacer todas las preguntas tecnicas de la Seccion 02.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 3 &mdash; Pricing y Modelo Comercial</span><span>15 min</span></div>
+    <div class="block-body">
+      <p><strong>Abrir con preguntas, no con pedidos:</strong></p>
+      <ul class="question-list">
+        <li>"Cual es el modelo de pricing para Movements API especificamente?"</li>
+        <li>"El minimo de 6.5 UF aplica tambien para solo Movements?"</li>
+        <li>"Tienen pricing diferenciado para B2C/PFM vs B2B/conciliacion?"</li>
+        <li>"Cobran por cuenta conectada, por API call, o por transaccion leida?"</li>
+        <li>"Tienen programa para startups o creditos early-stage?"</li>
+        <li>"Estarian abiertos a un revenue share que escale con nosotros?"</li>
+      </ul>
+      <p style="margin-top: 14px;"><strong>Luego presentar la propuesta:</strong></p>
+      <div class="say-box">"Proponemos un piloto de 3-6 meses con hasta 200 cuentas sin minimo mensual, solo pago por uso. A cambio, somos su caso showcase PFM/B2C y ofrecemos co-marketing: 'TallyFinance powered by Fintoc'."</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 4 &mdash; Regulacion</span><span>10 min</span></div>
+    <div class="block-body">
+      <p>Hacer las preguntas de regulacion de la Seccion 04. Demostrar que investigamos el SFA y la NCG 514.</p>
+      <div class="say-box">"Sabemos que el SFA entra en julio 2027 con la NCG 514 y que va a requerir APIs estandarizadas con OpenID Connect sobre OAuth 2.0. Queremos entender como Fintoc se posiciona en esa transicion y ser parte desde ahora."</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 5 &mdash; Partnership Estrategico</span><span>10 min</span></div>
+    <div class="block-body">
+      <div class="say-box">"No buscamos solo ser un cliente. Buscamos un partnership. Cuando Open Banking llegue, la vertical PFM va a explotar en Chile. Fintoc necesita casos B2C reales para posicionarse frente a la competencia. Nosotros somos ese caso."</div>
+      <ul>
+        <li>Co-marketing: "TallyFinance powered by Fintoc" visible en la app y materiales</li>
+        <li>Caso de estudio publico que Fintoc puede usar en su pitch</li>
+        <li>Cada usuario nuestro es una cuenta conectada recurrente para ellos</li>
+        <li>Abrir la vertical de datos/PFM que hoy Fintoc no explota en B2C</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header"><span>Bloque 6 &mdash; Proximos Pasos</span><span>5 min</span></div>
+    <div class="block-body">
+      <ul>
+        <li><strong>Acceso a sandbox</strong> para empezar integracion tecnica esta semana</li>
+        <li><strong>Propuesta comercial</strong> por escrito dentro de la semana</li>
+        <li><strong>Timeline de integracion:</strong> 4-8 semanas hasta produccion</li>
+        <li><strong>Contacto tecnico y comercial</strong> asignado de ambos lados</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Escenarios de salida</h2>
+
+  <div class="scenario-bar best">
+    <div class="scenario-letter">A</div>
+    <div class="scenario-text">
+      <h4>Best case: Piloto gratuito 3-6 meses, solo pago por uso</h4>
+      <p>Empezar integracion inmediata. Objetivo: 200 cuentas conectadas en el piloto.</p>
+    </div>
+  </div>
+
+  <div class="scenario-bar good">
+    <div class="scenario-letter">B</div>
+    <div class="scenario-text">
+      <h4>Good case: Minimo reducido (~3 UF) o descuento startup 50%</h4>
+      <p>Viable financieramente. Empezar sandbox mientras se cierra el comercial.</p>
+    </div>
+  </div>
+
+  <div class="scenario-bar neutral">
+    <div class="scenario-letter">C</div>
+    <div class="scenario-text">
+      <h4>Neutral: Pricing estandar pero sandbox gratuito</h4>
+      <p>Desarrollar en sandbox. Evaluar Prometeo ($0.14-$0.50/call, sin minimo mensual) en paralelo como alternativa.</p>
+    </div>
+  </div>
+
+  <div class="scenario-bar backup">
+    <div class="scenario-letter">D</div>
+    <div class="scenario-text">
+      <h4>Plan B: Fintoc no cede en pricing</h4>
+      <p>Pivotar a Prometeo como alternativa temporal. O lanzar con tarjeta prepago Pomelo (tracking automatico solo de compras con tarjeta TallyFinance) + registro manual via chat.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 7: CHECKLIST ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">Seccion 07</div>
+    <div class="page-title">Material y Checklist</div>
+    <div class="page-lead">Que llevar preparado a la reunion.</div>
+  </div>
+
+  <h2>Material para mostrar</h2>
+
+  <div class="callout callout-blue">
+    <h4>Demo en vivo de Gus</h4>
+    <p>Conversacion real en Telegram mostrando: registro de gasto, consulta de presupuesto, roast mode, consulta de metas. Que vean el producto funcionando.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>Mockup del flujo con Fintoc</h4>
+    <p>Wireframe de como se veria la experiencia: usuario conecta banco en el dashboard &rarr; Gus empieza a notificar transacciones via Telegram. Mostrar el loop de valor completo.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>Proyeccion de usuarios</h4>
+    <p>Curva de crecimiento estimada a 6, 12 y 18 meses. No tiene que ser precisa &mdash; tiene que mostrar ambicion realista.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <h4>One-pager TallyFinance</h4>
+    <p>Resumen de una pagina: producto, equipo, vision, modelo de negocio, por que Fintoc es clave.</p>
+  </div>
+
+  <hr>
+
+  <h2>Checklist pre-reunion</h2>
+
+  <table>
+    <thead><tr><th style="width:50px">OK</th><th>Item</th></tr></thead>
+    <tbody>
+      <tr><td style="text-align:center">&#9744;</td><td>Demo de Gus en Telegram lista y funcionando</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Mockup o wireframe del flujo con conexion bancaria</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Proyeccion de usuarios (tabla o grafico simple)</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>One-pager del producto</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Cuenta creada en dashboard.fintoc.com (sandbox)</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Revisar docs de Movements API (docs.fintoc.com)</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Leer este documento completo antes de la reunion</td></tr>
+      <tr><td style="text-align:center">&#9744;</td><td>Definir quien lidera cada bloque de la reunion</td></tr>
+    </tbody>
+  </table>
+
+  <div class="doc-footer">
+    <p>TallyFinance SPA &mdash; Documento interno de preparacion</p>
+    <p>Abril 2026</p>
+  </div>
+</div>
+
+</body>
+</html>

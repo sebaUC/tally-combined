@@ -4,6 +4,7 @@
  */
 export const RedisKeys = {
   userContext: (userId: string) => `ctx:${userId}`,
+  userInsights: (userId: string) => `insights:${userId}`,
   convMetrics: (userId: string) => `conv:${userId}:metrics`,
   rateLimit: (externalId: string) => `rl:${externalId}`,
   lock: (userId: string) => `lock:${userId}`,
@@ -15,6 +16,7 @@ export const RedisKeys = {
  */
 export const RedisTTL = {
   USER_CONTEXT: 60,
+  USER_INSIGHTS: 300, // 5 min — insights cambian solo en mutaciones de tx
   METRICS: 30 * 24 * 3600, // 30 days
   RATE_LIMIT: 60,
   LOCK: 5,

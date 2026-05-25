@@ -6,7 +6,8 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    // rawBody exposed as req.rawBody — needed for Fintoc webhook HMAC validation.
+    // rawBody exposed as req.rawBody — available for webhook HMAC validation
+    // (Telegram secret header, WhatsApp app-secret, future bank providers).
     // JSON parsing still runs for all controllers.
     rawBody: true,
   });
